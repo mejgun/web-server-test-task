@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: dbb1d2f2b02b6a43856fb5f94700090e81cfe805c197b7f77f932c4c8653e3a8
+-- hash: dc9cb4afffa5f82fa39ab28fd53441bd2f8e95bdc8c1d84cb4405d03ed5b3fd9
 
 name:           web-server-test-task
 version:        0.1.0.0
@@ -34,6 +34,10 @@ library
       src
   build-depends:
       base >=4.7 && <5
+    , blaze-builder
+    , http-types
+    , wai
+    , warp
   default-language: Haskell2010
 
 executable web-server-test-task-exe
@@ -45,6 +49,10 @@ executable web-server-test-task-exe
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , blaze-builder
+    , http-types
+    , wai
+    , warp
     , web-server-test-task
   default-language: Haskell2010
 
@@ -58,5 +66,9 @@ test-suite web-server-test-task-test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , blaze-builder
+    , http-types
+    , wai
+    , warp
     , web-server-test-task
   default-language: Haskell2010

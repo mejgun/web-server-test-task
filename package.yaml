@@ -21,6 +21,11 @@ description:         Please see the README on GitHub at <https://github.com/gith
 
 dependencies:
 - base >= 4.7 && < 5
+- wai
+- http-types
+- warp
+- blaze-builder
+
 
 library:
   source-dirs: src
