@@ -25,6 +25,7 @@ dependencies:
 - http-types
 - warp
 - blaze-builder
+- wai-extra
 
 
 library:
