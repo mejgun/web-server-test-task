@@ -2,20 +2,18 @@
 
 module Main where
 
-import           Network.Wai
-import           Network.HTTP.Types             ( status200 )
-import           Network.Wai.Handler.Warp       ( run )
-
 import           Blaze.ByteString.Builder       ( fromByteString )
 import           Blaze.ByteString.Builder.Char.Utf8
                                                 ( fromShow )
 import           Control.Concurrent.MVar
+--import           Database.PostgreSQL.Simple
+import           Network.HTTP.Types             ( status200 )
+import           Network.Wai
+import           Network.Wai.Handler.Warp       ( run )
 import           Network.Wai.Middleware.RequestLogger
                                                 ( logStdout )
---import           Data.Monoid                    ( (<>) )
 
---import           Lib
-
+import           PG
 application
   :: MVar Int
   -> Request
@@ -36,4 +34,7 @@ application countRef req respond = do
 main :: IO ()
 main = do
   visitorCount <- newMVar 0
+  conn         <- pgconnect
+  [Only i]     <- query_ conn "select 2 + 2" :: IO [Only Int]
+  print i
   run 8080 $ logStdout $ application visitorCount

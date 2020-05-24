@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 2499f43e9e1f5b6e57603ba6d2d9e26fb2ea8d987108b3db46ecf2d116a0589c
+-- hash: 4298c98641144e36f976bfeca568ff9d3b5eda28a82e4886adc9c6f0be47ac86
 
 name:           web-server-test-task
 version:        0.1.0.0
@@ -28,6 +28,7 @@ source-repository head
 library
   exposed-modules:
       Lib
+      PG
   other-modules:
       Paths_web_server_test_task
   hs-source-dirs:
@@ -35,7 +36,9 @@ library
   build-depends:
       base >=4.7 && <5
     , blaze-builder
+    , bytestring
     , http-types
+    , postgresql-simple
     , wai
     , wai-extra
     , warp
@@ -51,7 +54,9 @@ executable web-server-test-task-exe
   build-depends:
       base >=4.7 && <5
     , blaze-builder
+    , bytestring
     , http-types
+    , postgresql-simple
     , wai
     , wai-extra
     , warp
@@ -69,7 +74,9 @@ test-suite web-server-test-task-test
   build-depends:
       base >=4.7 && <5
     , blaze-builder
+    , bytestring
     , http-types
+    , postgresql-simple
     , wai
     , wai-extra
     , warp

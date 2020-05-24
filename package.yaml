@@ -26,7 +26,8 @@ dependencies:
 - warp
 - blaze-builder
 - wai-extra
-
+- postgresql-simple
+- bytestring
 
 library:
   source-dirs: src
