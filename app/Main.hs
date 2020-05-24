@@ -5,8 +5,6 @@ module Main where
 import           Blaze.ByteString.Builder       ( fromByteString )
 import           Blaze.ByteString.Builder.Char.Utf8
                                                 ( fromShow )
-import           Control.Concurrent.MVar
---import           Database.PostgreSQL.Simple
 import           Network.HTTP.Types             ( status200 )
 import           Network.Wai
 import           Network.Wai.Handler.Warp       ( run )
@@ -15,26 +13,41 @@ import           Network.Wai.Middleware.RequestLogger
 
 import           PG
 application
-  :: MVar Int
+  :: Connection
   -> Request
   -> (Response -> IO ResponseReceived)
   -> IO ResponseReceived
-application countRef req respond = do
-  modifyMVar countRef $ \count -> do
-    let count' = count + 1
-        msg =
+application conn req respond = case pathInfo req of
+  ["getusers"] -> getUsers conn req respond
+  _            -> do
+    let msg =
           fromByteString "You are visitor number: "
-            <> fromShow count'
             <> fromShow (queryString req)
             <> fromShow (pathInfo req)
-    responseReceived <- respond
-      $ responseBuilder status200 [("Content-Type", "text/plain")] msg
-    return (count', responseReceived)
+    respond $ responseBuilder status200 [("Content-Type", "text/plain")] msg
+
 
 main :: IO ()
 main = do
-  visitorCount <- newMVar 0
-  conn         <- pgconnect
-  [Only i]     <- query_ conn "select 2 + 2" :: IO [Only Int]
-  print i
-  run 8080 $ logStdout $ application visitorCount
+  conn <- pgconnect
+  print =<< isAdmin conn "97b0febcad13268a5a12de9d09436ab5"
+  run 8080 $ logStdout $ application conn
+
+
+isAdmin :: Connection -> String -> IO Bool
+isAdmin conn token = do
+  p <- query conn "select admin from users where token = ?" [token]
+  return $ case p of
+    [Only i] -> i
+    _        -> False
+
+getUsers
+  :: Connection
+  -> Request
+  -> (Response -> IO ResponseReceived)
+  -> IO ResponseReceived
+getUsers conn req respond = do
+  p <-
+    query_ conn "select name,lastname,photo from users;" :: IO
+      [(String, String, Maybe String)]
+  respond $ responseBuilder status200 [] $ fromShow p

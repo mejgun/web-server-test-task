@@ -15,5 +15,5 @@ stack runhaskell db-scripts/CreateDB.hs
 ## Test scripts
 - Insert some data
   ```
-  stack runhaskell test-scripts/       InsertTestData.hs
+  stack runhaskell test-scripts/InsertTestData.hs
   ```
