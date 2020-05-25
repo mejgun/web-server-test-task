@@ -41,6 +41,8 @@ data CreateUser = CreateUser
     { name     :: String
     , lastname :: String
     , photo    :: Maybe String
+    , login    :: String
+    , password :: String
     }
     deriving (Generic, Show)
 
@@ -56,7 +58,7 @@ createUser conn req respond = do
       let img = fromMaybe "" (photo u)
       _ <- execute
         conn
-        "insert into users (name,lastname,photo,token) values(?,?,?,md5(random()::text));"
-        [name u, lastname u, img]
+        "insert into users (name,lastname,photo,token,login,password) values(?,?,?,md5(random()::text),?,md5(?));"
+        [name u, lastname u, img, login u, password u]
       respond $ responseBuilder status200 [] ok
     _ -> respond $ responseBuilder status404 [] err
