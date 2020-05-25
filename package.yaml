@@ -28,6 +28,7 @@ dependencies:
 - wai-extra
 - postgresql-simple
 - bytestring
+- aeson
 
 library:
   source-dirs: src

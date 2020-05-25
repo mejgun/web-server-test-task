@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 4298c98641144e36f976bfeca568ff9d3b5eda28a82e4886adc9c6f0be47ac86
+-- hash: e7ab74221963ecfb70d2a3761ae8858f9f0a8939ccda9ca4737d4ff7af8d6212
 
 name:           web-server-test-task
 version:        0.1.0.0
@@ -27,14 +27,16 @@ source-repository head
 
 library
   exposed-modules:
-      Lib
       PG
+      Types
+      Users
   other-modules:
       Paths_web_server_test_task
   hs-source-dirs:
       src
   build-depends:
-      base >=4.7 && <5
+      aeson
+    , base >=4.7 && <5
     , blaze-builder
     , bytestring
     , http-types
@@ -52,7 +54,8 @@ executable web-server-test-task-exe
       app
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      aeson
+    , base >=4.7 && <5
     , blaze-builder
     , bytestring
     , http-types
@@ -72,7 +75,8 @@ test-suite web-server-test-task-test
       test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      aeson
+    , base >=4.7 && <5
     , blaze-builder
     , bytestring
     , http-types
