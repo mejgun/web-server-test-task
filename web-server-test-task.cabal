@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: e7ab74221963ecfb70d2a3761ae8858f9f0a8939ccda9ca4737d4ff7af8d6212
+-- hash: a487cca14016652c29a7a8b907ed3def77e6343a5d6cf44be8f6ba29296778d7
 
 name:           web-server-test-task
 version:        0.1.0.0
@@ -30,6 +30,8 @@ library
       PG
       Types
       Users
+      Users.CreateUser
+      Users.GetUsers
   other-modules:
       Paths_web_server_test_task
   hs-source-dirs:
