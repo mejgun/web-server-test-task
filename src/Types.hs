@@ -5,17 +5,21 @@ module Types
   , responseOK
   , responseERR
   , responseSQLERR
+  , responseJSON
   , isAdmin
   , jsonCT
   , checkSqlErr
+  , bodyToJSON
   , module Control.Exception
   )
 where
 
 import           Blaze.ByteString.Builder       ( Builder
                                                 , fromByteString
+                                                , fromLazyByteString
                                                 )
 import           Control.Exception              ( handle )
+import           Data.Aeson                    as A
 import qualified Data.ByteString               as B
 import           Network.HTTP.Types             ( HeaderName
                                                 , status200
@@ -54,6 +58,10 @@ responseERR = responseBuilder status404 [] ""
 responseSQLERR :: Response
 responseSQLERR = responseBuilder status409 jsonCT err
 
+responseJSON :: (A.ToJSON a) => a -> Response
+responseJSON j =
+  responseBuilder status200 jsonCT $ fromLazyByteString $ A.encode j
+
 
 jsonCT :: [(HeaderName, B.ByteString)]
 jsonCT = [("Content-Type", "application/json")]
@@ -61,3 +69,5 @@ jsonCT = [("Content-Type", "application/json")]
 checkSqlErr :: IO ResponseReceived -> SqlError -> IO ResponseReceived
 checkSqlErr x (SqlError _ _ _ _ _) = x
 
+bodyToJSON :: (A.FromJSON a) => Request -> IO (Maybe a)
+bodyToJSON x = A.decode <$> lazyRequestBody x
