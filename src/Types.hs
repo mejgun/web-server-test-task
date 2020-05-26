@@ -28,10 +28,10 @@ type MyApp
   -> IO ResponseReceived
 
 ok :: Builder
-ok = fromByteString "{\"ok\":\"ok\"}\n"
+ok = fromByteString "{\"ok\":\"ok\"}"
 
 err :: Builder
-err = fromByteString "ERR\n"
+err = fromByteString "{\"error\":\"error\"}"
 
 isAdmin :: Connection -> String -> IO Bool
 isAdmin conn token = do
