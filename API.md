@@ -2,8 +2,8 @@
 
 ## Endpoints
 
-HTTP Method | API Method | Body (JSON) | Admin
+HTTP Method | API Method | Body (JSON) | Access
 ---|---|---|---
-POST | createuser | name, lastname, login, password, photo (optional) | False
-GET | getusers | - | False
-POST | deleteuser | login, token | True
+POST | createuser | name, lastname, login, password, photo (optional) | All
+GET | getusers |   | All
+POST | deleteuser | login, token | Admin

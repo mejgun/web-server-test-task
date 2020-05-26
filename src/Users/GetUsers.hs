@@ -25,7 +25,7 @@ instance A.ToJSON User
 instance A.FromJSON User
 
 getUsers :: MyApp
-getUsers conn _ respond = do
+getUsers conn _ respond = handle (checkSqlErr (respond responseSQLERR)) $ do
   p <-
     query_ conn "select name,lastname,photo from users;" :: IO
       [(String, String, Maybe String)]

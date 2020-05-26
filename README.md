@@ -19,5 +19,5 @@ stack runhaskell db-scripts/CreateDB.hs
   ```
 - Run shell scripts from `test-scripts` or run all scripts
   ```
-  find test-scripts -name "*sh" -exec ./{} \;
+  cd test-scripts && find test-scripts -name "*_*sh" -exec ./{} \;
   ```

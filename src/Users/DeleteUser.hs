@@ -10,6 +10,7 @@ import qualified Data.Aeson                    as A
 import           GHC.Generics
 import           Network.Wai
 
+
 import           PG
 import           Types
 
@@ -30,7 +31,7 @@ deleteUser conn req respond = do
     Just u -> do
       adm <- isAdmin conn $ token u
       if adm
-        then do
+        then handle (checkSqlErr (respond responseSQLERR)) $ do
           _ <- execute conn "delete from users where login=?;" [login u]
           respond responseOK
         else respond responseERR

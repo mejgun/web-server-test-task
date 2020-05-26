@@ -30,13 +30,16 @@ createUser :: MyApp
 createUser conn req respond = do
   b <- lazyRequestBody req
   let p = A.decode b :: Maybe CreateUser
-  print p
   case p of
     Just u -> do
       let img = fromMaybe "" (photo u)
-      _ <- execute
-        conn
-        "insert into users (name,lastname,photo,token,login,password) values(?,?,?,md5(random()::text),?,md5(?));"
-        [name u, lastname u, img, login u, password u]
-      respond responseOK
+      handle (checkSqlErr (respond responseSQLERR)) $ do
+        _ <- execute
+          conn
+          "insert into users (name,lastname,photo,token,login,password) values(?,?,?,md5(random()::text),?,md5(?));"
+          [name u, lastname u, img, login u, password u]
+        respond responseOK
+
+
+
     _ -> respond responseERR
