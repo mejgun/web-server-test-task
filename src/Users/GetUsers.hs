@@ -11,7 +11,6 @@ import           GHC.Generics
 import           Network.HTTP.Types             ( status200 )
 import           Network.Wai
 
-
 import           PG
 import           Types
 
@@ -32,4 +31,5 @@ getUsers conn _ respond = do
       [(String, String, Maybe String)]
   let users =
         map (\(n, l, ph) -> User { name = n, lastname = l, photo = ph }) p
-  respond $ responseBuilder status200 [] $ fromLazyByteString $ A.encode users
+  respond $ responseBuilder status200 jsonCT $ fromLazyByteString $ A.encode
+    users

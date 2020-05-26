@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a487cca14016652c29a7a8b907ed3def77e6343a5d6cf44be8f6ba29296778d7
+-- hash: f47078019ccde024f67ac6c52e5f96fe749ed78366dc599281dd33b303bc767b
 
 name:           web-server-test-task
 version:        0.1.0.0
@@ -31,6 +31,7 @@ library
       Types
       Users
       Users.CreateUser
+      Users.DeleteUser
       Users.GetUsers
   other-modules:
       Paths_web_server_test_task
@@ -43,6 +44,7 @@ library
     , bytestring
     , http-types
     , postgresql-simple
+    , text
     , wai
     , wai-extra
     , warp
@@ -62,6 +64,7 @@ executable web-server-test-task-exe
     , bytestring
     , http-types
     , postgresql-simple
+    , text
     , wai
     , wai-extra
     , warp
@@ -83,6 +86,7 @@ test-suite web-server-test-task-test
     , bytestring
     , http-types
     , postgresql-simple
+    , text
     , wai
     , wai-extra
     , warp

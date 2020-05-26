@@ -2,13 +2,20 @@
 
 module Types
   ( MyApp
-  , ok
-  , err
+  , responseOK
+  , responseERR
+  , isAdmin
+  , jsonCT
   )
 where
 
 import           Blaze.ByteString.Builder       ( Builder
                                                 , fromByteString
+                                                )
+import qualified Data.ByteString               as B
+import           Network.HTTP.Types             ( HeaderName
+                                                , status200
+                                                , status404
                                                 )
 import           Network.Wai
 
@@ -21,7 +28,23 @@ type MyApp
   -> IO ResponseReceived
 
 ok :: Builder
-ok = fromByteString "OK\n"
+ok = fromByteString "{\"ok\":\"ok\"}\n"
 
 err :: Builder
 err = fromByteString "ERR\n"
+
+isAdmin :: Connection -> String -> IO Bool
+isAdmin conn token = do
+  p <- query conn "select admin from users where token = ?" [token]
+  return $ case p of
+    [Only i] -> i
+    _        -> False
+
+responseOK :: Response
+responseOK = responseBuilder status200 jsonCT ok
+
+responseERR :: Response
+responseERR = responseBuilder status404 jsonCT err
+
+jsonCT :: [(HeaderName, B.ByteString)]
+jsonCT = [("Content-Type", "application/json")]

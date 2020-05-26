@@ -29,6 +29,7 @@ dependencies:
 - postgresql-simple
 - bytestring
 - aeson
+- text
 
 library:
   source-dirs: src

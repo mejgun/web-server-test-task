@@ -9,11 +9,7 @@ where
 import qualified Data.Aeson                    as A
 import           Data.Maybe                     ( fromMaybe )
 import           GHC.Generics
-import           Network.HTTP.Types             ( status200
-                                                , status404
-                                                )
 import           Network.Wai
-
 
 import           PG
 import           Types
@@ -42,5 +38,5 @@ createUser conn req respond = do
         conn
         "insert into users (name,lastname,photo,token,login,password) values(?,?,?,md5(random()::text),?,md5(?));"
         [name u, lastname u, img, login u, password u]
-      respond $ responseBuilder status200 [] ok
-    _ -> respond $ responseBuilder status404 [] err
+      respond responseOK
+    _ -> respond responseERR
