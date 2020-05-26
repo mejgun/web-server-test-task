@@ -39,7 +39,4 @@ createUser conn req respond = do
           "insert into users (name,lastname,photo,token,login,password) values(?,?,?,md5(random()::text),?,md5(?));"
           [name u, lastname u, img, login u, password u]
         respond responseOK
-
-
-
     _ -> respond responseERR

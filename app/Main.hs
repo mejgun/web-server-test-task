@@ -19,6 +19,7 @@ application conn req respond = case pathInfo req of
   ["getusers"  ] -> getUsers conn req respond
   ["createuser"] -> createUser conn req respond
   ["deleteuser"] -> deleteUser conn req respond
+  ["loginuser" ] -> loginUser conn req respond
   _              -> respond responseERR
 
 
