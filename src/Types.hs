@@ -11,6 +11,7 @@ module Types
   , checkSqlErr
   , bodyToJSON
   , usersPerPage
+  , authorsPerPage
   , module Control.Exception
   )
 where
@@ -39,6 +40,9 @@ type MyApp
 
 usersPerPage :: Int
 usersPerPage = 10
+
+authorsPerPage :: Int
+authorsPerPage = 5
 
 isAdmin :: Connection -> String -> IO Bool
 isAdmin conn token = do
