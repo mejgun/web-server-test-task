@@ -10,6 +10,7 @@ module Types
   , jsonCT
   , checkSqlErr
   , bodyToJSON
+  , usersPerPage
   , module Control.Exception
   )
 where
@@ -35,6 +36,9 @@ type MyApp
   -> Request
   -> (Response -> IO ResponseReceived)
   -> IO ResponseReceived
+
+usersPerPage :: Int
+usersPerPage = 10
 
 isAdmin :: Connection -> String -> IO Bool
 isAdmin conn token = do
