@@ -8,7 +8,6 @@ where
 
 import qualified Data.Aeson                    as A
 import           GHC.Generics
-import           Text.Read                      ( readMaybe )
 
 import           PG
 import           Types
@@ -24,16 +23,17 @@ data Author = Author
 instance FromRow Author
 instance A.ToJSON Author
 
-data Token = Token
+data Req = Req
     { token :: String
+    , page  :: Int
     }
     deriving (Generic, Show)
 
-instance A.FromJSON Token
+instance A.FromJSON Req
 
-getAuthors :: String -> MyApp
-getAuthors page conn req respond = do
-  p <- bodyToJSON req :: IO (Maybe Token)
+getAuthors :: MyApp
+getAuthors conn req respond = do
+  p <- bodyToJSON req :: IO (Maybe Req)
   maybe
     (respond responseERR)
     (\u -> do
@@ -44,11 +44,11 @@ getAuthors page conn req respond = do
             query
               conn
               "select name,lastname,photo,descr from authors as a,users as u where a.user_id=u.id offset ? limit ?;"
-              [offset, limit] :: IO [Author]
+              [offset (page u), limit] :: IO [Author]
           respond $ responseJSON users
         else respond responseERR
     )
     p
  where
-  offset = maybe 0 (\p -> (p - 1) * usersPerPage) (readMaybe page :: Maybe Int)
-  limit  = authorsPerPage
+  offset i = (i - 1) * usersPerPage
+  limit = authorsPerPage

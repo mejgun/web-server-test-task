@@ -5,7 +5,6 @@ module Main
   )
 where
 
-import qualified Data.Text                     as T
 import           Network.Wai
 import           Network.Wai.Handler.Warp       ( run )
 import           Network.Wai.Middleware.RequestLogger
@@ -18,17 +17,15 @@ import           Users
 
 application :: MyApp
 application c r rd = case pathInfo r of
-  ["getusers"]         -> getUsers "1" c r rd
-  ["getusers", page]   -> getUsers (T.unpack page) c r rd
-  ["createuser"  ]     -> createUser c r rd
-  ["deleteuser"  ]     -> deleteUser c r rd
-  ["loginuser"   ]     -> loginUser c r rd
-  ["makeauthor"  ]     -> makeAuthor c r rd
-  ["editauthor"  ]     -> editAuthor c r rd
-  ["deleteauthor"]     -> deleteAuthor c r rd
-  ["getauthors"  ]     -> getAuthors "1" c r rd
-  ["getauthors", page] -> getAuthors (T.unpack page) c r rd
-  _                    -> rd responseERR
+  ["getusers"    ] -> getUsers c r rd
+  ["createuser"  ] -> createUser c r rd
+  ["deleteuser"  ] -> deleteUser c r rd
+  ["loginuser"   ] -> loginUser c r rd
+  ["makeauthor"  ] -> makeAuthor c r rd
+  ["editauthor"  ] -> editAuthor c r rd
+  ["deleteauthor"] -> deleteAuthor c r rd
+  ["getauthors"  ] -> getAuthors c r rd
+  _                -> rd responseERR
 
 
 main :: IO ()

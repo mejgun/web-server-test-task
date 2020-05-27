@@ -2,20 +2,30 @@
 
 ## Endpoints
 
+HTTP method always POST
+
 ### Users
 
-HTTP Method | API Method | Body (JSON) | Access
----|---|---|---
-POST | createuser | name, lastname, login, password, photo (optional) | All
-GET | getusers/page | - | All
-POST | deleteuser | login, token | Admin
-POST | loginuser | login, password | All
+API Method | Body (JSON) | Access
+---|---|---
+createuser | name, lastname, login, password, photo (optional) | All
+getusers | page | All
+deleteuser | login, token | Admin
+loginuser | login, password | All
 
 ### Authors
 
-HTTP Method | API Method | Body (JSON) | Access
----|---|---|---
-POST | makeauthor | login, description, token | Admin
-POST | editauthor | login, description, token | Admin
-POST | deleteauthor | login, token | Admin
-POST | getauthors/page | token | Admin
+API Method | Body (JSON) | Access
+---|---|---
+makeauthor | login, description, token | Admin
+editauthor | login, description, token | Admin
+deleteauthor | login, token | Admin
+getauthors | token, page | Admin
+
+### Categories
+
+### Tags
+
+### Drafts
+
+### News

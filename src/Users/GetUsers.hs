@@ -8,7 +8,6 @@ where
 
 import qualified Data.Aeson                    as A
 import           GHC.Generics
-import           Text.Read                      ( readMaybe )
 
 import           PG
 import           Types
@@ -23,14 +22,27 @@ data User = User
 instance FromRow User
 instance A.ToJSON User
 
-getUsers :: String -> MyApp
-getUsers page conn _ respond =
-  handle (checkSqlErr (respond responseSQLERR)) $ do
-    users <-
-      query conn
-            "select name,lastname,photo from users offset ? limit ?;"
-            [offset, limit] :: IO [User]
-    respond $ responseJSON users
+data Req = Req
+    { page :: Int
+    }
+    deriving (Generic, Show)
+
+instance A.FromJSON Req
+
+getUsers :: MyApp
+getUsers conn req respond = do
+  p <- bodyToJSON req :: IO (Maybe Req)
+  maybe
+    (respond responseERR)
+    (\u -> do
+      handle (checkSqlErr (respond responseSQLERR)) $ do
+        users <-
+          query conn
+                "select name,lastname,photo from users offset ? limit ?;"
+                [offset (page u), limit] :: IO [User]
+        respond $ responseJSON users
+    )
+    p
  where
-  offset = maybe 0 (\p -> (p - 1) * usersPerPage) (readMaybe page :: Maybe Int)
-  limit  = usersPerPage
+  offset i = (i - 1) * usersPerPage
+  limit = usersPerPage
