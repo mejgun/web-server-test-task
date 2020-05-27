@@ -71,7 +71,8 @@ jsonCT :: [(HeaderName, B.ByteString)]
 jsonCT = [("Content-Type", "application/json")]
 
 checkSqlErr :: IO ResponseReceived -> SqlError -> IO ResponseReceived
-checkSqlErr x (SqlError _ _ _ _ _) = x
+-- checkSqlErr x (SqlError _ _ _ _ _) = x
+checkSqlErr x e = print e >> x
 
 bodyToJSON :: (A.FromJSON a) => Request -> IO (Maybe a)
 bodyToJSON x = A.decode <$> lazyRequestBody x
