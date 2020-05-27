@@ -34,7 +34,7 @@ createUser conn req respond = do
       handle (checkSqlErr (respond responseSQLERR)) $ do
         _ <- execute
           conn
-          "insert into users (name,lastname,photo,token,login,password) values(?,?,?,md5(random()::text),?,md5(?));"
+          "insert into users (name,lastname,photo,token,login,password) values(?,?,?,md5(random()::text),?,md5(?)) on conflict do nothing;"
           [name u, lastname u, img, login u, password u]
         respond responseOK
     )
