@@ -10,3 +10,4 @@ POST | deleteuser | login, token | Admin
 POST | loginuser | login, password | All
 POST | makeauthor | login, description, token | Admin
 POST | editauthor | login, description, token | Admin
+POST | deleteauthor | login, token | Admin

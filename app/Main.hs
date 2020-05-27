@@ -20,11 +20,12 @@ application :: MyApp
 application c r rd = case pathInfo r of
   ["getusers"]       -> getUsers "0" c r rd
   ["getusers", page] -> getUsers (T.unpack page) c r rd
-  ["createuser"]     -> createUser c r rd
-  ["deleteuser"]     -> deleteUser c r rd
-  ["loginuser" ]     -> loginUser c r rd
-  ["makeauthor"]     -> makeAuthor c r rd
-  ["editauthor"]     -> editAuthor c r rd
+  ["createuser"  ]   -> createUser c r rd
+  ["deleteuser"  ]   -> deleteUser c r rd
+  ["loginuser"   ]   -> loginUser c r rd
+  ["makeauthor"  ]   -> makeAuthor c r rd
+  ["editauthor"  ]   -> editAuthor c r rd
+  ["deleteauthor"]   -> deleteAuthor c r rd
   _                  -> rd responseERR
 
 
