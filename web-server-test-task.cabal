@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: c3163981b162fa1eb74f525635645fa0619d6ea55ef71c517a61261e896a5591
+-- hash: 0d1a841256698956b85a55e17c5bc95f0cf67ffbc02939f0993230aece831c7b
 
 name:           web-server-test-task
 version:        0.1.0.0
@@ -28,6 +28,7 @@ source-repository head
 library
   exposed-modules:
       Authors
+      Authors.EditAuthor
       Authors.MakeAuthor
       PG
       Types
