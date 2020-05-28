@@ -13,9 +13,9 @@ import           Network.Wai.Middleware.RequestLogger
 import           Authors
 import           Categories
 import           PG
+import           Tags
 import           Types
 import           Users
-import           Tags
 
 main :: IO ()
 main = do

@@ -34,5 +34,5 @@ loginUser conn respond u = handleSqlErr respond $ do
     query conn
           "select token from users where login = ? and password = md5(?);"
           [login u, password u] :: IO [Token]
-  if null t then respond responseERR else respond $ responseJSON $ head t
+  if null t then respond responseERR else respond $ respJSON $ head t
 

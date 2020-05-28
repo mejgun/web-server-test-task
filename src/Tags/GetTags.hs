@@ -13,8 +13,8 @@ import           PG
 import           Types
 
 data Tag = Tag
-    { id     :: Int
-    , name   :: String
+    { id   :: Int
+    , name :: String
     }
     deriving (Generic, Show)
 
@@ -26,16 +26,16 @@ data Req = Req
     }
     deriving (Generic, Show)
 
-
 instance A.FromJSON Req
 
 getTags :: MyHandler Req
-getTags conn respond u = handleSqlErr respond $ do
-  tags <-
-    query conn
-          "select id,name from tags offset ? limit ?;"
-          (offset (page u), limit) :: IO [Tag]
-  respond $ responseJSON tags
+getTags conn respond u = handleSqlErr respond $ rJSON
+  respond
+  (query conn
+         "select id,name from tags offset ? limit ?;"
+         (offset (page u), limit) :: IO [Tag]
+  )
  where
   offset i = (i - 1) * tagsPerPage
   limit = tagsPerPage
+

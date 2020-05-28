@@ -6,7 +6,7 @@ module Types
   , responseOK
   , responseERR
   , responseSQLERR
-  , responseJSON
+  , respJSON
   , jsonCT
   , handleSqlErr
   , usersPerPage
@@ -15,6 +15,7 @@ module Types
   , tagsPerPage
   , rIfAdmin
   , rIfJsonBody
+  , rJSON
   , module Control.Exception
   )
 where
@@ -43,6 +44,14 @@ type MyApp
 
 type MyHandler a
   = Connection -> (Response -> IO ResponseReceived) -> a -> IO ResponseReceived
+
+
+rJSON
+  :: (A.ToJSON a, FromRow a)
+  => (Response -> IO ResponseReceived)
+  -> IO [a]
+  -> IO ResponseReceived
+rJSON respond q = q >>= (\t -> respond (respJSON t))
 
 usersPerPage :: Int
 usersPerPage = 10
@@ -78,9 +87,8 @@ responseERR = responseBuilder status404 [] ""
 responseSQLERR :: Response
 responseSQLERR = responseBuilder status409 jsonCT err
 
-responseJSON :: (A.ToJSON a) => a -> Response
-responseJSON j =
-  responseBuilder status200 jsonCT $ fromLazyByteString $ A.encode j
+respJSON :: (A.ToJSON a) => a -> Response
+respJSON j = responseBuilder status200 jsonCT $ fromLazyByteString $ A.encode j
 
 jsonCT :: [(HeaderName, B.ByteString)]
 jsonCT = [("Content-Type", "application/json")]

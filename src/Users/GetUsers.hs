@@ -30,12 +30,12 @@ data Req = Req
 instance A.FromJSON Req
 
 getUsers :: MyHandler Req
-getUsers conn respond u = handleSqlErr respond $ do
-  users <-
-    query conn
-          "select name,lastname,photo from users offset ? limit ?;"
-          [offset (page u), limit] :: IO [User]
-  respond $ responseJSON users
+getUsers conn respond u = handleSqlErr respond $ rJSON
+  respond
+  (query conn
+         "select name,lastname,photo from users offset ? limit ?;"
+         [offset (page u), limit] :: IO [User]
+  )
  where
   offset i = (i - 1) * usersPerPage
   limit = usersPerPage

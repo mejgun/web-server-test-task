@@ -31,12 +31,12 @@ data Req = Req
 instance A.FromJSON Req
 
 getCategories :: MyHandler Req
-getCategories conn respond u = handleSqlErr respond $ do
-  cats <-
-    query conn
-          "select id,name,parent from categories offset ? limit ?;"
-          (offset (page u), limit) :: IO [Cat]
-  respond $ responseJSON cats
+getCategories conn respond u = handleSqlErr respond $ rJSON
+  respond
+  (query conn
+         "select id,name,parent from categories offset ? limit ?;"
+         (offset (page u), limit) :: IO [Cat]
+  )
  where
   offset i = (i - 1) * categoriesPerPage
   limit = categoriesPerPage

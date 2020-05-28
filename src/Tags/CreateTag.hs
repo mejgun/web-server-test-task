@@ -13,8 +13,8 @@ import           PG
 import           Types
 
 data Req = Req
-    { name   :: String
-    , token  :: String
+    { name  :: String
+    , token :: String
     }
     deriving (Generic, Show)
 
