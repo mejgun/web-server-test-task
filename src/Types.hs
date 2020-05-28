@@ -2,16 +2,17 @@
 
 module Types
   ( MyApp
+  , MyHandler
   , responseOK
   , responseERR
   , responseSQLERR
   , responseJSON
-  , isAdmin
   , jsonCT
   , checkSqlErr
-  , bodyToJSON
   , usersPerPage
   , authorsPerPage
+  , rIfAdmin
+  , rIfJsonBody
   , module Control.Exception
   )
 where
@@ -37,6 +38,9 @@ type MyApp
   -> Request
   -> (Response -> IO ResponseReceived)
   -> IO ResponseReceived
+
+type MyHandler a
+  = Connection -> (Response -> IO ResponseReceived) -> a -> IO ResponseReceived
 
 usersPerPage :: Int
 usersPerPage = 10
@@ -78,5 +82,26 @@ checkSqlErr :: IO ResponseReceived -> SqlError -> IO ResponseReceived
 -- checkSqlErr x (SqlError _ _ _ _ _) = x
 checkSqlErr x e = print e >> x
 
-bodyToJSON :: (A.FromJSON a) => Request -> IO (Maybe a)
+bodyToJSON :: A.FromJSON a => Request -> IO (Maybe a)
 bodyToJSON x = A.decode <$> lazyRequestBody x
+
+rIfJsonBody
+  :: A.FromJSON a
+  => (  Connection
+     -> (Response -> IO ResponseReceived)
+     -> a
+     -> IO ResponseReceived
+     )
+  -> MyApp
+rIfJsonBody x conn req respond =
+  bodyToJSON req >>= maybe (respond responseERR) (x conn respond)
+
+rIfAdmin
+  :: Connection
+  -> (Response -> IO ResponseReceived)
+  -> String
+  -> IO ResponseReceived
+  -> IO ResponseReceived
+rIfAdmin conn respond token r = do
+  adm <- isAdmin conn token
+  if adm then r else respond responseERR

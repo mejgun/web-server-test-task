@@ -24,18 +24,12 @@ data CreateUser = CreateUser
 
 instance A.FromJSON CreateUser
 
-createUser :: MyApp
-createUser conn req respond = do
-  p <- bodyToJSON req :: IO (Maybe CreateUser)
-  maybe
-    (respond responseERR)
-    (\u -> do
-      let img = fromMaybe "" (photo u)
-      handle (checkSqlErr (respond responseSQLERR)) $ do
-        _ <- execute
-          conn
-          "insert into users (name,lastname,photo,token,login,password) values(?,?,?,md5(random()::text),?,md5(?)) on conflict do nothing;"
-          [name u, lastname u, img, login u, password u]
-        respond responseOK
-    )
-    p
+createUser :: MyHandler CreateUser
+createUser conn respond u = do
+  let img = fromMaybe "" (photo u)
+  handle (checkSqlErr (respond responseSQLERR)) $ do
+    _ <- execute
+      conn
+      "insert into users (name,lastname,photo,token,login,password) values(?,?,?,md5(random()::text),?,md5(?)) on conflict do nothing;"
+      [name u, lastname u, img, login u, password u]
+    respond responseOK

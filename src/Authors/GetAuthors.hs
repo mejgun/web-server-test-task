@@ -31,24 +31,17 @@ data Req = Req
 
 instance A.FromJSON Req
 
-getAuthors :: MyApp
-getAuthors conn req respond = do
-  p <- bodyToJSON req :: IO (Maybe Req)
-  maybe
-    (respond responseERR)
-    (\u -> do
-      adm <- isAdmin conn $ token u
-      if adm
-        then handle (checkSqlErr (respond responseSQLERR)) $ do
-          users <-
-            query
-              conn
-              "select name,lastname,photo,descr from authors as a,users as u where a.user_id=u.id offset ? limit ?;"
-              [offset (page u), limit] :: IO [Author]
-          respond $ responseJSON users
-        else respond responseERR
-    )
-    p
+getAuthors :: MyHandler Req
+getAuthors conn respond u =
+  rIfAdmin conn respond (token u)
+    $ handle (checkSqlErr (respond responseSQLERR))
+    $ do
+        users <-
+          query
+            conn
+            "select name,lastname,photo,descr from authors as a,users as u where a.user_id=u.id offset ? limit ?;"
+            [offset (page u), limit] :: IO [Author]
+        respond $ responseJSON users
  where
   offset i = (i - 1) * usersPerPage
   limit = authorsPerPage

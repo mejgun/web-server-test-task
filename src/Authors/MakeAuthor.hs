@@ -21,20 +21,14 @@ data MakeAuthor = MakeAuthor
 
 instance A.FromJSON MakeAuthor
 
-makeAuthor :: MyApp
-makeAuthor conn req respond = do
-  p <- bodyToJSON req :: IO (Maybe MakeAuthor)
-  maybe
-    (respond responseERR)
-    (\u -> do
-      adm <- isAdmin conn $ token u
-      if adm
-        then handle (checkSqlErr (respond responseSQLERR)) $ do
-          _ <- execute
-            conn
-            "insert into authors (user_id,descr) values ((select id from users where login=?),?) on conflict do nothing;"
-            [login u, descr u]
-          respond responseOK
-        else respond responseERR
-    )
-    p
+makeAuthor :: MyHandler MakeAuthor
+makeAuthor conn respond u =
+  rIfAdmin conn respond (token u)
+    $ handle (checkSqlErr (respond responseSQLERR))
+    $ do
+        _ <- execute
+          conn
+          "insert into authors (user_id,descr) values ((select id from users where login=?),?) on conflict do nothing;"
+          [login u, descr u]
+        respond responseOK
+

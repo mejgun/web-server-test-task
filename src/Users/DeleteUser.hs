@@ -20,17 +20,11 @@ data DeleteUser = DeleteUser
 
 instance A.FromJSON DeleteUser
 
-deleteUser :: MyApp
-deleteUser conn req respond = do
-  p <- bodyToJSON req :: IO (Maybe DeleteUser)
-  maybe
-    (respond responseERR)
-    (\u -> do
-      adm <- isAdmin conn $ token u
-      if adm
-        then handle (checkSqlErr (respond responseSQLERR)) $ do
-          _ <- execute conn "delete from users where login=?;" [login u]
-          respond responseOK
-        else respond responseERR
-    )
-    p
+deleteUser :: MyHandler DeleteUser
+deleteUser conn respond u =
+  rIfAdmin conn respond (token u)
+    $ handle (checkSqlErr (respond responseSQLERR))
+    $ do
+        _ <- execute conn "delete from users where login=?;" [login u]
+        respond responseOK
+
