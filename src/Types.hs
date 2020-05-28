@@ -11,6 +11,7 @@ module Types
   , handleSqlErr
   , usersPerPage
   , authorsPerPage
+  , categoriesPerPage
   , rIfAdmin
   , rIfJsonBody
   , module Control.Exception
@@ -47,6 +48,9 @@ usersPerPage = 10
 
 authorsPerPage :: Int
 authorsPerPage = 5
+
+categoriesPerPage :: Int
+categoriesPerPage = 15
 
 isAdmin :: Connection -> String -> IO Bool
 isAdmin conn token = do

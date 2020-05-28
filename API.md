@@ -29,6 +29,7 @@ API Method | Body (JSON) | Access
 createcategory | name, parent (optional), token | Admin
 editcategory | cat_id, name, parent (optional), token | Admin
 deletecategory | cat_id, token | Admin
+getcategories | page | All
 
 ### Tags
 
