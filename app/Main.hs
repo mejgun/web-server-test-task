@@ -11,6 +11,7 @@ import           Network.Wai.Middleware.RequestLogger
                                                 ( logStdout )
 
 import           Authors
+import           Categories
 import           PG
 import           Types
 import           Users
@@ -23,13 +24,14 @@ main = do
 
 application :: MyApp
 application c r rd = case pathInfo r of
-  ["getusers"    ] -> f getUsers
-  ["createuser"  ] -> f createUser
-  ["deleteuser"  ] -> f deleteUser
-  ["loginuser"   ] -> f loginUser
-  ["makeauthor"  ] -> f makeAuthor
-  ["editauthor"  ] -> f editAuthor
-  ["deleteauthor"] -> f deleteAuthor
-  ["getauthors"  ] -> f getAuthors
-  _                -> rd responseERR
+  ["getusers"      ] -> f getUsers
+  ["createuser"    ] -> f createUser
+  ["deleteuser"    ] -> f deleteUser
+  ["loginuser"     ] -> f loginUser
+  ["makeauthor"    ] -> f makeAuthor
+  ["editauthor"    ] -> f editAuthor
+  ["deleteauthor"  ] -> f deleteAuthor
+  ["getauthors"    ] -> f getAuthors
+  ["createcategory"] -> f createCategory
+  _                  -> rd responseERR
   where f x = rIfJsonBody x c r rd
