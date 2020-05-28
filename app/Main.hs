@@ -15,6 +15,7 @@ import           Categories
 import           PG
 import           Types
 import           Users
+import           Tags
 
 main :: IO ()
 main = do
@@ -36,5 +37,9 @@ application c r rd = case pathInfo r of
   ["editcategory"  ] -> f editCategory
   ["deletecategory"] -> f deleteCategory
   ["getcategories" ] -> f getCategories
+  ["createtag"     ] -> f createTag
+  ["edittag"       ] -> f editTag
+  ["deletetag"     ] -> f deleteTag
+  ["gettags"       ] -> f getTags
   _                  -> rd responseERR
   where f x = rIfJsonBody x c r rd

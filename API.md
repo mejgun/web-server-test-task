@@ -33,6 +33,13 @@ getcategories | page | All
 
 ### Tags
 
+API Method | Body (JSON) | Access
+---|---|---
+createtag | name, token | Admin
+edittag | tag_id, name, token | Admin
+deletetag | tag_id, token | Admin
+gettags | page | All
+
 ### Drafts
 
 ### News

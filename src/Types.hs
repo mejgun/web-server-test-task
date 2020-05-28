@@ -12,6 +12,7 @@ module Types
   , usersPerPage
   , authorsPerPage
   , categoriesPerPage
+  , tagsPerPage
   , rIfAdmin
   , rIfJsonBody
   , module Control.Exception
@@ -51,6 +52,9 @@ authorsPerPage = 5
 
 categoriesPerPage :: Int
 categoriesPerPage = 15
+
+tagsPerPage :: Int
+tagsPerPage = 20
 
 isAdmin :: Connection -> String -> IO Bool
 isAdmin conn token = do
