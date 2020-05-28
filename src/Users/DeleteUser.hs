@@ -22,9 +22,7 @@ instance A.FromJSON DeleteUser
 
 deleteUser :: MyHandler DeleteUser
 deleteUser conn respond u =
-  rIfAdmin conn respond (token u)
-    $ handle (checkSqlErr (respond responseSQLERR))
-    $ do
-        _ <- execute conn "delete from users where login=?;" [login u]
-        respond responseOK
+  rIfAdmin conn respond (token u) $ handleSqlErr respond $ do
+    _ <- execute conn "delete from users where login=?;" [login u]
+    respond responseOK
 

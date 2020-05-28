@@ -8,7 +8,7 @@ module Types
   , responseSQLERR
   , responseJSON
   , jsonCT
-  , checkSqlErr
+  , handleSqlErr
   , usersPerPage
   , authorsPerPage
   , rIfAdmin
@@ -78,9 +78,14 @@ responseJSON j =
 jsonCT :: [(HeaderName, B.ByteString)]
 jsonCT = [("Content-Type", "application/json")]
 
-checkSqlErr :: IO ResponseReceived -> SqlError -> IO ResponseReceived
--- checkSqlErr x (SqlError _ _ _ _ _) = x
-checkSqlErr x e = print e >> x
+handleSqlErr
+  :: (Response -> IO ResponseReceived)
+  -> IO ResponseReceived
+  -> IO ResponseReceived
+handleSqlErr r = handle (checkSqlErr (r responseSQLERR))
+ where
+  checkSqlErr :: IO ResponseReceived -> SqlError -> IO ResponseReceived
+  checkSqlErr x e = print e >> x
 
 bodyToJSON :: A.FromJSON a => Request -> IO (Maybe a)
 bodyToJSON x = A.decode <$> lazyRequestBody x

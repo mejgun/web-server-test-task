@@ -27,7 +27,7 @@ instance A.FromJSON CreateUser
 createUser :: MyHandler CreateUser
 createUser conn respond u = do
   let img = fromMaybe "" (photo u)
-  handle (checkSqlErr (respond responseSQLERR)) $ do
+  handleSqlErr respond $ do
     _ <- execute
       conn
       "insert into users (name,lastname,photo,token,login,password) values(?,?,?,md5(random()::text),?,md5(?)) on conflict do nothing;"

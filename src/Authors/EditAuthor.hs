@@ -23,11 +23,9 @@ instance A.FromJSON EditAuthor
 
 editAuthor :: MyHandler EditAuthor
 editAuthor conn respond u =
-  rIfAdmin conn respond (token u)
-    $ handle (checkSqlErr (respond responseSQLERR))
-    $ do
-        _ <- execute
-          conn
-          "update authors set descr=? where user_id = (select id from users where login=?);"
-          [descr u, login u]
-        respond responseOK
+  rIfAdmin conn respond (token u) $ handleSqlErr respond $ do
+    _ <- execute
+      conn
+      "update authors set descr=? where user_id = (select id from users where login=?);"
+      [descr u, login u]
+    respond responseOK

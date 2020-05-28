@@ -30,7 +30,7 @@ data Req = Req
 instance A.FromJSON Req
 
 getUsers :: MyHandler Req
-getUsers conn respond u = handle (checkSqlErr (respond responseSQLERR)) $ do
+getUsers conn respond u = handleSqlErr respond $ do
   users <-
     query conn
           "select name,lastname,photo from users offset ? limit ?;"

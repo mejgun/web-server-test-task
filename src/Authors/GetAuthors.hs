@@ -33,15 +33,13 @@ instance A.FromJSON Req
 
 getAuthors :: MyHandler Req
 getAuthors conn respond u =
-  rIfAdmin conn respond (token u)
-    $ handle (checkSqlErr (respond responseSQLERR))
-    $ do
-        users <-
-          query
-            conn
-            "select name,lastname,photo,descr from authors as a,users as u where a.user_id=u.id offset ? limit ?;"
-            [offset (page u), limit] :: IO [Author]
-        respond $ responseJSON users
+  rIfAdmin conn respond (token u) $ handleSqlErr respond $ do
+    users <-
+      query
+        conn
+        "select name,lastname,photo,descr from authors as a,users as u where a.user_id=u.id offset ? limit ?;"
+        [offset (page u), limit] :: IO [Author]
+    respond $ responseJSON users
  where
   offset i = (i - 1) * usersPerPage
   limit = authorsPerPage
