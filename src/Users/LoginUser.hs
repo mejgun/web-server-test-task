@@ -12,13 +12,13 @@ import           GHC.Generics
 import           PG
 import           Types
 
-data LoginUser = LoginUser
+data Req = Req
     { login    :: String
     , password :: String
     }
     deriving (Generic, Show)
 
-instance A.FromJSON LoginUser
+instance A.FromJSON Req
 
 data Token = Token
     { token :: String
@@ -28,7 +28,7 @@ data Token = Token
 instance FromRow Token
 instance A.ToJSON Token
 
-loginUser :: MyHandler LoginUser
+loginUser :: MyHandler Req
 loginUser conn respond u = handleSqlErr respond $ do
   t <-
     query conn

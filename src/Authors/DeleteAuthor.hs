@@ -12,15 +12,15 @@ import           GHC.Generics
 import           PG
 import           Types
 
-data DeleteAuthor = DeleteAuthor
+data Req = Req
     { login :: String
     , token :: String
     }
     deriving (Generic, Show)
 
-instance A.FromJSON DeleteAuthor
+instance A.FromJSON Req
 
-deleteAuthor :: MyHandler DeleteAuthor
+deleteAuthor :: MyHandler Req
 deleteAuthor conn respond u =
   rIfAdmin conn respond (token u) $ handleSqlErr respond $ do
     _ <- execute

@@ -74,7 +74,6 @@ responseJSON :: (A.ToJSON a) => a -> Response
 responseJSON j =
   responseBuilder status200 jsonCT $ fromLazyByteString $ A.encode j
 
-
 jsonCT :: [(HeaderName, B.ByteString)]
 jsonCT = [("Content-Type", "application/json")]
 
@@ -90,14 +89,7 @@ handleSqlErr r = handle (checkSqlErr (r responseSQLERR))
 bodyToJSON :: A.FromJSON a => Request -> IO (Maybe a)
 bodyToJSON x = A.decode <$> lazyRequestBody x
 
-rIfJsonBody
-  :: A.FromJSON a
-  => (  Connection
-     -> (Response -> IO ResponseReceived)
-     -> a
-     -> IO ResponseReceived
-     )
-  -> MyApp
+rIfJsonBody :: A.FromJSON a => MyHandler a -> MyApp
 rIfJsonBody x conn req respond =
   bodyToJSON req >>= maybe (respond responseERR) (x conn respond)
 

@@ -12,16 +12,16 @@ import           GHC.Generics
 import           PG
 import           Types
 
-data MakeAuthor = MakeAuthor
+data Req = Req
     { login :: String
     , token :: String
     , descr :: String
     }
     deriving (Generic, Show)
 
-instance A.FromJSON MakeAuthor
+instance A.FromJSON Req
 
-makeAuthor :: MyHandler MakeAuthor
+makeAuthor :: MyHandler Req
 makeAuthor conn respond u =
   rIfAdmin conn respond (token u) $ handleSqlErr respond $ do
     _ <- execute

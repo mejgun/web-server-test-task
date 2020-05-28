@@ -13,7 +13,7 @@ import           GHC.Generics
 import           PG
 import           Types
 
-data CreateUser = CreateUser
+data Req = Req
     { name     :: String
     , lastname :: String
     , photo    :: Maybe String
@@ -22,9 +22,9 @@ data CreateUser = CreateUser
     }
     deriving (Generic, Show)
 
-instance A.FromJSON CreateUser
+instance A.FromJSON Req
 
-createUser :: MyHandler CreateUser
+createUser :: MyHandler Req
 createUser conn respond u = do
   let img = fromMaybe "" (photo u)
   handleSqlErr respond $ do
