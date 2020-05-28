@@ -33,5 +33,6 @@ application c r rd = case pathInfo r of
   ["deleteauthor"  ] -> f deleteAuthor
   ["getauthors"    ] -> f getAuthors
   ["createcategory"] -> f createCategory
+  ["editcategory"  ] -> f editCategory
   _                  -> rd responseERR
   where f x = rIfJsonBody x c r rd

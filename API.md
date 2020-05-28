@@ -24,6 +24,11 @@ getauthors | token, page | Admin
 
 ### Categories
 
+API Method | Body (JSON) | Access
+---|---|---
+createcategory | name, parent (optional), token | Admin
+editcategory | cat_id, name, parent (optional), token | Admin
+
 ### Tags
 
 ### Drafts

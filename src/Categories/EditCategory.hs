@@ -1,8 +1,8 @@
 {-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Categories.CreateCategory
-  ( createCategory
+module Categories.EditCategory
+  ( editCategory
   )
 where
 
@@ -13,7 +13,8 @@ import           PG
 import           Types
 
 data Req = Req
-    { name   :: String
+    { cat_id :: Int
+    , name   :: String
     , parent :: Maybe Int
     , token  :: String
     }
@@ -22,11 +23,10 @@ data Req = Req
 
 instance A.FromJSON Req
 
-createCategory :: MyHandler Req
-createCategory conn respond u =
+editCategory :: MyHandler Req
+editCategory conn respond u =
   rIfAdmin conn respond (token u) $ handleSqlErr respond $ do
-    _ <- execute
-      conn
-      "insert into categories (name,parent) values(?,?) on conflict do nothing;"
-      (name u, parent u)
+    _ <- execute conn
+                 "update categories set name=?, parent=? where id=?;"
+                 (name u, parent u, cat_id u)
     respond responseOK
