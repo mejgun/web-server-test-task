@@ -45,14 +45,6 @@ type MyApp
 type MyHandler a
   = Connection -> (Response -> IO ResponseReceived) -> a -> IO ResponseReceived
 
-
-rJSON
-  :: (A.ToJSON a, FromRow a)
-  => (Response -> IO ResponseReceived)
-  -> IO [a]
-  -> IO ResponseReceived
-rJSON respond q = q >>= (\t -> respond (respJSON t))
-
 usersPerPage :: Int
 usersPerPage = 10
 
@@ -67,7 +59,7 @@ tagsPerPage = 20
 
 isAdmin :: Connection -> String -> IO Bool
 isAdmin conn token = do
-  p <- query conn "select admin from users where token = ?" [token]
+  p <- query conn "select admin from users where token = ? limit 1;" [token]
   return $ case p of
     [Only i] -> i
     _        -> False
@@ -118,3 +110,10 @@ rIfAdmin
 rIfAdmin conn respond token r = do
   adm <- isAdmin conn token
   if adm then r else respond responseERR
+
+rJSON
+  :: (A.ToJSON a, FromRow a)
+  => (Response -> IO ResponseReceived)
+  -> IO [a]
+  -> IO ResponseReceived
+rJSON respond q = q >>= respond . respJSON
