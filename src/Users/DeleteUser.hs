@@ -6,7 +6,6 @@ module Users.DeleteUser
   )
 where
 
-import           Control.Monad                  ( when )
 import qualified Data.Aeson                    as A
 import           GHC.Generics
 import           System.Directory               ( removeFile )
@@ -26,10 +25,9 @@ deleteUser :: MyHandler Req
 deleteUser conn u = rIfAdmin conn (token u) $ handleSqlErr $ do
   q <-
     query conn "delete from users where login=? returning photo;" [login u] :: IO
-      [String]
-  print q
+      [Maybe (Only String)]
   case q of
-    [f] -> when (not (null f)) $ removeFile f
-    _   -> return ()
+    [Just (Only f)] -> removeFile f
+    _               -> return ()
   return responseOK
 

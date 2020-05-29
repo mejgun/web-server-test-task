@@ -30,4 +30,5 @@ createCategory conn u =
          conn
          "insert into categories (name,parent) values(?,?) on conflict do nothing;"
          (name u, parent u)
+    >> print u
     >> return responseOK
