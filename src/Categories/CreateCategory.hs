@@ -28,7 +28,6 @@ createCategory conn u =
     $  handleSqlErr
     $  execute
          conn
-         "insert into categories (name,parent) values(?,?) on conflict do nothing;"
+         "insert into categories (name,parent) values (?,(select id from categories where id=?)) on conflict do nothing;"
          (name u, parent u)
-    >> print u
     >> return responseOK
