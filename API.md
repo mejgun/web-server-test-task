@@ -8,10 +8,10 @@ HTTP method always POST
 
 API Method | Body (JSON) | Access
 ---|---|---
-createuser | name, lastname, login, password, photo (optional) | All
-getusers | page | All
-deleteuser | login, token | Admin
-loginuser | login, password | All
+createuser | name: string<br>lastname: string<br>login: string<br>password: string<br>photo: base64 encoded photo (optional)<br>photo_type: string (photo file type (extension), optional) | All
+getusers | page: string | All
+deleteuser | login: string<br>token: string | Admin
+loginuser | login: string<br>password: string | All
 
 ### Authors
 

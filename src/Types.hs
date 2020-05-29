@@ -13,6 +13,7 @@ module Types
   , authorsPerPage
   , categoriesPerPage
   , tagsPerPage
+  , imagesDir
   , rIfAdmin
   , rIfJsonBody
   , rJSON
@@ -56,6 +57,9 @@ categoriesPerPage = 15
 
 tagsPerPage :: Int
 tagsPerPage = 20
+
+imagesDir :: String
+imagesDir = "images/"
 
 isAdmin :: Connection -> String -> IO Bool
 isAdmin conn token = do

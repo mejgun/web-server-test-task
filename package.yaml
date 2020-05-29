@@ -29,7 +29,9 @@ dependencies:
 - postgresql-simple
 - bytestring
 - aeson
-- text
+- base64-bytestring
+- utf8-string
+- directory
 
 library:
   source-dirs: src
