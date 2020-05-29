@@ -1,4 +1,5 @@
 .stack-work/
 *.txt
 /build/
+/images/*jpg
 *~

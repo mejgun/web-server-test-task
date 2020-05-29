@@ -23,7 +23,8 @@ data Req = Req
 instance A.FromJSON Req
 
 editTag :: MyHandler Req
-editTag conn respond u =
-  rIfAdmin conn respond (token u) $ handleSqlErr respond $ do
-    _ <- execute conn "update tags set name=? where id=?;" (name u, tag_id u)
-    respond responseOK
+editTag conn u =
+  rIfAdmin conn (token u)
+    $  handleSqlErr
+    $  execute conn "update tags set name=? where id=?;" (name u, tag_id u)
+    >> return responseOK

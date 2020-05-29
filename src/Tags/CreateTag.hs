@@ -22,9 +22,10 @@ data Req = Req
 instance A.FromJSON Req
 
 createTag :: MyHandler Req
-createTag conn respond u =
-  rIfAdmin conn respond (token u) $ handleSqlErr respond $ do
-    _ <- execute conn
-                 "insert into tags (name) values(?) on conflict do nothing;"
-                 [name u]
-    respond responseOK
+createTag conn u =
+  rIfAdmin conn (token u)
+    $  handleSqlErr
+    $  execute conn
+               "insert into tags (name) values(?) on conflict do nothing;"
+               [name u]
+    >> return responseOK

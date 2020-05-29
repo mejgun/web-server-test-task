@@ -22,11 +22,12 @@ data Req = Req
 instance A.FromJSON Req
 
 makeAuthor :: MyHandler Req
-makeAuthor conn respond u =
-  rIfAdmin conn respond (token u) $ handleSqlErr respond $ do
-    _ <- execute
-      conn
-      "insert into authors (user_id,descr) values ((select id from users where login=?),?) on conflict do nothing;"
-      [login u, descr u]
-    respond responseOK
+makeAuthor conn u =
+  rIfAdmin conn (token u)
+    $  handleSqlErr
+    $  execute
+         conn
+         "insert into authors (user_id,descr) values ((select id from users where login=?),?) on conflict do nothing;"
+         [login u, descr u]
+    >> return responseOK
 

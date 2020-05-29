@@ -22,7 +22,8 @@ data Req = Req
 instance A.FromJSON Req
 
 deleteTag :: MyHandler Req
-deleteTag conn respond u =
-  rIfAdmin conn respond (token u) $ handleSqlErr respond $ do
-    _ <- execute conn "delete from tags where id=?;" [tag_id u]
-    respond responseOK
+deleteTag conn u =
+  rIfAdmin conn (token u)
+    $  handleSqlErr
+    $  execute conn "delete from tags where id=?;" [tag_id u]
+    >> return responseOK

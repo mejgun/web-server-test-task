@@ -22,10 +22,11 @@ data Req = Req
 instance A.FromJSON Req
 
 editAuthor :: MyHandler Req
-editAuthor conn respond u =
-  rIfAdmin conn respond (token u) $ handleSqlErr respond $ do
-    _ <- execute
-      conn
-      "update authors set descr=? where user_id = (select id from users where login=?);"
-      [descr u, login u]
-    respond responseOK
+editAuthor conn u =
+  rIfAdmin conn (token u)
+    $  handleSqlErr
+    $  execute
+         conn
+         "update authors set descr=? where user_id = (select id from users where login=?);"
+         [descr u, login u]
+    >> return responseOK

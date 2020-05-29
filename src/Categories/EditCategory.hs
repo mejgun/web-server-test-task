@@ -24,9 +24,10 @@ data Req = Req
 instance A.FromJSON Req
 
 editCategory :: MyHandler Req
-editCategory conn respond u =
-  rIfAdmin conn respond (token u) $ handleSqlErr respond $ do
-    _ <- execute conn
-                 "update categories set name=?, parent=? where id=?;"
-                 (name u, parent u, cat_id u)
-    respond responseOK
+editCategory conn u =
+  rIfAdmin conn (token u)
+    $  handleSqlErr
+    $  execute conn
+               "update categories set name=?, parent=? where id=?;"
+               (name u, parent u, cat_id u)
+    >> return responseOK

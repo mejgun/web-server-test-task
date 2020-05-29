@@ -16,7 +16,6 @@ module Types
   , imagesDir
   , rIfAdmin
   , rIfJsonBody
-  , rJSON
   , module Control.Exception
   )
 where
@@ -43,8 +42,7 @@ type MyApp
   -> (Response -> IO ResponseReceived)
   -> IO ResponseReceived
 
-type MyHandler a
-  = Connection -> (Response -> IO ResponseReceived) -> a -> IO ResponseReceived
+type MyHandler a = Connection -> a -> IO Response
 
 usersPerPage :: Int
 usersPerPage = 10
@@ -89,35 +87,22 @@ respJSON j = responseBuilder status200 jsonCT $ fromLazyByteString $ A.encode j
 jsonCT :: [(HeaderName, B.ByteString)]
 jsonCT = [("Content-Type", "application/json")]
 
-handleSqlErr
-  :: (Response -> IO ResponseReceived)
-  -> IO ResponseReceived
-  -> IO ResponseReceived
-handleSqlErr r = handle (checkSqlErr (r responseSQLERR))
+handleSqlErr :: IO Response -> IO Response
+handleSqlErr = handle (checkSqlErr (return responseSQLERR))
  where
-  checkSqlErr :: IO ResponseReceived -> SqlError -> IO ResponseReceived
+  checkSqlErr :: IO Response -> SqlError -> IO Response
   checkSqlErr x e = print e >> x
 
 bodyToJSON :: A.FromJSON a => Request -> IO (Maybe a)
 bodyToJSON x = A.decode <$> lazyRequestBody x
 
 rIfJsonBody :: A.FromJSON a => MyHandler a -> MyApp
-rIfJsonBody x conn req respond =
-  bodyToJSON req >>= maybe (respond responseERR) (x conn respond)
+rIfJsonBody x conn req respond = do
+  j <- bodyToJSON req
+  q <- maybe (return responseERR) (x conn) j
+  respond q
 
-rIfAdmin
-  :: Connection
-  -> (Response -> IO ResponseReceived)
-  -> String
-  -> IO ResponseReceived
-  -> IO ResponseReceived
-rIfAdmin conn respond token r = do
+rIfAdmin :: Connection -> String -> IO Response -> IO Response
+rIfAdmin conn token r = do
   adm <- isAdmin conn token
-  if adm then r else respond responseERR
-
-rJSON
-  :: (A.ToJSON a, FromRow a)
-  => (Response -> IO ResponseReceived)
-  -> IO [a]
-  -> IO ResponseReceived
-rJSON respond q = q >>= respond . respJSON
+  if adm then r else return responseERR

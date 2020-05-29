@@ -21,12 +21,13 @@ data Req = Req
 instance A.FromJSON Req
 
 deleteAuthor :: MyHandler Req
-deleteAuthor conn respond u =
-  rIfAdmin conn respond (token u) $ handleSqlErr respond $ do
-    _ <- execute
-      conn
-      "delete from authors where user_id=(select id from users where login=?);"
-      [login u]
-    respond responseOK
+deleteAuthor conn u =
+  rIfAdmin conn (token u)
+    $  handleSqlErr
+    $  execute
+         conn
+         "delete from authors where user_id=(select id from users where login=?);"
+         [login u]
+    >> return responseOK
 
 

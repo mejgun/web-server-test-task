@@ -29,12 +29,13 @@ data Req = Req
 instance A.FromJSON Req
 
 getTags :: MyHandler Req
-getTags conn respond u = handleSqlErr respond $ rJSON
-  respond
-  (query conn
-         "select id,name from tags offset ? limit ?;"
-         (offset (page u), limit) :: IO [Tag]
-  )
+getTags conn u =
+  handleSqlErr
+    $   respJSON
+    <$> (query conn
+               "select id,name from tags offset ? limit ?;"
+               (offset (page u), limit) :: IO [Tag]
+        )
  where
   offset i = (i - 1) * tagsPerPage
   limit = tagsPerPage

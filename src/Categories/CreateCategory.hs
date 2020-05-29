@@ -23,10 +23,11 @@ data Req = Req
 instance A.FromJSON Req
 
 createCategory :: MyHandler Req
-createCategory conn respond u =
-  rIfAdmin conn respond (token u) $ handleSqlErr respond $ do
-    _ <- execute
-      conn
-      "insert into categories (name,parent) values(?,?) on conflict do nothing;"
-      (name u, parent u)
-    respond responseOK
+createCategory conn u =
+  rIfAdmin conn (token u)
+    $  handleSqlErr
+    $  execute
+         conn
+         "insert into categories (name,parent) values(?,?) on conflict do nothing;"
+         (name u, parent u)
+    >> return responseOK
