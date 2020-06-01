@@ -15,6 +15,7 @@ module Types
   , tagsPerPage
   , imagesDir
   , rIfAdmin
+  , rIfAuthor
   , rIfJsonBody
   , module Control.Exception
   )
@@ -27,6 +28,8 @@ import           Blaze.ByteString.Builder       ( Builder
 import           Control.Exception              ( handle )
 import           Data.Aeson                    as A
 import qualified Data.ByteString               as B
+import qualified Data.ByteString.Char8         as B8
+                                                ( putStrLn )
 import           Network.HTTP.Types             ( HeaderName
                                                 , status200
                                                 , status404
@@ -66,6 +69,16 @@ isAdmin conn token = do
     [Only i] -> i
     _        -> False
 
+isAuthor :: Connection -> String -> IO Bool
+isAuthor conn token = do
+  p <- query
+    conn
+    "select count(id)=1 from authors where user_id=(select id from users where token=?);"
+    [token]
+  return $ case p of
+    [Only i] -> i
+    _        -> False
+
 ok :: Builder
 ok = fromByteString "{\"ok\":\"ok\"}"
 
@@ -91,7 +104,8 @@ handleSqlErr :: IO Response -> IO Response
 handleSqlErr = handle (checkSqlErr (return responseSQLERR))
  where
   checkSqlErr :: IO Response -> SqlError -> IO Response
-  checkSqlErr x e = print e >> x
+  checkSqlErr x e = printErr e >> x
+  printErr (SqlError q w t e r) = print w >> mapM_ B8.putStrLn [q, e, r, t]
 
 bodyToJSON :: A.FromJSON a => Request -> IO (Maybe a)
 bodyToJSON x = A.decode <$> lazyRequestBody x
@@ -102,7 +116,29 @@ rIfJsonBody x conn req respond = do
   q <- maybe (return responseERR) (x conn) j
   respond q
 
+-- rIfAdmin :: Connection -> String -> IO Response -> IO Response
+-- rIfAdmin conn token r = do
+--   adm <- isAdmin conn token
+--   if adm then r else return responseERR
+
+-- rIfAuthor :: Connection -> String -> IO Response -> IO Response
+-- rIfAuthor conn token r = do
+--   adm <- isAuthor conn token
+--   if adm then r else return responseERR
+
 rIfAdmin :: Connection -> String -> IO Response -> IO Response
-rIfAdmin conn token r = do
-  adm <- isAdmin conn token
-  if adm then r else return responseERR
+rIfAdmin c t r = responseIf isAdmin c t r responseERR
+
+rIfAuthor :: Connection -> String -> IO Response -> IO Response
+rIfAuthor c t r = responseIf isAuthor c t r responseSQLERR
+
+responseIf
+  :: (Connection -> String -> IO Bool)
+  -> Connection
+  -> String
+  -> IO Response
+  -> Response
+  -> IO Response
+responseIf cond conn token r rElse = do
+  a <- cond conn token
+  if a then r else return rElse

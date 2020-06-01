@@ -12,6 +12,7 @@ import           Network.Wai.Middleware.RequestLogger
 
 import           Authors
 import           Categories
+import           News
 import           PG
 import           Tags
 import           Types
@@ -41,5 +42,14 @@ application c r rd = case pathInfo r of
   ["edittag"       ] -> f editTag
   ["deletetag"     ] -> f deleteTag
   ["gettags"       ] -> f getTags
+  ["createnews"    ] -> f createNews
   _                  -> rd responseERR
   where f x = rIfJsonBody x c r rd
+
+
+-- createnews
+-- setmainphoto
+-- addphoto
+-- deletephoto
+-- updatenews
+
