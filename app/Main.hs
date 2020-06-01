@@ -26,26 +26,27 @@ main = do
 
 application :: MyApp
 application c r rd = case pathInfo r of
-  ["getusers"      ] -> f getUsers
-  ["createuser"    ] -> f createUser
-  ["deleteuser"    ] -> f deleteUser
-  ["loginuser"     ] -> f loginUser
-  ["makeauthor"    ] -> f makeAuthor
-  ["editauthor"    ] -> f editAuthor
-  ["deleteauthor"  ] -> f deleteAuthor
-  ["getauthors"    ] -> f getAuthors
-  ["createcategory"] -> f createCategory
-  ["editcategory"  ] -> f editCategory
-  ["deletecategory"] -> f deleteCategory
-  ["getcategories" ] -> f getCategories
-  ["createtag"     ] -> f createTag
-  ["edittag"       ] -> f editTag
-  ["deletetag"     ] -> f deleteTag
-  ["gettags"       ] -> f getTags
-  ["createnews"    ] -> f createNews
-  ["updatenews"    ] -> f updateNews
-  ["publishnews"   ] -> f publishNews
-  _                  -> rd responseERR
+  ["getusers"        ] -> f getUsers
+  ["createuser"      ] -> f createUser
+  ["deleteuser"      ] -> f deleteUser
+  ["loginuser"       ] -> f loginUser
+  ["makeauthor"      ] -> f makeAuthor
+  ["editauthor"      ] -> f editAuthor
+  ["deleteauthor"    ] -> f deleteAuthor
+  ["getauthors"      ] -> f getAuthors
+  ["createcategory"  ] -> f createCategory
+  ["editcategory"    ] -> f editCategory
+  ["deletecategory"  ] -> f deleteCategory
+  ["getcategories"   ] -> f getCategories
+  ["createtag"       ] -> f createTag
+  ["edittag"         ] -> f editTag
+  ["deletetag"       ] -> f deleteTag
+  ["gettags"         ] -> f getTags
+  ["createnews"      ] -> f createNews
+  ["updatenews"      ] -> f updateNews
+  ["publishnews"     ] -> f publishNews
+  ["setnewsmainphoto"] -> f setNewsMainPhoto
+  _                    -> rd responseERR
   where f x = rIfJsonBody x c r rd
 
 
