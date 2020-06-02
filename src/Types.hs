@@ -101,10 +101,11 @@ jsonCT :: [(HeaderName, B.ByteString)]
 jsonCT = [("Content-Type", "application/json")]
 
 handleSqlErr :: IO Response -> IO Response
-handleSqlErr = handle (checkSqlErr (return responseSQLERR))
+handleSqlErr = handle $ checkSqlErr $ return responseSQLERR
  where
   checkSqlErr :: IO Response -> SqlError -> IO Response
   checkSqlErr x e = printErr e >> x
+  printErr :: SqlError -> IO ()
   printErr (SqlError q w t e r) = print w >> mapM_ B8.putStrLn [q, e, r, t]
 
 bodyToJSON :: A.FromJSON a => Request -> IO (Maybe a)
@@ -115,16 +116,6 @@ rIfJsonBody x conn req respond = do
   j <- bodyToJSON req
   q <- maybe (return responseERR) (x conn) j
   respond q
-
--- rIfAdmin :: Connection -> String -> IO Response -> IO Response
--- rIfAdmin conn token r = do
---   adm <- isAdmin conn token
---   if adm then r else return responseERR
-
--- rIfAuthor :: Connection -> String -> IO Response -> IO Response
--- rIfAuthor conn token r = do
---   adm <- isAuthor conn token
---   if adm then r else return responseERR
 
 rIfAdmin :: Connection -> String -> IO Response -> IO Response
 rIfAdmin c t r = responseIf isAdmin c t r responseERR

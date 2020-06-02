@@ -23,10 +23,16 @@ instance A.FromJSON Req
 
 addComment :: MyHandler Req
 addComment conn u = handleSqlErr $ do
-  q <- execute
-    conn
-    "insert into news_comments (news_id,text,user_id) values (?,?,(select id from users where token=?)) on conflict do nothing;"
-    (news_id u, text u, token u)
-  return $ case q of
-    1 -> responseOK
-    _ -> responseSQLERR
+  i <-
+    query conn "select id from news where id=? and published=true;" [news_id u] :: IO
+      [Only Int]
+  case i of
+    [Only x] -> do
+      q <- execute
+        conn
+        "insert into news_comments (news_id,text,user_id) values (?,?,(select id from users where token=?)) on conflict do nothing;"
+        (x, text u, token u)
+      case q of
+        1 -> return responseOK
+        _ -> return responseSQLERR
+    _ -> return responseSQLERR
