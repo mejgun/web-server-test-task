@@ -48,3 +48,6 @@ createnews | name: string<br>cat_id: int<br>text: string<br>token: string | Auth
 updatenews | news_id: int<br>name: string<br>cat_id: int<br>text: string<br>token: string | Author
 publishnews | news_id: int<br>publish: bool<br>token: string | Author
 setnewsmainphoto | news_id: int<br>photo: base64 encoded photo<br>photo_type: string (photo file type (extension), optional)<br>token: string | Author
+addnewsphoto | news_id: int<br>photo: base64 encoded photo<br>photo_type: string (photo file type (extension), optional)<br>token: string | Author
+deletenewsphoto | news_id: int<br>photo_id: int<br>token: string | Author
+

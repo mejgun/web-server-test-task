@@ -19,5 +19,9 @@ stack runhaskell db-scripts/CreateDB.hs
   ```
 - Run shell scripts from `test-scripts` or run all scripts
   ```
-  cd test-scripts && find test-scripts -name "*_*sh" -exec ./{} \;
+  cd test-scripts && ls -1 ./*_*.sh|bash
   ```
+  
+## API
+
+[API.md](https://github.com/mejgun/web-server-test-task/blob/master/API.md)
