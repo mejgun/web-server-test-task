@@ -46,11 +46,11 @@ application c r rd = case pathInfo r of
   ["updatenews"      ] -> f updateNews
   ["publishnews"     ] -> f publishNews
   ["setnewsmainphoto"] -> f setNewsMainPhoto
+  ["addnewsphoto"    ] -> f addNewsPhoto
   _                    -> rd responseERR
   where f x = rIfJsonBody x c r rd
 
 
--- setmainphoto
 -- addphoto
 -- deletephoto
 -- deletemainphoto

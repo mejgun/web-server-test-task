@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 22679f4159f6dec5873f591ff50b7a77b8648b2bf241f543391e1036de24dd1b
+-- hash: d407794d81e1e2596ebe081119fa67548e7eb7040cdbf24c6e89c7b987215616
 
 name:           web-server-test-task
 version:        0.1.0.0
@@ -38,6 +38,7 @@ library
       Categories.EditCategory
       Categories.GetCategories
       News
+      News.AddNewsPhoto
       News.CreateNews
       News.PublishNews
       News.SetNewsMainPhoto
