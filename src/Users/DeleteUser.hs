@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Users.DeleteUser
-  ( deleteUser
+  ( delete
   )
 where
 
@@ -21,8 +21,8 @@ data Req = Req
 
 instance A.FromJSON Req
 
-deleteUser :: MyHandler Req
-deleteUser conn u = rIfAdmin conn (token u) $ handleSqlErr $ do
+delete :: MyHandler Req
+delete conn u = rIfAdmin conn (token u) $ handleSqlErr $ do
   q <-
     query conn "delete from users where login=? returning photo;" [login u] :: IO
       [Maybe (Only String)]

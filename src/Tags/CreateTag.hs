@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Tags.CreateTag
-  ( createTag
+  ( create
   )
 where
 
@@ -21,8 +21,8 @@ data Req = Req
 
 instance A.FromJSON Req
 
-createTag :: MyHandler Req
-createTag conn u =
+create :: MyHandler Req
+create conn u =
   rIfAdmin conn (token u)
     $  handleSqlErr
     $  execute conn

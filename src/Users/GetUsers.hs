@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Users.GetUsers
-  ( getUsers
+  ( get
   )
 where
 
@@ -29,8 +29,8 @@ data Req = Req
 
 instance A.FromJSON Req
 
-getUsers :: MyHandler Req
-getUsers conn u =
+get :: MyHandler Req
+get conn u =
   handleSqlErr
     $ respJSON
     <$> (query conn

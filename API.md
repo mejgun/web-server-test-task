@@ -8,46 +8,46 @@ HTTP method always POST
 
 API Method | Body (JSON) | Access
 ---|---|---
-createuser | name: string<br>lastname: string<br>login: string<br>password: string<br>photo: base64 encoded photo (optional)<br>photo_type: string (photo file type (extension), optional) | All
-getusers | page: int | All
-deleteuser | login: string<br>token: string | Admin
-loginuser | login: string<br>password: string | All
+user/create | name: string<br>lastname: string<br>login: string<br>password: string<br>photo: base64 encoded photo (optional)<br>photo_type: string (photo file type (extension), optional) | All
+user/get | page: int | All
+user/delete | login: string<br>token: string | Admin
+user/login | login: string<br>password: string | All
 
 ### Authors
 
 API Method | Body (JSON) | Access
 ---|---|---
-makeauthor | login: string<br>description: string<br>token: string | Admin
-editauthor | login: string<br>description: string<br>token: string | Admin
-deleteauthor | login: string<br>token: string | Admin
-getauthors | token: string<br>page: int | Admin
+author/make | login: string<br>description: string<br>token: string | Admin
+author/edit | login: string<br>description: string<br>token: string | Admin
+author/delete | login: string<br>token: string | Admin
+author/get | token: string<br>page: int | Admin
 
 ### Categories
 
 API Method | Body (JSON) | Access
 ---|---|---
-createcategory | name: string<br>parent: int (optional)<br>token: string | Admin
-editcategory | cat_id: int<br>name: string<br>parent: int (optional)<br>token: string | Admin
-deletecategory | cat_id: int<br>token: string | Admin
-getcategories | page: int | All
+category/create | name: string<br>parent: int (optional)<br>token: string | Admin
+category/edit | cat_id: int<br>name: string<br>parent: int (optional)<br>token: string | Admin
+category/delete | cat_id: int<br>token: string | Admin
+category/get | page: int | All
 
 ### Tags
 
 API Method | Body (JSON) | Access
 ---|---|---
-createtag | name: string<br>token: string | Admin
-edittag | tag_id: int<br>name: string<br>token: string | Admin
-deletetag | tag_id: int<br>token: string | Admin
-gettags | page: int | All
+tag/create | name: string<br>token: string | Admin
+tag/edit | tag_id: int<br>name: string<br>token: string | Admin
+tag/delete | tag_id: int<br>token: string | Admin
+tag/get | page: int | All
 
 ### News & Drafts
 
 API Method | Body (JSON) | Access
 ---|---|---
-createnews | name: string<br>cat_id: int<br>text: string<br>token: string | Author
-updatenews | news_id: int<br>name: string<br>cat_id: int<br>text: string<br>token: string | Author
-publishnews | news_id: int<br>publish: bool<br>token: string | Author
-setnewsmainphoto | news_id: int<br>photo: base64 encoded photo<br>photo_type: string (photo file type (extension), optional)<br>token: string | Author
-addnewsphoto | news_id: int<br>photo: base64 encoded photo<br>photo_type: string (photo file type (extension), optional)<br>token: string | Author
-deletenewsphoto | news_id: int<br>photo_id: int<br>token: string | Author
+news/create | name: string<br>cat_id: int<br>text: string<br>token: string | Author
+news/update | news_id: int<br>name: string<br>cat_id: int<br>text: string<br>token: string | Author
+news/publish | news_id: int<br>publish: bool<br>token: string | Author
+news/setmainphoto | news_id: int<br>photo: base64 encoded photo<br>photo_type: string (photo file type (extension), optional)<br>token: string | Author
+news/addphoto | news_id: int<br>photo: base64 encoded photo<br>photo_type: string (photo file type (extension), optional)<br>token: string | Author
+news/deletephoto | news_id: int<br>photo_id: int<br>token: string | Author
 

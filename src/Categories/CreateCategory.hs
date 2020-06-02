@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Categories.CreateCategory
-  ( createCategory
+  ( create
   )
 where
 
@@ -22,8 +22,8 @@ data Req = Req
 
 instance A.FromJSON Req
 
-createCategory :: MyHandler Req
-createCategory conn u =
+create :: MyHandler Req
+create conn u =
   rIfAdmin conn (token u)
     $  handleSqlErr
     $  execute

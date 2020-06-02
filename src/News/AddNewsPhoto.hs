@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module News.AddNewsPhoto
-  ( addNewsPhoto
+  ( addPhoto
   )
 where
 
@@ -26,8 +26,8 @@ data Req = Req
 
 instance A.FromJSON Req
 
-addNewsPhoto :: MyHandler Req
-addNewsPhoto conn u = handleSqlErr $ do
+addPhoto :: MyHandler Req
+addPhoto conn u = handleSqlErr $ do
   let img = decodeLenient $ fromString $ photo u
       ext = maybe ".jpg" ((++) "." . (map toLower)) (photo_type u)
   q <- query

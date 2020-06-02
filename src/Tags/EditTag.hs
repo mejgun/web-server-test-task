@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Tags.EditTag
-  ( editTag
+  ( edit
   )
 where
 
@@ -22,8 +22,8 @@ data Req = Req
 
 instance A.FromJSON Req
 
-editTag :: MyHandler Req
-editTag conn u =
+edit :: MyHandler Req
+edit conn u =
   rIfAdmin conn (token u)
     $  handleSqlErr
     $  execute conn "update tags set name=? where id=?;" (name u, tag_id u)

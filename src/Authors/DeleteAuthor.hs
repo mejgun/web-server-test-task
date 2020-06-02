@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Authors.DeleteAuthor
-  ( deleteAuthor
+  ( delete
   )
 where
 
@@ -20,8 +20,8 @@ data Req = Req
 
 instance A.FromJSON Req
 
-deleteAuthor :: MyHandler Req
-deleteAuthor conn u =
+delete :: MyHandler Req
+delete conn u =
   rIfAdmin conn (token u)
     $  handleSqlErr
     $  execute

@@ -1,4 +1,4 @@
 #!/bin/bash
 set -x 
 
-./curl.sh gettags '{"page":1}'
+./curl.sh tag/get '{"page":1}'

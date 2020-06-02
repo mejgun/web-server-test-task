@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module News.CreateNews
-  ( createNews
+  ( create
   )
 where
 
@@ -30,8 +30,8 @@ data Req = Req
 
 instance A.FromJSON Req
 
-createNews :: MyHandler Req
-createNews conn u = rIfAuthor conn (token u) $ handleSqlErr $ do
+create :: MyHandler Req
+create conn u = rIfAuthor conn (token u) $ handleSqlErr $ do
   q <-
     query
       conn

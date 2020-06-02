@@ -1,4 +1,4 @@
 #!/bin/bash
 set -x 
 
-./curl.sh getcategories '{"page":1}'
+./curl.sh category/get '{"page":1}'

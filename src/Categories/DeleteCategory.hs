@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Categories.DeleteCategory
-  ( deleteCategory
+  ( delete
   )
 where
 
@@ -21,8 +21,8 @@ data Req = Req
 
 instance A.FromJSON Req
 
-deleteCategory :: MyHandler Req
-deleteCategory conn u =
+delete :: MyHandler Req
+delete conn u =
   rIfAdmin conn (token u)
     $  handleSqlErr
     $  execute conn "delete from categories where id=?;" [cat_id u]

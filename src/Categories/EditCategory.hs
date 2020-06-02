@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Categories.EditCategory
-  ( editCategory
+  ( edit
   )
 where
 
@@ -23,8 +23,8 @@ data Req = Req
 
 instance A.FromJSON Req
 
-editCategory :: MyHandler Req
-editCategory conn u =
+edit :: MyHandler Req
+edit conn u =
   rIfAdmin conn (token u)
     $  handleSqlErr
     $  execute conn

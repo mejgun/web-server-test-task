@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Authors.GetAuthors
-  ( getAuthors
+  ( get
   )
 where
 
@@ -31,8 +31,8 @@ data Req = Req
 
 instance A.FromJSON Req
 
-getAuthors :: MyHandler Req
-getAuthors conn u =
+get :: MyHandler Req
+get conn u =
   rIfAdmin conn (token u)
     $   handleSqlErr
     $   respJSON

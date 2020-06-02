@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module News.SetNewsMainPhoto
-  ( setNewsMainPhoto
+  ( setMainPhoto
   )
 where
 
@@ -28,8 +28,8 @@ data Req = Req
 
 instance A.FromJSON Req
 
-setNewsMainPhoto :: MyHandler Req
-setNewsMainPhoto conn u = handleSqlErr $ do
+setMainPhoto :: MyHandler Req
+setMainPhoto conn u = handleSqlErr $ do
   p <-
     query
       conn

@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Tags.GetTags
-  ( getTags
+  ( get
   )
 where
 
@@ -28,8 +28,8 @@ data Req = Req
 
 instance A.FromJSON Req
 
-getTags :: MyHandler Req
-getTags conn u =
+get :: MyHandler Req
+get conn u =
   handleSqlErr
     $   respJSON
     <$> (query conn

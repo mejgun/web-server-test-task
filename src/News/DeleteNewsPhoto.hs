@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module News.DeleteNewsPhoto
-  ( deleteNewsPhoto
+  ( deletePhoto
   )
 where
 
@@ -23,8 +23,8 @@ data Req = Req
 
 instance A.FromJSON Req
 
-deleteNewsPhoto :: MyHandler Req
-deleteNewsPhoto conn u = handleSqlErr $ do
+deletePhoto :: MyHandler Req
+deletePhoto conn u = handleSqlErr $ do
   p <-
     query
       conn

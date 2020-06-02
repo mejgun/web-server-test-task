@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Authors.MakeAuthor
-  ( makeAuthor
+  ( make
   )
 where
 
@@ -21,8 +21,8 @@ data Req = Req
 
 instance A.FromJSON Req
 
-makeAuthor :: MyHandler Req
-makeAuthor conn u =
+make :: MyHandler Req
+make conn u =
   rIfAdmin conn (token u)
     $  handleSqlErr
     $  execute

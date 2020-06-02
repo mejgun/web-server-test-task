@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module News.UpdateNews
-  ( updateNews
+  ( update
   )
 where
 
@@ -23,8 +23,8 @@ data Req = Req
 
 instance A.FromJSON Req
 
-updateNews :: MyHandler Req
-updateNews conn u = handleSqlErr $ do
+update :: MyHandler Req
+update conn u = handleSqlErr $ do
   q <- execute
     conn
     "update news set name=?, category_id=?, text=? where id=? and author_id=(select id from authors where user_id=(select id from users where token=?));"

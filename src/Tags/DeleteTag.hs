@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Tags.DeleteTag
-  ( deleteTag
+  ( delete
   )
 where
 
@@ -21,8 +21,8 @@ data Req = Req
 
 instance A.FromJSON Req
 
-deleteTag :: MyHandler Req
-deleteTag conn u =
+delete :: MyHandler Req
+delete conn u =
   rIfAdmin conn (token u)
     $  handleSqlErr
     $  execute conn "delete from tags where id=?;" [tag_id u]

@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Users.CreateUser
-  ( createUser
+  ( create
   )
 where
 
@@ -28,8 +28,8 @@ data Req = Req
 
 instance A.FromJSON Req
 
-createUser :: MyHandler Req
-createUser conn u = case photo u of
+create :: MyHandler Req
+create conn u = case photo u of
   Nothing ->
     handleSqlErr
       $  execute

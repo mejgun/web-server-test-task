@@ -1,4 +1,4 @@
 #!/bin/bash
 set -x 
 
-./curl.sh getusers '{"page":1}'
+./curl.sh user/get '{"page":1}'

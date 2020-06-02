@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Categories.GetCategories
-  ( getCategories
+  ( get
   )
 where
 
@@ -30,8 +30,8 @@ data Req = Req
 
 instance A.FromJSON Req
 
-getCategories :: MyHandler Req
-getCategories conn u =
+get :: MyHandler Req
+get conn u =
   handleSqlErr
     $ respJSON
     <$> (query conn
