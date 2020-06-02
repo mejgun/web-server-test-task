@@ -50,4 +50,5 @@ news/publish | news_id: int<br>publish: bool<br>token: string | Author
 news/setmainphoto | news_id: int<br>photo: base64 encoded photo<br>photo_type: string (photo file type (extension), optional)<br>token: string | Author
 news/addphoto | news_id: int<br>photo: base64 encoded photo<br>photo_type: string (photo file type (extension), optional)<br>token: string | Author
 news/deletephoto | news_id: int<br>photo_id: int<br>token: string | Author
-
+news/addcomment | news_id: int<br>text: string<br>token: string | All
+news/deletecomment | comment_id: int<br>token: string | Admin
