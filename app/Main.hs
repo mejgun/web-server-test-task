@@ -50,5 +50,6 @@ application c r rd = case pathInfo r of
   ["news"    , "deletephoto" ] -> f News.deletePhoto
   ["news"    , "addtag"      ] -> f News.addTag
   ["news"    , "deletetag"   ] -> f News.deleteTag
+  ["news"    , "addcomment"  ] -> f News.addComment
   _                            -> rd responseERR
   where f x = rIfJsonBody x c r rd

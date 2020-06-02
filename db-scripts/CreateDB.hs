@@ -7,6 +7,7 @@ import           PG
 -- v3 categories table created
 -- v4 news, news_photos, news_tags tables created
 -- v5 users.photo set unique
+-- v6 news_comments table created
 
 main :: IO ()
 main = do
@@ -21,4 +22,5 @@ main = do
     , "create table if not exists news_photos (id serial primary key, news_id integer not null references news(id) on delete restrict, photo varchar(999) unique not null);"
     , "create table if not exists news_tags (id serial primary key, tag_id integer not null references tags(id) on delete cascade, news_id integer not null references news(id) on delete cascade, constraint unique_news_tag unique (tag_id,news_id));"
     , "do $$ begin if not exists (select constraint_name as a from information_schema.constraint_column_usage where constraint_name = 'users_photo_key') then alter table if exists users add constraint users_photo_key unique (photo); end if; end; $$;"
+    , "create table if not exists news_comments (id serial primary key, news_id integer not null references news(id) on delete cascade, user_id integer not null references users(id) on delete cascade, text text not null);"
     ]
