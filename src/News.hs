@@ -9,6 +9,7 @@ module News
   , module News.DeleteNewsTag
   , module News.AddNewsComment
   , module News.DeleteNewsComment
+  , module News.GetNewsComments
   )
 where
 
@@ -19,6 +20,7 @@ import           News.CreateNews
 import           News.DeleteNewsComment
 import           News.DeleteNewsPhoto
 import           News.DeleteNewsTag
+import           News.GetNewsComments
 import           News.PublishNews
 import           News.SetNewsMainPhoto
 import           News.UpdateNews

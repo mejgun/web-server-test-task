@@ -13,6 +13,7 @@ module Types
   , authorsPerPage
   , categoriesPerPage
   , tagsPerPage
+  , commentsPerPage
   , imagesDir
   , rIfAdmin
   , rIfAuthor
@@ -58,6 +59,9 @@ categoriesPerPage = 15
 
 tagsPerPage :: Int
 tagsPerPage = 20
+
+commentsPerPage :: Int
+commentsPerPage = 10
 
 imagesDir :: String
 imagesDir = "images/"
