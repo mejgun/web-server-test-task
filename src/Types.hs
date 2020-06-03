@@ -7,6 +7,7 @@ module Types
   , responseERR
   , responseSQLERR
   , respJSON
+  , returnFile
   , jsonCT
   , handleSqlErr
   , usersPerPage
@@ -30,12 +31,14 @@ import           Data.Aeson                    as A
 import qualified Data.ByteString               as B
 import qualified Data.ByteString.Char8         as B8
                                                 ( putStrLn )
+import qualified Data.Text                     as T
 import           Network.HTTP.Types             ( HeaderName
                                                 , status200
                                                 , status404
                                                 , status409
                                                 )
 import           Network.Wai
+import           System.Directory               ( doesFileExist )
 
 import           PG
 
@@ -136,3 +139,11 @@ responseIf
 responseIf cond conn token r rElse = do
   a <- cond conn token
   if a then r else return rElse
+
+returnFile :: T.Text -> (Response -> IO ResponseReceived) -> IO ResponseReceived
+returnFile f rd = do
+  let file = imagesDir ++ (T.unpack f)
+  exist <- doesFileExist file
+  rd $ case exist of
+    True -> responseFile status200 [] file Nothing
+    _    -> responseERR

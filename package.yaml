@@ -32,6 +32,7 @@ dependencies:
 - base64-bytestring
 - utf8-string
 - directory
+- text
 
 library:
   source-dirs: src

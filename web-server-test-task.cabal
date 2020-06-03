@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 60318af13bd880c11093b62df40d2c2ff541572cfe8b435dd25fa78a1c469140
+-- hash: 5708e1b6f48449bbbf36ab91cb3335c264579123591c30870b6f9ae2b5e96ff1
 
 name:           web-server-test-task
 version:        0.1.0.0
@@ -75,6 +75,7 @@ library
     , directory
     , http-types
     , postgresql-simple
+    , text
     , utf8-string
     , wai
     , wai-extra
@@ -97,6 +98,7 @@ executable web-server-test-task-exe
     , directory
     , http-types
     , postgresql-simple
+    , text
     , utf8-string
     , wai
     , wai-extra
@@ -121,6 +123,7 @@ test-suite web-server-test-task-test
     , directory
     , http-types
     , postgresql-simple
+    , text
     , utf8-string
     , wai
     , wai-extra
