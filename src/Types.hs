@@ -18,7 +18,6 @@ module Types
   , rIfAdmin
   , rIfAuthor
   , rIfJsonBody
-  , module Control.Exception
   )
 where
 
