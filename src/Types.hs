@@ -28,6 +28,7 @@ import           Blaze.ByteString.Builder       ( Builder
                                                 , fromLazyByteString
                                                 )
 import           Control.Exception              ( handle )
+import           Control.Monad                  ( when )
 import           Data.Aeson                    as A
 import qualified Data.ByteString               as B
 import qualified Data.ByteString.Char8         as B8
@@ -39,10 +40,9 @@ import           Network.HTTP.Types             ( HeaderName
                                                 , status409
                                                 )
 import           Network.Wai
-import           Control.Monad                  ( when )
-import           System.Directory               ( doesFileExist
-                                                , createDirectory
+import           System.Directory               ( createDirectory
                                                 , doesDirectoryExist
+                                                , doesFileExist
                                                 )
 
 import           PG

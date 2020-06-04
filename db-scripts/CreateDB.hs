@@ -24,3 +24,7 @@ main = do
     , "do $$ begin if not exists (select constraint_name as a from information_schema.constraint_column_usage where constraint_name = 'users_photo_key') then alter table if exists users add constraint users_photo_key unique (photo); end if; end; $$;"
     , "create table if not exists news_comments (id serial primary key, news_id integer not null references news(id) on delete cascade, user_id integer not null references users(id) on delete cascade, text text not null);"
     ]
+
+{-
+
+-}
