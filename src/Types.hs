@@ -19,6 +19,7 @@ module Types
   , rIfAdmin
   , rIfAuthor
   , rIfJsonBody
+  , createImagesDir
   )
 where
 
@@ -38,7 +39,11 @@ import           Network.HTTP.Types             ( HeaderName
                                                 , status409
                                                 )
 import           Network.Wai
-import           System.Directory               ( doesFileExist )
+import           Control.Monad                  ( when )
+import           System.Directory               ( doesFileExist
+                                                , createDirectory
+                                                , doesDirectoryExist
+                                                )
 
 import           PG
 
@@ -147,3 +152,7 @@ returnFile f rd = do
   rd $ case exist of
     True -> responseFile status200 [] file Nothing
     _    -> responseERR
+
+createImagesDir :: IO ()
+createImagesDir = doesDirectoryExist imagesDir
+  >>= \exist -> when (not exist) $ createDirectory imagesDir

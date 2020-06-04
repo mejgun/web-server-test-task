@@ -21,6 +21,7 @@ import qualified Users
 main :: IO ()
 main = do
   conn <- pgconnect
+  createImagesDir
   putStrLn "Server started"
   run 8080 $ logStdout $ application conn
 
