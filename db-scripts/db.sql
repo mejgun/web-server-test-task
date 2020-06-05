@@ -83,25 +83,31 @@ create or replace function getnews(
  anything_contains text,
  cat_id int, 
  tags_all int[],
- tags_any int[])
+ tags_any int[],
+ sort text)
 returns table(
  id int,
+ date date,
  name varchar,
  text text,
+ main_photo varchar,
  author_name varchar,
  author_lastname varchar,
- category_id int) as $$
+ category_id int,
+ category_name text,
+ photo_count bigint) as $$
 declare
- at text  := ' and true';
- bf text  := ' and true';
- aft text := ' and true';
- ac text  := ' and true';
- nc text  := ' and true';
- tc text  := ' and true';
- anc text := ' and true';
- cid text := ' and true';
- allt text := ' and true';
- anyt text := ' and true';
+ at text  := '';
+ bf text  := '';
+ aft text := '';
+ ac text  := '';
+ nc text  := '';
+ tc text  := '';
+ anc text := '';
+ cid text := '';
+ allt text := '';
+ anyt text := '';
+ srt text  := '';
 begin
  if (created_at is not null) then at = concat('date=''', created_at, ''''); end if;
  if (created_before is not null) then bf = concat(' and date<''', created_before, ''''); end if;
@@ -119,14 +125,32 @@ begin
  if (cat_id is not null) then cid = concat(' and c.id=',cat_id); end if;
  if (tags_all is not null) then allt = concat(' and ''',tags_all,''' = array(select tag_id from news_tags where news_id=n.id order by tag_id asc)::int[]'); end if;
  if (tags_any is not null) then anyt = concat(' and ''',tags_any,''' && array(select tag_id from news_tags where news_id=n.id order by tag_id asc)::int[]'); end if;
+ srt := case 
+  when sort = 'author' then ' u.name asc, u.lastname asc, n.id asc'
+  when sort = 'category' then ' c.name asc, n.date asc, n.id asc'
+  when sort = 'photos' then ' photo_count desc, n.id asc'
+  else ' n.date asc, n.id asc'
+ end;
  return query execute 
-  'select distinct n.id,n.name,n.text,u.name,u.lastname,c.id 
+  'select 
+    n.id,
+    n.date,
+    n.name,
+    n.text,
+    n.main_photo,
+    u.name,
+    u.lastname,
+    c.id,
+    c.name,
+    ((select (case when main_photo is null then 0 else 1 end) from news where id=n.id)+(select count(np.id) from news_photos as np where np.news_id=n.id)) as photo_count
    from news as n
    left join authors as a on n.author_id=a.id
    left join users as u on a.user_id=u.id
    left join categories as c on c.id=n.category_id
    left join news_tags as nt on nt.news_id=n.id
    left join tags as t on t.id=nt.tag_id
-   where true ' || at || bf || aft || ac || nc || tc || anc || cid || allt || anyt || ';';
+   where true ' || at || bf || aft || ac || nc || tc || anc || cid || allt || anyt || '
+   group by n.id, u.name,u.lastname,c.id
+   order by ' || srt || ';';
 end;
 $$ language plpgsql;
