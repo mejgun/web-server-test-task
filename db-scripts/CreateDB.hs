@@ -9,5 +9,7 @@ import qualified Data.ByteString               as B
 
 main :: IO ()
 main = do
-  conn <- pgconnect
-  print =<< id =<< execute_ conn <$> Query <$> B.readFile "db-scripts/db.sql"
+  c <- pgconnect
+  q <- Query <$> B.readFile "db-scripts/db.sql"
+  r <- execute_ c q
+  print r

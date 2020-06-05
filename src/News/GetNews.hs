@@ -22,9 +22,8 @@ data Req = Req
     , text_contains     :: Maybe String
     , anything_contains :: Maybe String
     , cat_id            :: Maybe Int
-    , tag_id            :: Maybe Int
-    , tags_any          :: Maybe [Int]
     , tags_all          :: Maybe [Int]
+    , tags_any          :: Maybe [Int]
     , sort              :: Maybe String
     }
     deriving (Generic, Show)
