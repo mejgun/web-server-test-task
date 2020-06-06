@@ -84,7 +84,9 @@ create or replace function getnews(
  cat_id int, 
  tags_all int[],
  tags_any int[],
- sort text)
+ sort text,
+ offs int,
+ lim int)
 returns table(
  id int,
  date date,
@@ -149,8 +151,9 @@ begin
    left join categories as c on c.id=n.category_id
    left join news_tags as nt on nt.news_id=n.id
    left join tags as t on t.id=nt.tag_id
-   where true ' || at || bf || aft || ac || nc || tc || anc || cid || allt || anyt || '
+   where n.published=true ' || at || bf || aft || ac || nc || tc || anc || cid || allt || anyt || '
    group by n.id, u.name,u.lastname,c.id
-   order by ' || srt || ';';
+   order by ' || srt || '
+   offset ' || offs || ' limit ' || lim || ';';
 end;
 $$ language plpgsql;
