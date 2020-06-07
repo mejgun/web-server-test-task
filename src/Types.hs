@@ -34,6 +34,7 @@ import qualified Data.ByteString               as B
 import qualified Data.ByteString.Char8         as B8
                                                 ( putStrLn )
 import qualified Data.Text                     as T
+import           Data.Text.Encoding             ( encodeUtf8 )
 import           Network.HTTP.Types             ( HeaderName
                                                 , status200
                                                 , status404
@@ -150,8 +151,16 @@ returnFile f rd = do
   let file = imagesDir ++ (T.unpack f)
   exist <- doesFileExist file
   rd $ case exist of
-    True -> responseFile status200 [] file Nothing
-    _    -> responseERR
+    True -> do
+      responseFile status200 contentType file Nothing
+    _ -> responseERR
+ where
+  contentType :: [(HeaderName, B.ByteString)]
+  contentType = case T.split (== '.') f of
+    [] -> []
+    l ->
+      let ext = encodeUtf8 $ T.toLower $ last l
+      in  [("Content-Type", "application/" <> ext)]
 
 createImagesDir :: IO ()
 createImagesDir = doesDirectoryExist imagesDir
