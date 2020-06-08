@@ -73,6 +73,7 @@ create table if not exists news_comments (
  text text not null
 );
 
+drop function if exists getNews;
 create or replace function getnews(
  created_at date,
  created_before date,
@@ -84,7 +85,7 @@ create or replace function getnews(
  cat_id int, 
  tags_all int[],
  tags_any int[],
- sort text,
+ sortby text,
  offs int,
  lim int)
 returns table(
@@ -128,9 +129,9 @@ begin
  if (tags_all is not null) then allt = concat(' and ''',tags_all,''' = array(select tag_id from news_tags where news_id=n.id order by tag_id asc)::int[]'); end if;
  if (tags_any is not null) then anyt = concat(' and ''',tags_any,''' && array(select tag_id from news_tags where news_id=n.id order by tag_id asc)::int[]'); end if;
  srt := case 
-  when sort = 'author' then ' u.name asc, u.lastname asc, n.id asc'
-  when sort = 'category' then ' c.name asc, n.date asc, n.id asc'
-  when sort = 'photos' then ' photo_count desc, n.id asc'
+  when sortby = 'author' then ' u.name asc, u.lastname asc, n.id asc'
+  when sortby = 'category' then ' c.name asc, n.date asc, n.id asc'
+  when sortby = 'photos' then ' photo_count desc, n.id asc'
   else ' n.date asc, n.id asc'
  end;
  return query execute 
@@ -144,7 +145,7 @@ begin
     u.lastname,
     c.id,
     c.name,
-    ((select (case when main_photo is null then 0 else 1 end) from news where id=n.id)+(select count(np.id) from news_photos as np where np.news_id=n.id)) as photo_count
+    ((select (case when main_photo is null then 0 else 1 end) from news where id=n.id)+(select count(np.id) from news_photos as np where np.news_id=n.id)) as photo_count    
    from news as n
    left join authors as a on n.author_id=a.id
    left join users as u on a.user_id=u.id

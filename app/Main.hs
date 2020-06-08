@@ -55,6 +55,7 @@ application c r rd = case pathInfo r of
   ["news"    , "deletecomment"] -> f News.deleteComment
   ["news"    , "getcomments"  ] -> f News.getComments
   ["news"    , "delete"       ] -> f News.delete
+  ["news"    , "get"          ] -> f News.get
   ["images"  , img            ] -> returnFile img rd
   _                             -> rd responseERR
   where f x = rIfJsonBody x c r rd
