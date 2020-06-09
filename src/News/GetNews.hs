@@ -49,6 +49,14 @@ data TempTag = TempTag
 
 instance FromRow TempTag
 
+data TempPhoto = TempPhoto
+    { p_n_id :: Int
+    , p_path :: String
+    }
+    deriving (Generic, Show)
+
+instance FromRow TempPhoto
+
 data Category = Category
     { category_id     :: Int
     , category_name   :: String
@@ -56,7 +64,31 @@ data Category = Category
     }
     deriving (Generic, Show)
 
-instance A.FromJSON Category
+instance A.ToJSON Category
+
+data Tag = Tag
+    { tag_id   :: Int
+    , tag_name :: String
+    }
+    deriving (Generic, Show)
+
+instance A.ToJSON Tag
+
+data News = News
+    { news_id              :: Int
+    , news_date            :: String
+    , news_name            :: String
+    , news_text            :: String
+    , news_main_photo      :: Maybe String
+    , news_author_name     :: String
+    , news_author_lastname :: String
+    , news_category        :: Category
+    , news_photos          :: [String]
+    , news_tags            :: [Tag]
+    }
+    deriving (Generic, Show)
+
+instance A.ToJSON News
 
 data Req = Req
     { created_at        :: Maybe String
@@ -96,7 +128,6 @@ get conn u = handleSqlErr $ do
       , offset
       , limit
       ) :: IO [TempNews]
-  -- print news
   tags <-
     query
       conn
@@ -104,11 +135,13 @@ get conn u = handleSqlErr $ do
     $ Only
     $ In
     $ map n_id news :: IO [TempTag]
-  print tags
-  cats <- query_ conn "select id,name,parent from categories;" :: IO [TempCat]
-  -- print cats
-  print $ map (\t -> buildCategories (n_category_id t) cats) news
-  return responseOK
+  cats   <- query_ conn "select id,name,parent from categories;" :: IO [TempCat]
+  photos <-
+    query conn "select news_id,photo from news_photos where news_id in ?;"
+    $ Only
+    $ In
+    $ map n_id news :: IO [TempPhoto]
+  return $ respJSON $ map (buildAnswer photos tags cats) news
  where
   offset = ((page u) - 1) * newsPerPage
   limit  = newsPerPage
@@ -121,13 +154,34 @@ intListToPGarray l = T.unpack t2
   t1 = T.intercalate "," $ map (T.pack . show) $ sort l
   t2 = T.concat ["{", t1, "}"]
 
-buildCategories :: Int -> [TempCat] -> Category
-buildCategories c cats =
+buildCategories :: [TempCat] -> Int -> Category
+buildCategories cats c =
   let tempc = head $ filter (\i -> c_id i == c) cats
-  in  Category
-        { category_id     = c_id tempc
-        , category_name   = c_name tempc
-        , category_parent = case c_parent tempc of
-                              Nothing -> Nothing
-                              Just i  -> Just $ buildCategories i cats
-        }
+  in  Category { category_id     = c_id tempc
+               , category_name   = c_name tempc
+               , category_parent = buildCategories cats <$> c_parent tempc
+               }
+
+buildTags :: [TempTag] -> Int -> [Tag]
+buildTags t i = mp
+ where
+  flt = filter (\x -> t_n_id x == i) t
+  mp  = map (\x -> Tag { tag_id = t_id x, tag_name = t_name x }) flt
+
+buildPhotos :: [TempPhoto] -> Int -> [String]
+buildPhotos p i = map p_path $ filter (\x -> p_n_id x == i) p
+
+buildAnswer :: [TempPhoto] -> [TempTag] -> [TempCat] -> TempNews -> News
+buildAnswer photos tags cats t = News
+  { news_id              = n_id t
+  , news_date            = show $ n_date t
+  , news_name            = n_name t
+  , news_text            = n_text t
+  , news_main_photo      = n_main_photo t
+  , news_author_name     = n_author_name t
+  , news_author_lastname = n_author_lastname t
+  , news_category        = buildCategories cats $ n_category_id t
+  , news_photos          = buildPhotos photos $ n_id t
+  , news_tags            = buildTags tags $ n_id t
+  }
+
