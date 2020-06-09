@@ -97,7 +97,6 @@ returns table(
  author_name varchar,
  author_lastname varchar,
  category_id int,
- category_name text,
  photo_count bigint) as $$
 declare
  at text  := '';
@@ -144,7 +143,6 @@ begin
     u.name,
     u.lastname,
     c.id,
-    c.name,
     ((select (case when main_photo is null then 0 else 1 end) from news where id=n.id)+(select count(np.id) from news_photos as np where np.news_id=n.id)) as photo_count    
    from news as n
    left join authors as a on n.author_id=a.id

@@ -16,7 +16,7 @@ import           GHC.Generics
 import           PG
 import           Types
 
-data News = News
+data TempNews = TempNews
     { n_id              :: Int
     , n_date            :: Date
     , n_name            :: String
@@ -25,12 +25,38 @@ data News = News
     , n_author_name     :: String
     , n_author_lastname :: String
     , n_category_id     :: Int
-    , n_category_name   :: String
     , n_photo_count     :: Int
     }
     deriving (Generic, Show)
 
-instance FromRow News
+instance FromRow TempNews
+
+data TempCat = TempCat
+    { c_id     :: Int
+    , c_name   :: String
+    , c_parent :: Maybe Int
+    }
+    deriving (Generic, Show)
+
+instance FromRow TempCat
+
+data TempTag = TempTag
+    { t_n_id :: Int
+    , t_id   :: Int
+    , t_name :: String
+    }
+    deriving (Generic, Show)
+
+instance FromRow TempTag
+
+data Category = Category
+    { category_id     :: Int
+    , category_name   :: String
+    , category_parent :: Maybe Category
+    }
+    deriving (Generic, Show)
+
+instance A.FromJSON Category
 
 data Req = Req
     { created_at        :: Maybe String
@@ -69,17 +95,19 @@ get conn u = handleSqlErr $ do
       , sort_by u
       , offset
       , limit
-      ) :: IO [News]
-  print news
-  print $ map n_id news
+      ) :: IO [TempNews]
+  -- print news
   tags <-
     query
       conn
       "select nt.news_id,nt.tag_id,t.name from news_tags as nt left join tags as t on t.id=nt.tag_id where nt.news_id in ?;"
     $ Only
     $ In
-    $ map n_id news :: IO [(Int, Int, String)]
+    $ map n_id news :: IO [TempTag]
   print tags
+  cats <- query_ conn "select id,name,parent from categories;" :: IO [TempCat]
+  -- print cats
+  print $ map (\t -> buildCategories (n_category_id t) cats) news
   return responseOK
  where
   offset = ((page u) - 1) * newsPerPage
@@ -92,3 +120,14 @@ intListToPGarray l = T.unpack t2
  where
   t1 = T.intercalate "," $ map (T.pack . show) $ sort l
   t2 = T.concat ["{", t1, "}"]
+
+buildCategories :: Int -> [TempCat] -> Category
+buildCategories c cats =
+  let tempc = head $ filter (\i -> c_id i == c) cats
+  in  Category
+        { category_id     = c_id tempc
+        , category_name   = c_name tempc
+        , category_parent = case c_parent tempc of
+                              Nothing -> Nothing
+                              Just i  -> Just $ buildCategories i cats
+        }
