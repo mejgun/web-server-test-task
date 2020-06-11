@@ -42,15 +42,17 @@ instance FromRow Draft where
       <*> field
       <*> field
       <*> field
-      <*> liftM2 makePhoto field field
-      <*> liftM2 makeTag   field field
+      <*> liftM2 (makeR Photo) field field
+      <*> liftM2 (makeR Tag)   field field
       <*> field
       <*> field
    where
-    makePhoto :: PGArray (Maybe Int) -> PGArray (Maybe String) -> [Photo]
-    makePhoto a b = map (\(x, y) -> Photo x y) $ zipPGarrays a b
-    makeTag :: PGArray (Maybe Int) -> PGArray (Maybe String) -> [Tag]
-    makeTag a b = map (\(x, y) -> Tag x y) $ zipPGarrays a b
+    makeR
+      :: (Int -> String -> a)
+      -> PGArray (Maybe Int)
+      -> PGArray (Maybe String)
+      -> [a]
+    makeR c a b = (map (\(x, y) -> c x y)) $ zipPGarrays a b
 
 data Photo = Photo
     { photo_id  :: Int
