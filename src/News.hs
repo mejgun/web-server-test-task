@@ -12,6 +12,7 @@ module News
   , module News.GetNewsComments
   , module News.DeleteNews
   , module News.GetNews
+  , module News.GetDrafts
   )
 where
 
@@ -23,6 +24,7 @@ import           News.DeleteNews
 import           News.DeleteNewsComment
 import           News.DeleteNewsPhoto
 import           News.DeleteNewsTag
+import           News.GetDrafts
 import           News.GetNews
 import           News.GetNewsComments
 import           News.PublishNews
