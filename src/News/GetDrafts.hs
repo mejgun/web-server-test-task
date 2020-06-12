@@ -9,7 +9,6 @@ where
 
 import           Control.Monad                  ( liftM2 )
 import qualified Data.Aeson                    as A
-import           Data.Maybe                     ( catMaybes )
 import           Database.PostgreSQL.Simple.FromRow
                                                 ( field
                                                 , fromRow
@@ -85,7 +84,7 @@ getDrafts conn u =
     $   respJSON
     <$> (query
           conn
-          "select n.id,n.date::text,n.name,n.text,n.main_photo,array_agg(np.id),array_agg(np.photo),array_agg(nt.tag_id),array_agg(t.name),n.category_id,c.name from news as n left join news_photos as np on n.id=np.news_id left join news_tags as nt on nt.news_id=n.id left join tags as t on t.id=nt.tag_id left join categories as c on c.id=n.category_id left join authors as a on n.author_id=a.id left join users as u on a.user_id=u.id where u.token=? group by n.id, c.name offset ? limit ?;"
+          "select n.id,n.date::text,n.name,n.text,n.main_photo,array_agg(np.id),array_agg(np.photo),array_agg(nt.tag_id),array_agg(t.name),n.category_id,c.name from news as n left join news_photos as np on n.id=np.news_id left join news_tags as nt on nt.news_id=n.id left join tags as t on t.id=nt.tag_id left join categories as c on c.id=n.category_id left join authors as a on n.author_id=a.id left join users as u on a.user_id=u.id where u.token=? and n.published=false group by n.id, c.name offset ? limit ?;"
           (token u, offset, limit) :: IO [Draft]
         )
  where
@@ -96,5 +95,4 @@ getDrafts conn u =
 zipPGarrays :: PGArray (Maybe a) -> PGArray (Maybe b) -> [(a, b)]
 zipPGarrays a1 a2 = zip (pgArrayToList a1) (pgArrayToList a2)
 
-pgArrayToList :: PGArray (Maybe a) -> [a]
-pgArrayToList p = catMaybes $ fromPGArray p
+

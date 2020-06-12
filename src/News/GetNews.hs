@@ -7,29 +7,17 @@ module News.GetNews
 where
 
 
+import           Control.Monad                  ( liftM )
 import qualified Data.Aeson                    as A
 import           Data.List                      ( sort )
 import qualified Data.Text                     as T
-import           Database.PostgreSQL.Simple.Time
-                                                ( Date )
+import           Database.PostgreSQL.Simple.FromRow
+                                                ( field
+                                                , fromRow
+                                                )
 import           GHC.Generics
 import           PG
 import           Types
-
-data TempNews = TempNews
-    { n_id              :: Int
-    , n_date            :: Date
-    , n_name            :: String
-    , n_text            :: String
-    , n_main_photo      :: Maybe String
-    , n_author_name     :: String
-    , n_author_lastname :: String
-    , n_category_id     :: Int
-    , n_photo_count     :: Int
-    }
-    deriving (Generic, Show)
-
-instance FromRow TempNews
 
 data TempCat = TempCat
     { c_id     :: Int
@@ -40,23 +28,6 @@ data TempCat = TempCat
 
 instance FromRow TempCat
 
-data TempTag = TempTag
-    { t_n_id :: Int
-    , t_id   :: Int
-    , t_name :: String
-    }
-    deriving (Generic, Show)
-
-instance FromRow TempTag
-
-data TempPhoto = TempPhoto
-    { p_n_id :: Int
-    , p_path :: String
-    }
-    deriving (Generic, Show)
-
-instance FromRow TempPhoto
-
 data Category = Category
     { category_id     :: Int
     , category_name   :: String
@@ -66,14 +37,6 @@ data Category = Category
 
 instance A.ToJSON Category
 
-data Tag = Tag
-    { tag_id   :: Int
-    , tag_name :: String
-    }
-    deriving (Generic, Show)
-
-instance A.ToJSON Tag
-
 data News = News
     { news_id              :: Int
     , news_date            :: String
@@ -82,14 +45,30 @@ data News = News
     , news_main_photo      :: Maybe String
     , news_author_name     :: String
     , news_author_lastname :: String
+    , news_category_id     :: Int
     , news_category        :: Category
     , news_photos          :: [String]
-    , news_tags            :: [Tag]
+    , news_tags            :: [String]
+    , news_photo_count     :: Int
     }
     deriving (Generic, Show)
 
 instance A.ToJSON News
-
+instance FromRow News where
+  fromRow =
+    News
+      <$> field
+      <*> field
+      <*> field
+      <*> field
+      <*> field
+      <*> field
+      <*> field
+      <*> field
+      <*> pure (Category 0 "" Nothing)
+      <*> liftM pgArrayToList field
+      <*> liftM pgArrayToList field
+      <*> field
 data Req = Req
     { created_at        :: Maybe String
     , created_before    :: Maybe String
@@ -127,21 +106,9 @@ get conn u = handleSqlErr $ do
       , sort_by u
       , offset
       , limit
-      ) :: IO [TempNews]
-  tags <-
-    query
-      conn
-      "select nt.news_id,nt.tag_id,t.name from news_tags as nt left join tags as t on t.id=nt.tag_id where nt.news_id in ?;"
-    $ Only
-    $ In
-    $ map n_id news :: IO [TempTag]
-  cats   <- query_ conn "select id,name,parent from categories;" :: IO [TempCat]
-  photos <-
-    query conn "select news_id,photo from news_photos where news_id in ?;"
-    $ Only
-    $ In
-    $ map n_id news :: IO [TempPhoto]
-  return $ respJSON $ map (buildAnswer photos tags cats) news
+      ) :: IO [News]
+  cats <- query_ conn "select id,name,parent from categories;" :: IO [TempCat]
+  return $ respJSON $ map (buildAnswer cats) news
  where
   offset = ((page u) - 1) * newsPerPage
   limit  = newsPerPage
@@ -154,6 +121,10 @@ intListToPGarray l = T.unpack t2
   t1 = T.intercalate "," $ map (T.pack . show) $ sort l
   t2 = T.concat ["{", t1, "}"]
 
+buildAnswer :: [TempCat] -> News -> News
+buildAnswer cats t =
+  t { news_category = buildCategories cats $ news_category_id t }
+
 buildCategories :: [TempCat] -> Int -> Category
 buildCategories cats c =
   let tempc = head $ filter (\i -> c_id i == c) cats
@@ -161,27 +132,3 @@ buildCategories cats c =
                , category_name   = c_name tempc
                , category_parent = buildCategories cats <$> c_parent tempc
                }
-
-buildTags :: [TempTag] -> Int -> [Tag]
-buildTags t i = mp
- where
-  flt = filter (\x -> t_n_id x == i) t
-  mp  = map (\x -> Tag { tag_id = t_id x, tag_name = t_name x }) flt
-
-buildPhotos :: [TempPhoto] -> Int -> [String]
-buildPhotos p i = map p_path $ filter (\x -> p_n_id x == i) p
-
-buildAnswer :: [TempPhoto] -> [TempTag] -> [TempCat] -> TempNews -> News
-buildAnswer photos tags cats t = News
-  { news_id              = n_id t
-  , news_date            = show $ n_date t
-  , news_name            = n_name t
-  , news_text            = n_text t
-  , news_main_photo      = n_main_photo t
-  , news_author_name     = n_author_name t
-  , news_author_lastname = n_author_lastname t
-  , news_category        = buildCategories cats $ n_category_id t
-  , news_photos          = buildPhotos photos $ n_id t
-  , news_tags            = buildTags tags $ n_id t
-  }
-

@@ -90,13 +90,15 @@ create or replace function getnews(
  lim int)
 returns table(
  id int,
- date date,
+ date text,
  name varchar,
  text text,
  main_photo varchar,
  author_name varchar,
  author_lastname varchar,
  category_id int,
+ photos varchar[],
+ tags text[],
  photo_count bigint) as $$
 declare
  at text  := '';
@@ -136,20 +138,23 @@ begin
  return query execute 
   'select 
     n.id,
-    n.date,
+    n.date::text,
     n.name,
     n.text,
     n.main_photo,
     u.name,
     u.lastname,
-    c.id,
-    ((select (case when main_photo is null then 0 else 1 end) from news where id=n.id)+(select count(np.id) from news_photos as np where np.news_id=n.id)) as photo_count    
+    c.id,    
+    array_agg(np.photo),
+    array_agg(t.name),
+    ((select (case when main_photo is null then 0 else 1 end) from news where id=n.id)+count(np.id)) as photo_count
    from news as n
    left join authors as a on n.author_id=a.id
    left join users as u on a.user_id=u.id
    left join categories as c on c.id=n.category_id
    left join news_tags as nt on nt.news_id=n.id
    left join tags as t on t.id=nt.tag_id
+   left join news_photos as np on np.news_id=n.id
    where n.published=true ' || at || bf || aft || ac || nc || tc || anc || cid || allt || anyt || '
    group by n.id, u.name,u.lastname,c.id
    order by ' || srt || '

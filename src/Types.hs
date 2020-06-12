@@ -21,6 +21,7 @@ module Types
   , rIfAuthor
   , rIfJsonBody
   , createImagesDir
+  , pgArrayToList
   )
 where
 
@@ -34,8 +35,11 @@ import           Data.Aeson                    as A
 import qualified Data.ByteString               as B
 import qualified Data.ByteString.Char8         as B8
                                                 ( putStrLn )
+import           Data.Maybe                     ( catMaybes )
 import qualified Data.Text                     as T
 import           Data.Text.Encoding             ( encodeUtf8 )
+import           Database.PostgreSQL.Simple.Types
+                                                ( PGArray(..) )
 import           Network.HTTP.Types             ( HeaderName
                                                 , status200
                                                 , status404
@@ -169,3 +173,6 @@ returnFile f rd = do
 createImagesDir :: IO ()
 createImagesDir = doesDirectoryExist imagesDir
   >>= \exist -> when (not exist) $ createDirectory imagesDir
+
+pgArrayToList :: PGArray (Maybe a) -> [a]
+pgArrayToList p = catMaybes $ fromPGArray p
