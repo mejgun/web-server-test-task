@@ -12,6 +12,7 @@ import           Network.Wai.Middleware.RequestLogger
 
 import qualified Authors
 import qualified Categories
+import qualified Comments
 import qualified News
 import           PG
 import qualified Tags
@@ -57,6 +58,7 @@ application c r rd = case pathInfo r of
   ["news"    , "delete"       ] -> f News.delete
   ["news"    , "get"          ] -> f News.get
   ["news"    , "getdrafts"    ] -> f News.getDrafts
+  ["comments", "add"          ] -> f Comments.add
   ["images"  , img            ] -> returnFile img rd
   _                             -> rd responseERR
   where f x = rIfJsonBody x c r rd
