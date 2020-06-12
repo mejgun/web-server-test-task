@@ -61,3 +61,4 @@ news/addcomment | news_id: int<br>text: string<br>token: string | User
 news/deletecomment | comment_id: int<br>token: string | Admin
 news/getcomments | news_id: int<br>page: int | All
 news/delete | news_id: int<br>token: int | Author
+news/getdrafts | token: string<br>page: int | Author

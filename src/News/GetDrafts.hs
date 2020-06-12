@@ -79,13 +79,19 @@ data Req = Req
 instance A.FromJSON Req
 
 getDrafts :: MyHandler Req
-getDrafts conn _ = handleSqlErr $ do
-  drafts <-
-    query_
-      conn
-      "select n.id,n.date::text,n.name,n.text,n.main_photo,array_agg(np.id),array_agg(np.photo),array_agg(nt.tag_id),array_agg(t.name),n.category_id,c.name from news as n left join news_photos as np on n.id=np.news_id left join news_tags as nt on nt.news_id=n.id left join tags as t on t.id=nt.tag_id left join categories as c on c.id=n.category_id group by n.id, c.name;" :: IO
-      [Draft]
-  return $ respJSON drafts
+getDrafts conn u =
+  rIfAuthor conn (token u)
+    $   handleSqlErr
+    $   respJSON
+    <$> (query
+          conn
+          "select n.id,n.date::text,n.name,n.text,n.main_photo,array_agg(np.id),array_agg(np.photo),array_agg(nt.tag_id),array_agg(t.name),n.category_id,c.name from news as n left join news_photos as np on n.id=np.news_id left join news_tags as nt on nt.news_id=n.id left join tags as t on t.id=nt.tag_id left join categories as c on c.id=n.category_id left join authors as a on n.author_id=a.id left join users as u on a.user_id=u.id where u.token=? group by n.id, c.name offset ? limit ?;"
+          (token u, offset, limit) :: IO [Draft]
+        )
+ where
+  offset = ((page u) - 1) * newsPerPage
+  limit  = newsPerPage
+
 
 zipPGarrays :: PGArray (Maybe a) -> PGArray (Maybe b) -> [(a, b)]
 zipPGarrays a1 a2 = zip (pgArrayToList a1) (pgArrayToList a2)
