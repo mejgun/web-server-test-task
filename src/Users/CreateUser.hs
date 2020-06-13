@@ -32,11 +32,11 @@ create :: MyHandler Req
 create conn u = case photo u of
   Nothing ->
     handleSqlErr
-      $  execute
-           conn
-           "insert into users (name,lastname,token,login,password) values(?,?,md5(random()::text),?,md5(?)) on conflict do nothing;"
-           (name u, lastname u, login u, password u)
-      >> return responseOK
+      $   execute
+            conn
+            "insert into users (name,lastname,token,login,password) values(?,?,md5(random()::text),?,md5(?)) on conflict do nothing;"
+            (name u, lastname u, login u, password u)
+      >>= rExecResult
   Just ph -> do
     let img = decodeLenient $ fromString ph
         ext = maybe ".jpg" ((++) "." . (map toLower)) (photo_type u)
@@ -46,4 +46,4 @@ create conn u = case photo u of
       (name u, lastname u, login u, password u, imagesDir, ext)
     case q of
       [Only imgFile] -> B.writeFile imgFile img >> return responseOK
-      _              -> return responseERR
+      _              -> return responseSQLERR

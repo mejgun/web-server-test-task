@@ -27,36 +27,38 @@ main = do
 
 application :: MyApp
 application c r rd = case pathInfo r of
-  ["user"    , "get"          ] -> f Users.get
-  ["user"    , "create"       ] -> f Users.create
-  ["user"    , "delete"       ] -> f Users.delete
-  ["user"    , "login"        ] -> f Users.log_in
-  ["author"  , "make"         ] -> f Authors.make
-  ["author"  , "edit"         ] -> f Authors.edit
-  ["author"  , "delete"       ] -> f Authors.delete
-  ["author"  , "get"          ] -> f Authors.get
-  ["category", "create"       ] -> f Categories.create
-  ["category", "edit"         ] -> f Categories.edit
-  ["category", "delete"       ] -> f Categories.delete
-  ["category", "get"          ] -> f Categories.get
-  ["tag"     , "create"       ] -> f Tags.create
-  ["tag"     , "edit"         ] -> f Tags.edit
-  ["tag"     , "delete"       ] -> f Tags.delete
-  ["tag"     , "get"          ] -> f Tags.get
-  ["news"    , "create"       ] -> f News.create
-  ["news"    , "update"       ] -> f News.update
-  ["news"    , "publish"      ] -> f News.release
-  ["news"    , "setmainphoto" ] -> f News.setMainPhoto
-  ["news"    , "addphoto"     ] -> f News.addPhoto
-  ["news"    , "deletephoto"  ] -> f News.deletePhoto
-  ["news"    , "addtag"       ] -> f News.addTag
-  ["news"    , "deletetag"    ] -> f News.deleteTag
-  ["news"    , "addcomment"   ] -> f News.addComment
-  ["news"    , "deletecomment"] -> f News.deleteComment
-  ["news"    , "getcomments"  ] -> f News.getComments
-  ["news"    , "delete"       ] -> f News.delete
-  ["news"    , "get"          ] -> f News.get
-  ["news"    , "getdrafts"    ] -> f News.getDrafts
+  ["user"    , "get"          ] -> norm Users.get
+  ["user"    , "create"       ] -> norm Users.create
+  ["user"    , "delete"       ] -> adm Users.delete
+  ["user"    , "login"        ] -> norm Users.log_in
+  ["author"  , "make"         ] -> adm Authors.make
+  ["author"  , "edit"         ] -> adm Authors.edit
+  ["author"  , "delete"       ] -> adm Authors.delete
+  ["author"  , "get"          ] -> adm Authors.get
+  ["category", "create"       ] -> adm Categories.create
+  ["category", "edit"         ] -> adm Categories.edit
+  ["category", "delete"       ] -> adm Categories.delete
+  ["category", "get"          ] -> norm Categories.get
+  ["tag"     , "create"       ] -> adm Tags.create
+  ["tag"     , "edit"         ] -> adm Tags.edit
+  ["tag"     , "delete"       ] -> adm Tags.delete
+  ["tag"     , "get"          ] -> norm Tags.get
+  ["news"    , "create"       ] -> norm News.create
+  ["news"    , "update"       ] -> norm News.update
+  ["news"    , "publish"      ] -> norm News.release
+  ["news"    , "setmainphoto" ] -> norm News.setMainPhoto
+  ["news"    , "addphoto"     ] -> norm News.addPhoto
+  ["news"    , "deletephoto"  ] -> norm News.deletePhoto
+  ["news"    , "addtag"       ] -> norm News.addTag
+  ["news"    , "deletetag"    ] -> norm News.deleteTag
+  ["news"    , "addcomment"   ] -> norm News.addComment
+  ["news"    , "deletecomment"] -> adm News.deleteComment
+  ["news"    , "getcomments"  ] -> norm News.getComments
+  ["news"    , "delete"       ] -> norm News.delete
+  ["news"    , "get"          ] -> norm News.get
+  ["news"    , "getdrafts"    ] -> norm News.getDrafts
   ["images"  , img            ] -> returnFile img rd
   _                             -> rd responseERR
-  where f x = rIfJsonBody x c r rd
+ where
+  norm x = normalHandler x c r rd
+  adm x = adminHandler x c r rd

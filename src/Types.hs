@@ -19,11 +19,12 @@ module Types
   , imagesDir
   , rIfAdmin
   , rIfAuthor
-  , rIfJsonBody
   , rExecResult
   , createImagesDir
   , pgArrayToList
   , calcOffset
+  , normalHandler
+  , adminHandler
   )
 where
 
@@ -138,11 +139,17 @@ handleSqlErr = handle $ checkSqlErr $ return responseSQLERR
 bodyToJSON :: A.FromJSON a => Request -> IO (Maybe a)
 bodyToJSON x = A.decode <$> lazyRequestBody x
 
-rIfJsonBody :: A.FromJSON a => MyHandler a -> MyApp
-rIfJsonBody x conn req respond = do
+rIfJsonBody :: A.FromJSON a => Response -> MyHandler a -> MyApp
+rIfJsonBody rs x conn req respond = do
   j <- bodyToJSON req
-  q <- maybe (return responseERR) (x conn) j
+  q <- maybe (return rs) (x conn) j
   respond q
+
+normalHandler :: A.FromJSON a => MyHandler a -> MyApp
+normalHandler = rIfJsonBody responseSQLERR
+
+adminHandler :: A.FromJSON a => MyHandler a -> MyApp
+adminHandler = rIfJsonBody responseERR
 
 rIfAdmin :: Connection -> String -> IO Response -> IO Response
 rIfAdmin c t r = responseIf isAdmin c t r responseERR
