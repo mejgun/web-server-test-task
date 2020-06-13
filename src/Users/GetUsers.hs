@@ -35,8 +35,8 @@ get conn u =
     $ respJSON
     <$> (query conn
                "select name,lastname,photo from users offset ? limit ?;"
-               [offset (page u), limit] :: IO [User]
+               [offset, limit] :: IO [User]
         )
  where
-  offset i = (i - 1) * usersPerPage
-  limit = usersPerPage
+  offset = calcOffset (page u) usersPerPage
+  limit  = usersPerPage

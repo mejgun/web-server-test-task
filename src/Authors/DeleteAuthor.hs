@@ -23,11 +23,11 @@ instance A.FromJSON Req
 delete :: MyHandler Req
 delete conn u =
   rIfAdmin conn (token u)
-    $  handleSqlErr
-    $  execute
-         conn
-         "delete from authors where user_id=(select id from users where login=?);"
-         [login u]
-    >> return responseOK
+    $   handleSqlErr
+    $   execute
+          conn
+          "delete from authors where user_id=(select id from users where login=?);"
+          [login u]
+    >>= rExecResult
 
 

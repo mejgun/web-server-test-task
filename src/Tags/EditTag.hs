@@ -25,6 +25,6 @@ instance A.FromJSON Req
 edit :: MyHandler Req
 edit conn u =
   rIfAdmin conn (token u)
-    $  handleSqlErr
-    $  execute conn "update tags set name=? where id=?;" (name u, tag_id u)
-    >> return responseOK
+    $   handleSqlErr
+    $   execute conn "update tags set name=? where id=?;" (name u, tag_id u)
+    >>= rExecResult

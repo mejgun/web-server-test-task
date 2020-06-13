@@ -41,6 +41,6 @@ getComments conn u =
           (news_id u, offset, limit) :: IO [Comment]
         )
  where
-  offset = commentsPerPage * (page u - 1)
+  offset = calcOffset (page u) commentsPerPage
   limit  = commentsPerPage
 

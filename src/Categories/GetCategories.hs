@@ -36,8 +36,8 @@ get conn u =
     $ respJSON
     <$> (query conn
                "select id,name,parent from categories offset ? limit ?;"
-               (offset (page u), limit) :: IO [Cat]
+               (offset, limit) :: IO [Cat]
         )
  where
-  offset i = (i - 1) * categoriesPerPage
-  limit = categoriesPerPage
+  offset = calcOffset (page u) categoriesPerPage
+  limit  = categoriesPerPage

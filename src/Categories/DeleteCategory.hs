@@ -24,6 +24,6 @@ instance A.FromJSON Req
 delete :: MyHandler Req
 delete conn u =
   rIfAdmin conn (token u)
-    $  handleSqlErr
-    $  execute conn "delete from categories where id=?;" [cat_id u]
-    >> return responseOK
+    $   handleSqlErr
+    $   execute conn "delete from categories where id=?;" [cat_id u]
+    >>= rExecResult

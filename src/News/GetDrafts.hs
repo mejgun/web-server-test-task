@@ -88,7 +88,7 @@ getDrafts conn u =
           (token u, offset, limit) :: IO [Draft]
         )
  where
-  offset = ((page u) - 1) * newsPerPage
+  offset = calcOffset (page u) newsPerPage
   limit  = newsPerPage
 
 

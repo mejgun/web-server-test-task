@@ -110,7 +110,7 @@ get conn u = handleSqlErr $ do
   cats <- query_ conn "select id,name,parent from categories;" :: IO [TempCat]
   return $ respJSON $ map (buildAnswer cats) news
  where
-  offset = ((page u) - 1) * newsPerPage
+  offset = calcOffset (page u) newsPerPage
   limit  = newsPerPage
   t_all  = intListToPGarray <$> tags_all u
   t_any  = intListToPGarray <$> tags_any u

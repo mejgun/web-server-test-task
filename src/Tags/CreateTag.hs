@@ -24,8 +24,8 @@ instance A.FromJSON Req
 create :: MyHandler Req
 create conn u =
   rIfAdmin conn (token u)
-    $  handleSqlErr
-    $  execute conn
-               "insert into tags (name) values(?) on conflict do nothing;"
-               [name u]
-    >> return responseOK
+    $   handleSqlErr
+    $   execute conn
+                "insert into tags (name) values(?) on conflict do nothing;"
+                [name u]
+    >>= rExecResult

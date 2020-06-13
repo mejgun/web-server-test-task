@@ -27,7 +27,7 @@ delete conn u = rIfAdmin conn (token u) $ handleSqlErr $ do
     query conn "delete from users where login=? returning photo;" [login u] :: IO
       [Maybe (Only String)]
   case q of
-    [Just (Only f)] -> removeFile f
-    _               -> return ()
-  return responseOK
+    [Just (Only f)] -> removeFile f >> return responseOK
+    [Nothing      ] -> return responseOK
+    _               -> return responseSQLERR
 

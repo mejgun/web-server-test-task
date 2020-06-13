@@ -24,14 +24,10 @@ data Req = Req
 instance A.FromJSON Req
 
 update :: MyHandler Req
-update conn u = handleSqlErr $ do
-  q <- execute
-    conn
-    "update news set name=?, category_id=?, text=? where id=? and author_id=(select id from authors where user_id=(select id from users where token=?));"
-    (name u, cat_id u, text u, news_id u, token u)
-  return $ case q of
-    1 -> responseOK
-    _ -> responseSQLERR
-
-
-
+update conn u =
+  handleSqlErr
+    $   execute
+          conn
+          "update news set name=?, category_id=?, text=? where id=? and author_id=(select id from authors where user_id=(select id from users where token=?));"
+          (name u, cat_id u, text u, news_id u, token u)
+    >>= rExecResult

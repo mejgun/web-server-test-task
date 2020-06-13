@@ -22,13 +22,13 @@ data Req = Req
 instance A.FromJSON Req
 
 deleteTag :: MyHandler Req
-deleteTag conn u = rIfAuthor conn (token u) $ handleSqlErr $ do
-  q <- execute
-    conn
-    "delete from news_tags where tag_id=? and news_id=(select id from news where id=? and author_id=(select id from authors where user_id=(select id from users where token=?)));"
-    (tag_id u, news_id u, token u)
-  return $ case q of
-    1 -> responseOK
-    _ -> responseSQLERR
+deleteTag conn u =
+  rIfAuthor conn (token u)
+    $   handleSqlErr
+    $   execute
+          conn
+          "delete from news_tags where tag_id=? and news_id=(select id from news where id=? and author_id=(select id from authors where user_id=(select id from users where token=?)));"
+          (tag_id u, news_id u, token u)
+    >>= rExecResult
 
 

@@ -25,9 +25,9 @@ instance A.FromJSON Req
 create :: MyHandler Req
 create conn u =
   rIfAdmin conn (token u)
-    $  handleSqlErr
-    $  execute
-         conn
-         "insert into categories (name,parent) values (?,(select id from categories where id=?)) on conflict do nothing;"
-         (name u, parent u)
-    >> return responseOK
+    $   handleSqlErr
+    $   execute
+          conn
+          "insert into categories (name,parent) values (?,(select id from categories where id=?)) on conflict do nothing;"
+          (name u, parent u)
+    >>= rExecResult

@@ -39,8 +39,8 @@ get conn u =
     <$> (query
           conn
           "select name,lastname,photo,descr from authors as a,users as u where a.user_id=u.id offset ? limit ?;"
-          [offset (page u), limit] :: IO [Author]
+          [offset, limit] :: IO [Author]
         )
  where
-  offset i = (i - 1) * usersPerPage
-  limit = authorsPerPage
+  offset = calcOffset (page u) usersPerPage
+  limit  = authorsPerPage

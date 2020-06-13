@@ -26,8 +26,8 @@ instance A.FromJSON Req
 edit :: MyHandler Req
 edit conn u =
   rIfAdmin conn (token u)
-    $  handleSqlErr
-    $  execute conn
-               "update categories set name=?, parent=? where id=?;"
-               (name u, parent u, cat_id u)
-    >> return responseOK
+    $   handleSqlErr
+    $   execute conn
+                "update categories set name=?, parent=? where id=?;"
+                (name u, parent u, cat_id u)
+    >>= rExecResult

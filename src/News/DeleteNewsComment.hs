@@ -21,8 +21,8 @@ data Req = Req
 instance A.FromJSON Req
 
 deleteComment :: MyHandler Req
-deleteComment conn u = rIfAdmin conn (token u) $ handleSqlErr $ do
-  q <- execute conn "delete from news_comments where id=?;" [comment_id u]
-  return $ case q of
-    1 -> responseOK
-    _ -> responseSQLERR
+deleteComment conn u =
+  rIfAdmin conn (token u)
+    $   handleSqlErr
+    $   execute conn "delete from news_comments where id=?;" [comment_id u]
+    >>= rExecResult

@@ -24,9 +24,9 @@ instance A.FromJSON Req
 edit :: MyHandler Req
 edit conn u =
   rIfAdmin conn (token u)
-    $  handleSqlErr
-    $  execute
-         conn
-         "update authors set descr=? where user_id = (select id from users where login=?);"
-         [descr u, login u]
-    >> return responseOK
+    $   handleSqlErr
+    $   execute
+          conn
+          "update authors set descr=? where user_id=(select id from users where login=?);"
+          [descr u, login u]
+    >>= rExecResult

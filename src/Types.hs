@@ -20,8 +20,10 @@ module Types
   , rIfAdmin
   , rIfAuthor
   , rIfJsonBody
+  , rExecResult
   , createImagesDir
   , pgArrayToList
+  , calcOffset
   )
 where
 
@@ -34,16 +36,20 @@ import           Control.Monad                  ( when )
 import           Data.Aeson                    as A
 import qualified Data.ByteString               as B
 import qualified Data.ByteString.Char8         as B8
-                                                ( putStrLn )
+                                                ( intercalate
+                                                , pack
+                                                , putStrLn
+                                                )
 import           Data.Maybe                     ( catMaybes )
 import qualified Data.Text                     as T
 import           Data.Text.Encoding             ( encodeUtf8 )
 import           Database.PostgreSQL.Simple.Types
                                                 ( PGArray(..) )
+import qualified GHC.Int                        ( Int64 )
 import           Network.HTTP.Types             ( HeaderName
                                                 , status200
+                                                , status400
                                                 , status404
-                                                , status409
                                                 )
 import           Network.Wai
 import           System.Directory               ( createDirectory
@@ -112,7 +118,7 @@ responseERR :: Response
 responseERR = responseBuilder status404 [] ""
 
 responseSQLERR :: Response
-responseSQLERR = responseBuilder status409 jsonCT err
+responseSQLERR = responseBuilder status400 jsonCT err
 
 respJSON :: (A.ToJSON a) => a -> Response
 respJSON j = responseBuilder status200 jsonCT $ fromLazyByteString $ A.encode j
@@ -126,7 +132,8 @@ handleSqlErr = handle $ checkSqlErr $ return responseSQLERR
   checkSqlErr :: IO Response -> SqlError -> IO Response
   checkSqlErr x e = printErr e >> x
   printErr :: SqlError -> IO ()
-  printErr (SqlError q w t e r) = print w >> mapM_ B8.putStrLn [q, e, r, t]
+  printErr (SqlError q w t e r) =
+    B8.putStrLn $ B8.intercalate " " [q, B8.pack (show w), e, r, t]
 
 bodyToJSON :: A.FromJSON a => Request -> IO (Maybe a)
 bodyToJSON x = A.decode <$> lazyRequestBody x
@@ -142,6 +149,11 @@ rIfAdmin c t r = responseIf isAdmin c t r responseERR
 
 rIfAuthor :: Connection -> String -> IO Response -> IO Response
 rIfAuthor c t r = responseIf isAuthor c t r responseSQLERR
+
+rExecResult :: GHC.Int.Int64 -> IO Response
+rExecResult i = return $ case i of
+  1 -> responseOK
+  _ -> responseSQLERR
 
 responseIf
   :: (Connection -> String -> IO Bool)
@@ -176,3 +188,6 @@ createImagesDir = doesDirectoryExist imagesDir
 
 pgArrayToList :: PGArray (Maybe a) -> [a]
 pgArrayToList p = catMaybes $ fromPGArray p
+
+calcOffset :: Int -> Int -> Int
+calcOffset page perpage = (page - 1) * perpage
