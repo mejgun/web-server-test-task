@@ -113,7 +113,7 @@ responseOK :: Response
 responseOK = responseBuilder status200 jsonCT ok
 
 err :: Builder
-err = fromByteString "{\"error\":\"error\"}"
+err = fromByteString "{\"error\":\"bad request\"}"
 
 responseERR :: Response
 responseERR = responseBuilder status404 [] ""

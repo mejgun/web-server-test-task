@@ -29,13 +29,12 @@ data Req = Req
 instance A.FromJSON Req
 
 create :: MyHandler Req
-create conn u = case photo u of
+create conn u = handleSqlErr $ case photo u of
   Nothing ->
-    handleSqlErr
-      $   execute
-            conn
-            "insert into users (name,lastname,token,login,password) values(?,?,md5(random()::text),?,md5(?)) on conflict do nothing;"
-            (name u, lastname u, login u, password u)
+    execute
+        conn
+        "insert into users (name,lastname,token,login,password) values(?,?,md5(random()::text),?,md5(?)) on conflict do nothing;"
+        (name u, lastname u, login u, password u)
       >>= rExecResult
   Just ph -> do
     let img = decodeLenient $ fromString ph
