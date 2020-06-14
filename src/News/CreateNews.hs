@@ -30,7 +30,7 @@ data Req = Req
 
 instance A.FromJSON Req
 
-create :: MyHandler Req
+create :: MyHandler Req NewsId
 create conn u = rIfAuthor conn (token u) $ handleSqlErr $ do
   q <-
     query
@@ -38,7 +38,7 @@ create conn u = rIfAuthor conn (token u) $ handleSqlErr $ do
       "insert into news (name,date,author_id,category_id,text) values (?,now(),(select id from authors where user_id=(select id from users where token=?)),?,?) returning id;"
       (name u, token u, cat_id u, text u) :: IO [NewsId]
   return $ case q of
-    [n] -> respJSON n
-    _   -> responseSQLERR
+    [n] -> OkJSON n
+    _   -> ErrorBadRequest
 
 

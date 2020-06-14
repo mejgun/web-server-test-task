@@ -3,11 +3,9 @@
 module Types
   ( MyApp
   , MyHandler
-  , responseOK
-  , responseERR
-  , responseSQLERR
-  , respJSON
+  , ResultResponse(..)
   , returnFile
+  , return404
   , jsonCT
   , handleSqlErr
   , usersPerPage
@@ -19,6 +17,7 @@ module Types
   , imagesDir
   , rIfAdmin
   , rIfAuthor
+  , rIfUserExist
   , rExecResult
   , createImagesDir
   , pgArrayToList
@@ -45,7 +44,9 @@ import           Data.Maybe                     ( catMaybes )
 import qualified Data.Text                     as T
 import           Data.Text.Encoding             ( encodeUtf8 )
 import           Database.PostgreSQL.Simple.Types
-                                                ( PGArray(..) )
+                                                ( PGArray(..)
+                                                , Query(..)
+                                                )
 import qualified GHC.Int                        ( Int64 )
 import           Network.HTTP.Types             ( HeaderName
                                                 , status200
@@ -66,7 +67,14 @@ type MyApp
   -> (Response -> IO ResponseReceived)
   -> IO ResponseReceived
 
-type MyHandler a = Connection -> a -> IO Response
+type MyHandler a b = Connection -> a -> IO (ResultResponse b)
+
+data ResultResponse a = Ok200
+    | OkJSON a
+    | Error404
+    | ErrorBadRequest
+    | ErrorNotAuthor
+    | ErrorUserNotExist
 
 usersPerPage :: Int
 usersPerPage = 10
@@ -89,48 +97,31 @@ newsPerPage = 10
 imagesDir :: String
 imagesDir = "images/"
 
-isAdmin :: Connection -> String -> IO Bool
-isAdmin conn token = do
-  p <- query conn "select admin from users where token = ? limit 1;" [token]
-  return $ case p of
-    [Only i] -> i
-    _        -> False
-
-isAuthor :: Connection -> String -> IO Bool
-isAuthor conn token = do
-  p <- query
-    conn
-    "select count(id)=1 from authors where user_id=(select id from users where token=?);"
-    [token]
-  return $ case p of
-    [Only i] -> i
-    _        -> False
+rIfDB
+  :: ToRow a
+  => Connection
+  -> Query
+  -> a
+  -> IO (ResultResponse b)
+  -> ResultResponse b
+  -> IO (ResultResponse b)
+rIfDB c q val r1 r2 = do
+  p <- query c q val :: IO [Only Bool]
+  case p of
+    [Only True] -> r1
+    _           -> return r2
 
 ok :: Builder
 ok = fromByteString "{\"ok\":\"ok\"}"
 
-responseOK :: Response
-responseOK = responseBuilder status200 jsonCT ok
-
-err :: Builder
-err = fromByteString "{\"error\":\"bad request\"}"
-
-responseERR :: Response
-responseERR = responseBuilder status404 [] ""
-
-responseSQLERR :: Response
-responseSQLERR = responseBuilder status400 jsonCT err
-
-respJSON :: (A.ToJSON a) => a -> Response
-respJSON j = responseBuilder status200 jsonCT $ fromLazyByteString $ A.encode j
-
 jsonCT :: [(HeaderName, B.ByteString)]
 jsonCT = [("Content-Type", "application/json")]
 
-handleSqlErr :: IO Response -> IO Response
-handleSqlErr = handle $ checkSqlErr $ return responseSQLERR
+handleSqlErr :: A.ToJSON a => IO (ResultResponse a) -> IO (ResultResponse a)
+handleSqlErr = handle $ checkSqlErr $ return ErrorBadRequest
  where
-  checkSqlErr :: IO Response -> SqlError -> IO Response
+  checkSqlErr
+    :: A.ToJSON a => IO (ResultResponse a) -> SqlError -> IO (ResultResponse a)
   checkSqlErr x e = printErr e >> x
   printErr :: SqlError -> IO ()
   printErr (SqlError q w t e r) =
@@ -139,39 +130,66 @@ handleSqlErr = handle $ checkSqlErr $ return responseSQLERR
 bodyToJSON :: A.FromJSON a => Request -> IO (Maybe a)
 bodyToJSON x = A.decode <$> lazyRequestBody x
 
-rIfJsonBody :: A.FromJSON a => Response -> MyHandler a -> MyApp
+rIfJsonBody
+  :: (FromJSON a, ToJSON b) => ResultResponse b -> MyHandler a b -> MyApp
 rIfJsonBody rs x conn req respond = do
   j <- bodyToJSON req
   q <- maybe (return rs) (x conn) j
-  respond q
+  respond $ resultToResponse q
 
-normalHandler :: A.FromJSON a => MyHandler a -> MyApp
-normalHandler = rIfJsonBody responseSQLERR
+normalHandler :: (A.FromJSON a, A.ToJSON b) => MyHandler a b -> MyApp
+normalHandler = rIfJsonBody ErrorBadRequest
 
-adminHandler :: A.FromJSON a => MyHandler a -> MyApp
-adminHandler = rIfJsonBody responseERR
+adminHandler :: (A.FromJSON a, A.ToJSON b) => MyHandler a b -> MyApp
+adminHandler = rIfJsonBody Error404
 
-rIfAdmin :: Connection -> String -> IO Response -> IO Response
-rIfAdmin c t r = responseIf isAdmin c t r responseERR
+resultToResponse :: A.ToJSON a => ResultResponse a -> Response
+resultToResponse r = case r of
+  Ok200 -> responseBuilder status200 jsonCT ok
+  OkJSON j ->
+    responseBuilder status200 jsonCT $ fromLazyByteString $ A.encode j
+  Error404          -> responseBuilder status404 [] ""
+  ErrorBadRequest   -> e "bad request"
+  ErrorNotAuthor    -> e "not a author"
+  ErrorUserNotExist -> e "user not exist"
+  where e x = responseBuilder status400 jsonCT $ toErr x
 
-rIfAuthor :: Connection -> String -> IO Response -> IO Response
-rIfAuthor c t r = responseIf isAuthor c t r responseSQLERR
+toErr :: String -> Builder
+toErr s = fromByteString $ B8.pack $ "{\"error\":\"" ++ s ++ "\"}"
 
-rExecResult :: GHC.Int.Int64 -> IO Response
+rIfAdmin
+  :: Connection -> String -> IO (ResultResponse a) -> IO (ResultResponse a)
+rIfAdmin conn token r = rIfDB
+  conn
+  (Query "select admin from users where token = ? limit 1;")
+  [token]
+  r
+  Error404
+
+rIfAuthor
+  :: Connection -> String -> IO (ResultResponse a) -> IO (ResultResponse a)
+rIfAuthor c token r = rIfDB
+  c
+  "select count(id)=1 from authors where user_id=(select id from users where token=?);"
+  [token]
+  r
+  ErrorNotAuthor
+
+rIfUserExist
+  :: Connection -> String -> IO (ResultResponse a) -> IO (ResultResponse a)
+rIfUserExist c login r = rIfDB c
+                               "select count(id)=1 from users where login=?;"
+                               [login]
+                               r
+                               ErrorUserNotExist
+
+rExecResult :: GHC.Int.Int64 -> IO (ResultResponse a)
 rExecResult i = return $ case i of
-  1 -> responseOK
-  _ -> responseSQLERR
+  1 -> Ok200
+  _ -> ErrorBadRequest
 
-responseIf
-  :: (Connection -> String -> IO Bool)
-  -> Connection
-  -> String
-  -> IO Response
-  -> Response
-  -> IO Response
-responseIf cond conn token r rElse = do
-  a <- cond conn token
-  if a then r else return rElse
+return404 :: (Response -> IO ResponseReceived) -> IO ResponseReceived
+return404 rd = rd $ responseBuilder status404 [] ""
 
 returnFile :: T.Text -> (Response -> IO ResponseReceived) -> IO ResponseReceived
 returnFile f rd = do
@@ -180,7 +198,7 @@ returnFile f rd = do
   rd $ case exist of
     True -> do
       responseFile status200 contentType file Nothing
-    _ -> responseERR
+    _ -> responseBuilder status404 [] ""
  where
   contentType :: [(HeaderName, B.ByteString)]
   contentType = case T.split (== '.') f of

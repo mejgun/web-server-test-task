@@ -20,7 +20,7 @@ data Req = Req
 
 instance A.FromJSON Req
 
-deleteComment :: MyHandler Req
+deleteComment :: MyHandler Req Bool
 deleteComment conn u =
   rIfAdmin conn (token u)
     $   handleSqlErr

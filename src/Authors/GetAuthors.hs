@@ -31,11 +31,11 @@ data Req = Req
 
 instance A.FromJSON Req
 
-get :: MyHandler Req
+get :: MyHandler Req [Author]
 get conn u =
   rIfAdmin conn (token u)
     $   handleSqlErr
-    $   respJSON
+    $   OkJSON
     <$> (query
           conn
           "select name,lastname,photo,descr from authors as a,users as u where a.user_id=u.id offset ? limit ?;"

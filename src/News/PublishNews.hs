@@ -21,7 +21,7 @@ data Req = Req
 
 instance A.FromJSON Req
 
-release :: MyHandler Req
+release :: MyHandler Req Int
 release conn u =
   handleSqlErr
     $   execute

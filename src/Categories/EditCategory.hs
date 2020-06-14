@@ -20,10 +20,9 @@ data Req = Req
     }
     deriving (Generic, Show)
 
-
 instance A.FromJSON Req
 
-edit :: MyHandler Req
+edit :: MyHandler Req Bool
 edit conn u =
   rIfAdmin conn (token u)
     $   handleSqlErr

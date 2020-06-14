@@ -28,11 +28,11 @@ data Token = Token
 instance FromRow Token
 instance A.ToJSON Token
 
-log_in :: MyHandler Req
+log_in :: MyHandler Req Token
 log_in conn u = handleSqlErr $ do
   t <-
     query conn
-          "select token from users where login = ? and password = md5(?);"
+          "select token from users where login=? and password=md5(?);"
           [login u, password u] :: IO [Token]
-  return $ if null t then responseERR else respJSON $ head t
+  return $ if null t then ErrorBadRequest else OkJSON $ head t
 

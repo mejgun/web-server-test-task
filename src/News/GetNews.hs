@@ -87,7 +87,7 @@ data Req = Req
 
 instance A.FromJSON Req
 
-get :: MyHandler Req
+get :: MyHandler Req [News]
 get conn u = handleSqlErr $ do
   news <-
     query
@@ -108,7 +108,7 @@ get conn u = handleSqlErr $ do
       , limit
       ) :: IO [News]
   cats <- query_ conn "select id,name,parent from categories;" :: IO [TempCat]
-  return $ respJSON $ map (buildAnswer cats) news
+  return $ OkJSON $ map (buildAnswer cats) news
  where
   offset = calcOffset (page u) newsPerPage
   limit  = newsPerPage

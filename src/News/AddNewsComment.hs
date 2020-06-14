@@ -21,7 +21,7 @@ data Req = Req
 
 instance A.FromJSON Req
 
-addComment :: MyHandler Req
+addComment :: MyHandler Req Bool
 addComment conn u =
   handleSqlErr
     $   execute

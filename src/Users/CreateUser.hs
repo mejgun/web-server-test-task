@@ -28,7 +28,7 @@ data Req = Req
 
 instance A.FromJSON Req
 
-create :: MyHandler Req
+create :: MyHandler Req Bool
 create conn u = handleSqlErr $ case photo u of
   Nothing ->
     execute
@@ -44,5 +44,5 @@ create conn u = handleSqlErr $ case photo u of
       "insert into users (name,lastname,token,login,password,photo) values(?,?,md5(random()::text),?,md5(?),concat(?,md5(random()::text),?)) on conflict do nothing returning photo;"
       (name u, lastname u, login u, password u, imagesDir, ext)
     case q of
-      [Only imgFile] -> B.writeFile imgFile img >> return responseOK
-      _              -> return responseSQLERR
+      [Only imgFile] -> B.writeFile imgFile img >> return Ok200
+      _              -> return ErrorBadRequest

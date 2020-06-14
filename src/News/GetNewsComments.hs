@@ -31,10 +31,10 @@ data Req = Req
 
 instance A.FromJSON Req
 
-getComments :: MyHandler Req
+getComments :: MyHandler Req [Comment]
 getComments conn u =
   handleSqlErr
-    $   respJSON
+    $   OkJSON
     <$> (query
           conn
           "select c.id,u.name,u.lastname,c.text from news_comments as c, users as u, news as n where c.user_id=u.id and news_id=? and n.id=c.news_id and n.published=true offset ? limit ?;"

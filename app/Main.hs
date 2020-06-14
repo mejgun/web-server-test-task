@@ -58,7 +58,7 @@ application c r rd = case pathInfo r of
   ["news"    , "get"          ] -> norm News.get
   ["news"    , "getdrafts"    ] -> norm News.getDrafts
   ["images"  , img            ] -> returnFile img rd
-  _                             -> rd responseERR
+  _                             -> return404 rd
  where
   norm x = normalHandler x c r rd
   adm x = adminHandler x c r rd

@@ -23,7 +23,7 @@ data Req = Req
 
 instance A.FromJSON Req
 
-deletePhoto :: MyHandler Req
+deletePhoto :: MyHandler Req Bool
 deletePhoto conn u = handleSqlErr $ do
   p <-
     query
@@ -31,5 +31,5 @@ deletePhoto conn u = handleSqlErr $ do
       "delete from news_photos where id=? and news_id=(select id from news where id=? and author_id=(select id from authors where user_id=(select id from users where token=?))) returning photo;"
       (photo_id u, news_id u, token u) :: IO [Maybe (Only String)]
   case p of
-    [Just (Only f)] -> removeFile f >> return responseOK
-    _               -> return responseSQLERR
+    [Just (Only f)] -> removeFile f >> return Ok200
+    _               -> return ErrorBadRequest

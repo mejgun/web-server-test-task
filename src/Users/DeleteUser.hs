@@ -21,13 +21,14 @@ data Req = Req
 
 instance A.FromJSON Req
 
-delete :: MyHandler Req
-delete conn u = rIfAdmin conn (token u) $ handleSqlErr $ do
-  q <-
-    query conn "delete from users where login=? returning photo;" [login u] :: IO
-      [Maybe (Only String)]
-  case q of
-    [Just (Only f)] -> removeFile f >> return responseOK
-    [Nothing      ] -> return responseOK
-    _               -> return responseSQLERR
+delete :: MyHandler Req Bool
+delete conn u =
+  rIfAdmin conn (token u) $ rIfUserExist conn (login u) $ handleSqlErr $ do
+    q <-
+      query conn "delete from users where login=? returning photo;" [login u] :: IO
+        [Maybe (Only String)]
+    case q of
+      [Just (Only f)] -> removeFile f >> return Ok200
+      [Nothing      ] -> return Ok200
+      _               -> return ErrorBadRequest
 

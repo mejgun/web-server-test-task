@@ -21,7 +21,7 @@ data Req = Req
 
 instance A.FromJSON Req
 
-deleteTag :: MyHandler Req
+deleteTag :: MyHandler Req Bool
 deleteTag conn u =
   rIfAuthor conn (token u)
     $   handleSqlErr

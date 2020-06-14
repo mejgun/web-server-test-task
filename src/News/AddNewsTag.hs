@@ -21,7 +21,7 @@ data Req = Req
 
 instance A.FromJSON Req
 
-addTag :: MyHandler Req
+addTag :: MyHandler Req Bool
 addTag conn u =
   rIfAuthor conn (token u)
     $   handleSqlErr

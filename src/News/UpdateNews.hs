@@ -23,7 +23,7 @@ data Req = Req
 
 instance A.FromJSON Req
 
-update :: MyHandler Req
+update :: MyHandler Req Bool
 update conn u =
   handleSqlErr
     $   execute

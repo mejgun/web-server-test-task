@@ -29,10 +29,10 @@ data Req = Req
 
 instance A.FromJSON Req
 
-get :: MyHandler Req
+get :: MyHandler Req [User]
 get conn u =
   handleSqlErr
-    $ respJSON
+    $ OkJSON
     <$> (query conn
                "select name,lastname,photo from users offset ? limit ?;"
                [offset, limit] :: IO [User]
