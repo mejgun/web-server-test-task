@@ -24,6 +24,7 @@ instance A.FromJSON Req
 edit :: MyHandler Req Bool
 edit conn u =
   rIfAdmin conn (token u)
+    $   rIfAuthorExist conn (login u)
     $   handleSqlErr
     $   execute
           conn

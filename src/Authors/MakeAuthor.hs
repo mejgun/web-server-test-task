@@ -24,9 +24,10 @@ instance A.FromJSON Req
 make :: MyHandler Req Bool
 make conn u =
   rIfAdmin conn (token u)
+    $   rIfUserExist conn (login u)
     $   handleSqlErr
     $   execute
           conn
-          "insert into authors (user_id,descr) values ((select id from users where login=?),?) on conflict do nothing;"
-          [login u, descr u]
+          "insert into authors (user_id,descr) values ((select id from users where login=?),?) on conflict (user_id) do update set descr=?;"
+          [login u, descr u, descr u]
     >>= rExecResult

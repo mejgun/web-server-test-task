@@ -6,7 +6,6 @@ module Types
   , ResultResponse(..)
   , returnFile
   , return404
-  , jsonCT
   , handleSqlErr
   , usersPerPage
   , authorsPerPage
@@ -18,7 +17,10 @@ module Types
   , rIfAdmin
   , rIfAuthor
   , rIfUserExist
+  , rIfUserNotExist
+  , rIfAuthorExist
   , rExecResult
+  , rIfPage
   , createImagesDir
   , pgArrayToList
   , calcOffset
@@ -75,6 +77,9 @@ data ResultResponse a = Ok200
     | ErrorBadRequest
     | ErrorNotAuthor
     | ErrorUserNotExist
+    | ErrorUserExist
+    | ErrorBadPage
+    | ErrorAuthorNotExist
 
 usersPerPage :: Int
 usersPerPage = 10
@@ -97,6 +102,54 @@ newsPerPage = 10
 imagesDir :: String
 imagesDir = "images/"
 
+handleSqlErr :: A.ToJSON a => IO (ResultResponse a) -> IO (ResultResponse a)
+handleSqlErr = handle $ checkSqlErr $ return ErrorBadRequest
+ where
+  checkSqlErr
+    :: A.ToJSON a => IO (ResultResponse a) -> SqlError -> IO (ResultResponse a)
+  checkSqlErr x e = printErr e >> x
+  printErr :: SqlError -> IO ()
+  printErr (SqlError q w t e r) =
+    B8.putStrLn $ B8.intercalate " " [q, B8.pack (show w), e, r, t]
+
+rIfJsonBody
+  :: (FromJSON a, ToJSON b) => ResultResponse b -> MyHandler a b -> MyApp
+rIfJsonBody rs x conn req respond = do
+  j <- bodyToJSON req
+  q <- maybe (return rs) (x conn) j
+  respond $ resultToResponse q
+ where
+  bodyToJSON :: A.FromJSON a => Request -> IO (Maybe a)
+  bodyToJSON j = A.decode <$> lazyRequestBody j
+
+normalHandler :: (A.FromJSON a, A.ToJSON b) => MyHandler a b -> MyApp
+normalHandler = rIfJsonBody ErrorBadRequest
+
+adminHandler :: (A.FromJSON a, A.ToJSON b) => MyHandler a b -> MyApp
+adminHandler = rIfJsonBody Error404
+
+resultToResponse :: A.ToJSON a => ResultResponse a -> Response
+resultToResponse r = case r of
+  Ok200 -> responseBuilder status200 jsonCT ok
+  OkJSON j ->
+    responseBuilder status200 jsonCT $ fromLazyByteString $ A.encode j
+  Error404            -> responseBuilder status404 [] ""
+  ErrorBadRequest     -> e "bad request"
+  ErrorNotAuthor      -> e "not a author"
+  ErrorUserNotExist   -> e "user not exist"
+  ErrorUserExist      -> e "user already exist"
+  ErrorBadPage        -> e "bad page"
+  ErrorAuthorNotExist -> e "author not exist"
+ where
+  ok :: Builder
+  ok = fromByteString "{\"ok\":\"ok\"}"
+  e :: String -> Response
+  e x = responseBuilder status400 jsonCT $ toErr x
+  jsonCT :: [(HeaderName, B.ByteString)]
+  jsonCT = [("Content-Type", "application/json")]
+  toErr :: String -> Builder
+  toErr s = fromByteString $ B8.pack $ "{\"error\":\"" ++ s ++ "\"}"
+
 rIfDB
   :: ToRow a
   => Connection
@@ -110,52 +163,6 @@ rIfDB c q val r1 r2 = do
   case p of
     [Only True] -> r1
     _           -> return r2
-
-ok :: Builder
-ok = fromByteString "{\"ok\":\"ok\"}"
-
-jsonCT :: [(HeaderName, B.ByteString)]
-jsonCT = [("Content-Type", "application/json")]
-
-handleSqlErr :: A.ToJSON a => IO (ResultResponse a) -> IO (ResultResponse a)
-handleSqlErr = handle $ checkSqlErr $ return ErrorBadRequest
- where
-  checkSqlErr
-    :: A.ToJSON a => IO (ResultResponse a) -> SqlError -> IO (ResultResponse a)
-  checkSqlErr x e = printErr e >> x
-  printErr :: SqlError -> IO ()
-  printErr (SqlError q w t e r) =
-    B8.putStrLn $ B8.intercalate " " [q, B8.pack (show w), e, r, t]
-
-bodyToJSON :: A.FromJSON a => Request -> IO (Maybe a)
-bodyToJSON x = A.decode <$> lazyRequestBody x
-
-rIfJsonBody
-  :: (FromJSON a, ToJSON b) => ResultResponse b -> MyHandler a b -> MyApp
-rIfJsonBody rs x conn req respond = do
-  j <- bodyToJSON req
-  q <- maybe (return rs) (x conn) j
-  respond $ resultToResponse q
-
-normalHandler :: (A.FromJSON a, A.ToJSON b) => MyHandler a b -> MyApp
-normalHandler = rIfJsonBody ErrorBadRequest
-
-adminHandler :: (A.FromJSON a, A.ToJSON b) => MyHandler a b -> MyApp
-adminHandler = rIfJsonBody Error404
-
-resultToResponse :: A.ToJSON a => ResultResponse a -> Response
-resultToResponse r = case r of
-  Ok200 -> responseBuilder status200 jsonCT ok
-  OkJSON j ->
-    responseBuilder status200 jsonCT $ fromLazyByteString $ A.encode j
-  Error404          -> responseBuilder status404 [] ""
-  ErrorBadRequest   -> e "bad request"
-  ErrorNotAuthor    -> e "not a author"
-  ErrorUserNotExist -> e "user not exist"
-  where e x = responseBuilder status400 jsonCT $ toErr x
-
-toErr :: String -> Builder
-toErr s = fromByteString $ B8.pack $ "{\"error\":\"" ++ s ++ "\"}"
 
 rIfAdmin
   :: Connection -> String -> IO (ResultResponse a) -> IO (ResultResponse a)
@@ -182,6 +189,27 @@ rIfUserExist c login r = rIfDB c
                                [login]
                                r
                                ErrorUserNotExist
+
+rIfUserNotExist
+  :: Connection -> String -> IO (ResultResponse a) -> IO (ResultResponse a)
+rIfUserNotExist c login r = rIfDB
+  c
+  "select count(id)=0 from users where login=?;"
+  [login]
+  r
+  ErrorUserExist
+
+rIfAuthorExist
+  :: Connection -> String -> IO (ResultResponse a) -> IO (ResultResponse a)
+rIfAuthorExist c login r = rIfDB
+  c
+  "select count(id)=1 from authors where user_id=(select id from users where login=?);"
+  [login]
+  r
+  ErrorAuthorNotExist
+
+rIfPage :: Int -> IO (ResultResponse a) -> IO (ResultResponse a)
+rIfPage p r = if p > 0 then r else return ErrorBadPage
 
 rExecResult :: GHC.Int.Int64 -> IO (ResultResponse a)
 rExecResult i = return $ case i of
