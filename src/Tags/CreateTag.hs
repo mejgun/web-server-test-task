@@ -22,6 +22,7 @@ instance A.FromJSON Req
 create :: MyHandler Req Bool
 create conn u =
   rIfAdmin conn (token u)
+    $   rIfTagNotExist conn (name u)
     $   handleSqlErr
     $   execute conn
                 "insert into tags (name) values(?) on conflict do nothing;"

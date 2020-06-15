@@ -22,6 +22,7 @@ instance A.FromJSON Req
 delete :: MyHandler Req Bool
 delete conn u =
   rIfAdmin conn (token u)
+    $   rIfTagExist conn (tag_id u)
     $   handleSqlErr
     $   execute conn "delete from tags where id=?;" [tag_id u]
     >>= rExecResult

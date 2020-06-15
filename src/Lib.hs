@@ -22,6 +22,8 @@ module Lib
   , rExecResult
   , rIfValidPage
   , rIfCategoryExist
+  , rIfTagNotExist
+  , rIfTagExist
   , createImagesDir
   , pgArrayToList
   , calcOffset
@@ -80,10 +82,12 @@ data ResultResponse a = Ok200
     | ErrorBadRequest
     | ErrorNotAuthor
     | ErrorUserNotExist
-    | ErrorUserExist
+    | ErrorUserAlreadyExist
     | ErrorBadPage
     | ErrorAuthorNotExist
     | ErrorCategoryNotExist
+    | ErrorTagAlreadyExist
+    | ErrorTagNotExist
     deriving Show
 
 -- constants
@@ -195,20 +199,21 @@ rIfAuthor c token r = rIfDB
 
 rIfUserExist
   :: Connection -> String -> IO (ResultResponse a) -> IO (ResultResponse a)
-rIfUserExist c login r = rIfDB c
-                               "select count(id)=1 from users where login=?;"
-                               [login]
-                               r
-                               ErrorUserNotExist
+rIfUserExist c login r = rIfUser 0 c login r ErrorUserNotExist
 
 rIfUserNotExist
   :: Connection -> String -> IO (ResultResponse a) -> IO (ResultResponse a)
-rIfUserNotExist c login r = rIfDB
-  c
-  "select count(id)=0 from users where login=?;"
-  [login]
-  r
-  ErrorUserExist
+rIfUserNotExist c login r = rIfUser 0 c login r ErrorUserAlreadyExist
+
+rIfUser
+  :: Int
+  -> Connection
+  -> String
+  -> IO (ResultResponse a)
+  -> ResultResponse a
+  -> IO (ResultResponse a)
+rIfUser cond c login r rElse =
+  rIfDB c "select count(id)=? from users where login=?;" (cond, login) r rElse
 
 rIfAuthorExist
   :: Connection -> String -> IO (ResultResponse a) -> IO (ResultResponse a)
@@ -227,6 +232,20 @@ rIfCategoryExist c cat r = rIfDB
   [cat]
   r
   ErrorCategoryNotExist
+
+rIfTagNotExist
+  :: Connection -> String -> IO (ResultResponse a) -> IO (ResultResponse a)
+rIfTagNotExist c tag r = rIfDB c
+                               "select count(id)=0 from tags where name=?;"
+                               [tag]
+                               r
+                               ErrorTagAlreadyExist
+
+rIfTagExist
+  :: Connection -> Int -> IO (ResultResponse a) -> IO (ResultResponse a)
+rIfTagExist c tag_id r =
+  rIfDB c "select count(id)=1 from tags where id=?;" [tag_id] r ErrorTagNotExist
+
 
 rIfValidPage :: Int -> IO (ResultResponse a) -> IO (ResultResponse a)
 rIfValidPage p r = if p > 0 then r else return ErrorBadPage
