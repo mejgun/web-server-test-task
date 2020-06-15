@@ -29,4 +29,3 @@ delete conn u =
           "delete from authors where user_id=(select id from users where login=?);"
           [login u]
     >>= rExecResult
-

@@ -30,7 +30,8 @@ instance A.FromJSON Req
 
 get :: MyHandler Req [Cat]
 get conn u =
-  handleSqlErr
+  rIfValidPage (page u)
+    $ handleSqlErr
     $ OkJSON
     <$> (query conn
                "select id,name,parent from categories offset ? limit ?;"

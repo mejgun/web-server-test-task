@@ -30,4 +30,3 @@ delete conn u =
       [Just (Only f)] -> removeFile f >> return Ok200
       [Nothing      ] -> return Ok200
       _               -> return ErrorBadRequest
-

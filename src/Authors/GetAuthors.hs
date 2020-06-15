@@ -33,7 +33,7 @@ instance A.FromJSON Req
 get :: MyHandler Req [Author]
 get conn u =
   rIfAdmin conn (token u)
-    $   rIfPage (page u)
+    $   rIfValidPage (page u)
     $   handleSqlErr
     $   OkJSON
     <$> (query

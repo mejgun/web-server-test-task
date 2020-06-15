@@ -39,4 +39,3 @@ create conn u = rIfAuthor conn (token u) $ handleSqlErr $ do
   return $ case q of
     [n] -> OkJSON n
     _   -> ErrorBadRequest
-

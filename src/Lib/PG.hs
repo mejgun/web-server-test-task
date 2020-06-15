@@ -1,4 +1,4 @@
-module PG
+module Lib.PG
   ( pgconnect
   , module Database.PostgreSQL.Simple
   )

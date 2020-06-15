@@ -34,4 +34,3 @@ log_in conn u = handleSqlErr $ do
           "select token from users where login=? and password=md5(?);"
           [login u, password u] :: IO [Token]
   return $ if null t then ErrorBadRequest else OkJSON $ head t
-

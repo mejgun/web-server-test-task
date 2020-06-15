@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-
+import           PG
 
 import           Database.PostgreSQL.Simple.Types
                                                 ( Query(..) )

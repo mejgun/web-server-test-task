@@ -42,4 +42,3 @@ getComments conn u =
  where
   offset = calcOffset (page u) commentsPerPage
   limit  = commentsPerPage
-

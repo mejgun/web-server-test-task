@@ -20,13 +20,14 @@ module Lib
   , rIfUserNotExist
   , rIfAuthorExist
   , rExecResult
-  , rIfPage
+  , rIfValidPage
+  , rIfCategoryExist
   , createImagesDir
   , pgArrayToList
   , calcOffset
   , normalHandler
   , adminHandler
-  , module PG
+  , module Lib.PG
   )
 where
 
@@ -51,13 +52,13 @@ import           Database.PostgreSQL.Simple.Types
                                                 , Query(..)
                                                 )
 import qualified GHC.Int                        ( Int64 )
+import           Lib.PG
 import           Network.HTTP.Types             ( HeaderName
                                                 , status200
                                                 , status400
                                                 , status404
                                                 )
 import           Network.Wai
-import           PG
 import           System.Directory               ( createDirectory
                                                 , doesDirectoryExist
                                                 , doesFileExist
@@ -82,6 +83,8 @@ data ResultResponse a = Ok200
     | ErrorUserExist
     | ErrorBadPage
     | ErrorAuthorNotExist
+    | ErrorCategoryNotExist
+    deriving Show
 
 -- constants
 
@@ -120,7 +123,10 @@ handleSqlErr = handle $ checkSqlErr $ return ErrorBadRequest
     B8.putStrLn $ B8.intercalate " " [q, B8.pack (show w), e, r, t]
 
 rIfJsonBody
-  :: (FromJSON a, ToJSON b) => ResultResponse b -> MyHandler a b -> MyApp
+  :: (FromJSON a, ToJSON b, Show b)
+  => ResultResponse b
+  -> MyHandler a b
+  -> MyApp
 rIfJsonBody rs x conn req respond = do
   j <- bodyToJSON req
   q <- maybe (return rs) (x conn) j
@@ -129,30 +135,25 @@ rIfJsonBody rs x conn req respond = do
   bodyToJSON :: A.FromJSON a => Request -> IO (Maybe a)
   bodyToJSON j = A.decode <$> lazyRequestBody j
 
-normalHandler :: (A.FromJSON a, A.ToJSON b) => MyHandler a b -> MyApp
+normalHandler :: (A.FromJSON a, A.ToJSON b, Show b) => MyHandler a b -> MyApp
 normalHandler = rIfJsonBody ErrorBadRequest
 
-adminHandler :: (A.FromJSON a, A.ToJSON b) => MyHandler a b -> MyApp
+adminHandler :: (A.FromJSON a, A.ToJSON b, Show b) => MyHandler a b -> MyApp
 adminHandler = rIfJsonBody Error404
 
-resultToResponse :: A.ToJSON a => ResultResponse a -> Response
+resultToResponse :: (A.ToJSON a, Show a) => ResultResponse a -> Response
 resultToResponse r = case r of
   Ok200 -> responseBuilder status200 jsonCT ok
   OkJSON j ->
     responseBuilder status200 jsonCT $ fromLazyByteString $ A.encode j
-  Error404            -> responseBuilder status404 [] ""
-  ErrorBadRequest     -> e "bad request"
-  ErrorNotAuthor      -> e "not a author"
-  ErrorUserNotExist   -> e "user not exist"
-  ErrorUserExist      -> e "user already exist"
-  ErrorBadPage        -> e "bad page"
-  ErrorAuthorNotExist -> e "author not exist"
+  Error404 -> responseBuilder status404 [] ""
+  p        -> e p
  where
   ok :: Builder
   ok = fromByteString "{\"ok\":\"ok\"}"
 
-  e :: String -> Response
-  e x = responseBuilder status400 jsonCT $ toErr x
+  e :: Show a => ResultResponse a -> Response
+  e = responseBuilder status400 jsonCT . toErr . show
 
   jsonCT :: [(HeaderName, B.ByteString)]
   jsonCT = [("Content-Type", "application/json")]
@@ -218,8 +219,17 @@ rIfAuthorExist c login r = rIfDB
   r
   ErrorAuthorNotExist
 
-rIfPage :: Int -> IO (ResultResponse a) -> IO (ResultResponse a)
-rIfPage p r = if p > 0 then r else return ErrorBadPage
+rIfCategoryExist
+  :: Connection -> Int -> IO (ResultResponse a) -> IO (ResultResponse a)
+rIfCategoryExist c cat r = rIfDB
+  c
+  "select count(id)=1 from categories where id=?;"
+  [cat]
+  r
+  ErrorCategoryNotExist
+
+rIfValidPage :: Int -> IO (ResultResponse a) -> IO (ResultResponse a)
+rIfValidPage p r = if p > 0 then r else return ErrorBadPage
 
 rExecResult :: GHC.Int.Int64 -> IO (ResultResponse a)
 rExecResult i = return $ case i of

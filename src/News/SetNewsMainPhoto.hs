@@ -45,4 +45,3 @@ setMainPhoto conn u = handleSqlErr $ do
   case q of
     [Only imgFile] -> B.writeFile imgFile img >> return Ok200
     _              -> return Error404
-

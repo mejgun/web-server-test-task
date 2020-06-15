@@ -37,4 +37,3 @@ get conn u =
  where
   offset = calcOffset (page u) tagsPerPage
   limit  = tagsPerPage
-

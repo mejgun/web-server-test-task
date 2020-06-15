@@ -91,4 +91,3 @@ getDrafts conn u =
 
 zipPGarrays :: PGArray (Maybe a) -> PGArray (Maybe b) -> [(a, b)]
 zipPGarrays a1 a2 = zip (pgArrayToList a1) (pgArrayToList a2)
-
