@@ -10,8 +10,7 @@ import qualified Data.Aeson                    as A
 import           GHC.Generics
 import           System.Directory               ( removeFile )
 
-import           PG
-import           Types
+import           Lib
 
 data Req = Req
     { login :: String

@@ -9,8 +9,7 @@ where
 import qualified Data.Aeson                    as A
 import           GHC.Generics
 
-import           PG
-import           Types
+import           Lib
 
 data Req = Req
     { cat_id :: Int

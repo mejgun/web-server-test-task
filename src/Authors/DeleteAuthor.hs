@@ -9,8 +9,7 @@ where
 import qualified Data.Aeson                    as A
 import           GHC.Generics
 
-import           PG
-import           Types
+import           Lib
 
 data Req = Req
     { login :: String
@@ -30,5 +29,4 @@ delete conn u =
           "delete from authors where user_id=(select id from users where login=?);"
           [login u]
     >>= rExecResult
-
 

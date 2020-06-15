@@ -9,8 +9,7 @@ where
 import qualified Data.Aeson                    as A
 import           GHC.Generics
 
-import           PG
-import           Types
+import           Lib
 
 data NewsId = NewsId
     { news_id :: Int
@@ -40,5 +39,4 @@ create conn u = rIfAuthor conn (token u) $ handleSqlErr $ do
   return $ case q of
     [n] -> OkJSON n
     _   -> ErrorBadRequest
-
 

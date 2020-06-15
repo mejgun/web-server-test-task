@@ -6,7 +6,6 @@ module Categories
   )
 where
 
-
 import           Categories.CreateCategory
 import           Categories.DeleteCategory
 import           Categories.EditCategory

@@ -6,7 +6,6 @@ module News.GetDrafts
   )
 where
 
-
 import           Control.Monad                  ( liftM2 )
 import qualified Data.Aeson                    as A
 import           Database.PostgreSQL.Simple.FromRow
@@ -16,8 +15,7 @@ import           Database.PostgreSQL.Simple.FromRow
 import           Database.PostgreSQL.Simple.Types
                                                 ( PGArray(..) )
 import           GHC.Generics
-import           PG
-import           Types
+import           Lib
 
 data Draft = Draft
     { draft_id            :: Int
@@ -91,8 +89,6 @@ getDrafts conn u =
   offset = calcOffset (page u) newsPerPage
   limit  = newsPerPage
 
-
 zipPGarrays :: PGArray (Maybe a) -> PGArray (Maybe b) -> [(a, b)]
 zipPGarrays a1 a2 = zip (pgArrayToList a1) (pgArrayToList a2)
-
 

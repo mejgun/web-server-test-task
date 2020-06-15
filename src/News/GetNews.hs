@@ -6,7 +6,6 @@ module News.GetNews
   )
 where
 
-
 import           Control.Monad                  ( liftM )
 import qualified Data.Aeson                    as A
 import           Data.List                      ( sort )
@@ -16,8 +15,7 @@ import           Database.PostgreSQL.Simple.FromRow
                                                 , fromRow
                                                 )
 import           GHC.Generics
-import           PG
-import           Types
+import           Lib
 
 data TempCat = TempCat
     { c_id     :: Int

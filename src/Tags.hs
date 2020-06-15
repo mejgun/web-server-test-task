@@ -6,7 +6,6 @@ module Tags
   )
 where
 
-
 import           Tags.CreateTag
 import           Tags.DeleteTag
 import           Tags.EditTag

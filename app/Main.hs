@@ -12,10 +12,9 @@ import           Network.Wai.Middleware.RequestLogger
 
 import qualified Authors
 import qualified Categories
+import           Lib
 import qualified News
-import           PG
 import qualified Tags
-import           Types
 import qualified Users
 
 main :: IO ()

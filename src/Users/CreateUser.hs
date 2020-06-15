@@ -13,8 +13,7 @@ import           Data.ByteString.UTF8           ( fromString )
 import           Data.Char                      ( toLower )
 import           GHC.Generics
 
-import           PG
-import           Types
+import           Lib
 
 data Req = Req
     { name       :: String

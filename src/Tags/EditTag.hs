@@ -9,8 +9,7 @@ where
 import qualified Data.Aeson                    as A
 import           GHC.Generics
 
-import           PG
-import           Types
+import           Lib
 
 data Req = Req
     { tag_id :: Int
@@ -18,7 +17,6 @@ data Req = Req
     , token  :: String
     }
     deriving (Generic, Show)
-
 
 instance A.FromJSON Req
 

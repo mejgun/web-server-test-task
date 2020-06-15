@@ -9,15 +9,13 @@ where
 import qualified Data.Aeson                    as A
 import           GHC.Generics
 
-import           PG
-import           Types
+import           Lib
 
 data Req = Req
     { name  :: String
     , token :: String
     }
     deriving (Generic, Show)
-
 
 instance A.FromJSON Req
 

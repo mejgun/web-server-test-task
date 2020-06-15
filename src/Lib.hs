@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Types
+module Lib
   ( MyApp
   , MyHandler
   , ResultResponse(..)
@@ -26,6 +26,7 @@ module Types
   , calcOffset
   , normalHandler
   , adminHandler
+  , module PG
   )
 where
 
@@ -56,12 +57,13 @@ import           Network.HTTP.Types             ( HeaderName
                                                 , status404
                                                 )
 import           Network.Wai
+import           PG
 import           System.Directory               ( createDirectory
                                                 , doesDirectoryExist
                                                 , doesFileExist
                                                 )
 
-import           PG
+-- types
 
 type MyApp
   =  Connection
@@ -80,6 +82,8 @@ data ResultResponse a = Ok200
     | ErrorUserExist
     | ErrorBadPage
     | ErrorAuthorNotExist
+
+-- constants
 
 usersPerPage :: Int
 usersPerPage = 10
@@ -102,12 +106,15 @@ newsPerPage = 10
 imagesDir :: String
 imagesDir = "images/"
 
+-- functions
+
 handleSqlErr :: A.ToJSON a => IO (ResultResponse a) -> IO (ResultResponse a)
 handleSqlErr = handle $ checkSqlErr $ return ErrorBadRequest
  where
   checkSqlErr
     :: A.ToJSON a => IO (ResultResponse a) -> SqlError -> IO (ResultResponse a)
   checkSqlErr x e = printErr e >> x
+
   printErr :: SqlError -> IO ()
   printErr (SqlError q w t e r) =
     B8.putStrLn $ B8.intercalate " " [q, B8.pack (show w), e, r, t]
@@ -143,10 +150,13 @@ resultToResponse r = case r of
  where
   ok :: Builder
   ok = fromByteString "{\"ok\":\"ok\"}"
+
   e :: String -> Response
   e x = responseBuilder status400 jsonCT $ toErr x
+
   jsonCT :: [(HeaderName, B.ByteString)]
   jsonCT = [("Content-Type", "application/json")]
+
   toErr :: String -> Builder
   toErr s = fromByteString $ B8.pack $ "{\"error\":\"" ++ s ++ "\"}"
 
