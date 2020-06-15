@@ -24,7 +24,10 @@ instance A.FromJSON Req
 
 update :: MyHandler Req Bool
 update conn u =
-  handleSqlErr
+  rIfAuthor conn (token u)
+    $   rIfNewsExist conn (news_id u)
+    $   rIfCategoryExist conn (cat_id u)
+    $   handleSqlErr
     $   execute
           conn
           "update news set name=?, category_id=?, text=? where id=? and author_id=(select id from authors where user_id=(select id from users where token=?));"

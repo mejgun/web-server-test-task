@@ -22,7 +22,9 @@ instance A.FromJSON Req
 
 release :: MyHandler Req Int
 release conn u =
-  handleSqlErr
+  rIfAuthor conn (token u)
+    $   rIfNewsExist conn (news_id u)
+    $   handleSqlErr
     $   execute
           conn
           "update news set published=? where id=? and author_id=(select id from authors where user_id=(select id from users where token=?));"

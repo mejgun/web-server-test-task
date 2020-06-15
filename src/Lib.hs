@@ -24,6 +24,7 @@ module Lib
   , rIfCategoryExist
   , rIfTagNotExist
   , rIfTagExist
+  , rIfNewsExist
   , createImagesDir
   , pgArrayToList
   , calcOffset
@@ -88,6 +89,7 @@ data ResultResponse a = Ok200
     | ErrorCategoryNotExist
     | ErrorTagAlreadyExist
     | ErrorTagNotExist
+    | ErrorNewsNotExist
     deriving Show
 
 -- constants
@@ -199,7 +201,7 @@ rIfAuthor c token r = rIfDB
 
 rIfUserExist
   :: Connection -> String -> IO (ResultResponse a) -> IO (ResultResponse a)
-rIfUserExist c login r = rIfUser 0 c login r ErrorUserNotExist
+rIfUserExist c login r = rIfUser 1 c login r ErrorUserNotExist
 
 rIfUserNotExist
   :: Connection -> String -> IO (ResultResponse a) -> IO (ResultResponse a)
@@ -245,6 +247,14 @@ rIfTagExist
   :: Connection -> Int -> IO (ResultResponse a) -> IO (ResultResponse a)
 rIfTagExist c tag_id r =
   rIfDB c "select count(id)=1 from tags where id=?;" [tag_id] r ErrorTagNotExist
+
+rIfNewsExist
+  :: Connection -> Int -> IO (ResultResponse a) -> IO (ResultResponse a)
+rIfNewsExist c news_id r = rIfDB c
+                                 "select count(id)=1 from news where id=?;"
+                                 [news_id]
+                                 r
+                                 ErrorNewsNotExist
 
 
 rIfValidPage :: Int -> IO (ResultResponse a) -> IO (ResultResponse a)
