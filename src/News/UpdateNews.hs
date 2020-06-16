@@ -26,6 +26,7 @@ update :: MyHandler Req Bool
 update conn u =
   rIfAuthor conn (token u)
     $   rIfNewsExist conn (news_id u)
+    $   rIfNewsAuthor conn (news_id u) (token u)
     $   rIfCategoryExist conn (cat_id u)
     $   handleSqlErr
     $   execute

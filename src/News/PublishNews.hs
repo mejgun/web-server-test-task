@@ -24,6 +24,7 @@ release :: MyHandler Req Int
 release conn u =
   rIfAuthor conn (token u)
     $   rIfNewsExist conn (news_id u)
+    $   rIfNewsAuthor conn (news_id u) (token u)
     $   handleSqlErr
     $   execute
           conn

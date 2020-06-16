@@ -22,7 +22,9 @@ instance A.FromJSON Req
 
 addComment :: MyHandler Req Bool
 addComment conn u =
-  handleSqlErr
+  rIfNewsExist conn (news_id u)
+    $   rIfUser conn (token u)
+    $   handleSqlErr
     $   execute
           conn
           "insert into news_comments (news_id,text,user_id) values ((select id from news where id=? and published=true),?,(select id from users where token=?)) on conflict do nothing;"

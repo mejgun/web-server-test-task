@@ -120,7 +120,7 @@ begin
  if (name_contains is not null) then nc = concat(' and n.name ilike ''%', name_contains, '%'''); end if;
  if (text_contains is not null) then tc = concat(' and n.text ilike ''%', text_contains, '%'''); end if;
  if (anything_contains is not null) then anc = concat(
-     ' and (and n.name ilike ''%', anything_contains, '%''',
+     ' and (n.name ilike ''%', anything_contains, '%''',
      ' or n.text ilike ''%', anything_contains, '%''',
      ' or u.name ilike ''%',anything_contains,'%''',
      ' or u.lastname ilike ''%',anything_contains,'%''',
@@ -145,8 +145,8 @@ begin
     u.name,
     u.lastname,
     c.id,    
-    array_agg(np.photo),
-    array_agg(t.name),
+    array_agg(distinct np.photo),
+    array_agg(distinct t.name),
     ((select (case when main_photo is null then 0 else 1 end) from news where id=n.id)+count(np.id)) as photo_count
    from news as n
    left join authors as a on n.author_id=a.id

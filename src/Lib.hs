@@ -25,6 +25,8 @@ module Lib
   , rIfTagNotExist
   , rIfTagExist
   , rIfNewsExist
+  , rIfNewsAuthor
+  , rIfUser
   , createImagesDir
   , pgArrayToList
   , calcOffset
@@ -90,6 +92,8 @@ data ResultResponse a = Ok200
     | ErrorTagAlreadyExist
     | ErrorTagNotExist
     | ErrorNewsNotExist
+    | ErrorNotYourNews
+    | ErrorNotUser
     deriving Show
 
 -- constants
@@ -185,7 +189,7 @@ rIfAdmin
   :: Connection -> String -> IO (ResultResponse a) -> IO (ResultResponse a)
 rIfAdmin conn token r = rIfDB
   conn
-  (Query "select admin from users where token = ? limit 1;")
+  (Query "select admin from users where token=? limit 1;")
   [token]
   r
   Error404
@@ -199,22 +203,31 @@ rIfAuthor c token r = rIfDB
   r
   ErrorNotAuthor
 
+rIfUser
+  :: Connection -> String -> IO (ResultResponse a) -> IO (ResultResponse a)
+rIfUser conn token r = rIfDB
+  conn
+  (Query "select count(id)=1 from users where token=?;")
+  [token]
+  r
+  ErrorNotUser
+
 rIfUserExist
   :: Connection -> String -> IO (ResultResponse a) -> IO (ResultResponse a)
-rIfUserExist c login r = rIfUser 1 c login r ErrorUserNotExist
+rIfUserExist c login r = rIfUserLogin 1 c login r ErrorUserNotExist
 
 rIfUserNotExist
   :: Connection -> String -> IO (ResultResponse a) -> IO (ResultResponse a)
-rIfUserNotExist c login r = rIfUser 0 c login r ErrorUserAlreadyExist
+rIfUserNotExist c login r = rIfUserLogin 0 c login r ErrorUserAlreadyExist
 
-rIfUser
+rIfUserLogin
   :: Int
   -> Connection
   -> String
   -> IO (ResultResponse a)
   -> ResultResponse a
   -> IO (ResultResponse a)
-rIfUser cond c login r rElse =
+rIfUserLogin cond c login r rElse =
   rIfDB c "select count(id)=? from users where login=?;" (cond, login) r rElse
 
 rIfAuthorExist
@@ -256,6 +269,18 @@ rIfNewsExist c news_id r = rIfDB c
                                  r
                                  ErrorNewsNotExist
 
+rIfNewsAuthor
+  :: Connection
+  -> Int
+  -> String
+  -> IO (ResultResponse a)
+  -> IO (ResultResponse a)
+rIfNewsAuthor c news_id token r = rIfDB
+  c
+  "select count(id)=1 from news where id=? and author_id=(select id from authors where user_id=(select id from users where token=?));"
+  (news_id, token)
+  r
+  ErrorNotYourNews
 
 rIfValidPage :: Int -> IO (ResultResponse a) -> IO (ResultResponse a)
 rIfValidPage p r = if p > 0 then r else return ErrorBadPage

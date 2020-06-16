@@ -23,6 +23,9 @@ instance A.FromJSON Req
 deleteTag :: MyHandler Req Bool
 deleteTag conn u =
   rIfAuthor conn (token u)
+    $   rIfNewsExist conn (news_id u)
+    $   rIfNewsAuthor conn (news_id u) (token u)
+    $   rIfTagExist conn (tag_id u)
     $   handleSqlErr
     $   execute
           conn

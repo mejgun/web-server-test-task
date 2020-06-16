@@ -3,6 +3,7 @@ set -x
 
 : publish news
 ./curl.sh news/publish '{"news_id":1,"publish":true,"token":"8e37ca708c492c66383247ae57009531"}'
+./curl.sh news/publish '{"news_id":2,"publish":true,"token":"8e37ca708c492c66383247ae57009531"}'
 
 : publish news - someone else_s news
 ./curl.sh news/publish '{"news_id":2,"publish":true,"token":"b185b4ee226a682ff359b7640212c1c5"}'
