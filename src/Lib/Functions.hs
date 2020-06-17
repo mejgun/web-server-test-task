@@ -15,6 +15,7 @@ module Lib.Functions
   , rIfTagNotExist
   , rIfTagExist
   , rIfNewsExist
+  , rIfNewsPublished
   , rIfNewsAuthor
   , rIfUser
   , createImagesDir
@@ -206,6 +207,15 @@ rIfNewsExist c news_id r = rIfDB c
                                  [news_id]
                                  r
                                  ErrorNewsNotExist
+
+rIfNewsPublished
+  :: Connection -> Int -> IO (ResultResponse a) -> IO (ResultResponse a)
+rIfNewsPublished c news_id r = rIfDB
+  c
+  "select count(id)=1 from news where id=? and published=true;"
+  [news_id]
+  r
+  ErrorNewsNotExist
 
 rIfNewsAuthor
   :: Connection

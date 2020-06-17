@@ -22,7 +22,7 @@ instance A.FromJSON Req
 
 addComment :: MyHandler Req Bool
 addComment conn u =
-  rIfNewsExist conn (news_id u)
+  rIfNewsPublished conn (news_id u)
     $   rIfUser conn (token u)
     $   handleSqlErr
     $   execute

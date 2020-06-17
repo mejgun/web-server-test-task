@@ -33,7 +33,7 @@ instance A.FromJSON Req
 getComments :: MyHandler Req [Comment]
 getComments conn u =
   rIfValidPage (page u)
-    $   rIfNewsExist conn (news_id u)
+    $   rIfNewsPublished conn (news_id u)
     $   handleSqlErr
     $   OkJSON
     <$> (query
