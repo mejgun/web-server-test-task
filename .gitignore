@@ -1,5 +1,5 @@
 .stack-work/
-*.txt
+config.json
 /build/
 /images/
 *~

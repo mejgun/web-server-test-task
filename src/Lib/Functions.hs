@@ -26,8 +26,8 @@ module Lib.Functions
   )
 where
 
+import           Lib.Config
 import           Lib.Constants
-import           Lib.PG
 import           Lib.Types
 
 import           Blaze.ByteString.Builder       ( Builder

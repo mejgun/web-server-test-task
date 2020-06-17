@@ -2,7 +2,7 @@ module Lib.Types where
 
 import           Network.Wai
 
-import           Lib.PG
+import           Lib.Config
 
 type MyApp
   =  Connection

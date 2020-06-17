@@ -19,10 +19,10 @@ import qualified Users
 
 main :: IO ()
 main = do
-  conn <- pgconnect
+  conf <- readConfig
   createImagesDir
   putStrLn "Server started"
-  run 8080 $ logStdout $ application conn
+  run 8080 $ logStdout $ application $ connection conf
 
 application :: MyApp
 application c r rd = case pathInfo r of

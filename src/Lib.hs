@@ -1,12 +1,12 @@
 module Lib
-  ( module Lib.PG
+  ( module Lib.Config
   , module Lib.Constants
   , module Lib.Types
   , module Lib.Functions
   )
 where
 
+import           Lib.Config
 import           Lib.Constants
 import           Lib.Functions
-import           Lib.PG
 import           Lib.Types
