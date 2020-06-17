@@ -57,8 +57,11 @@ news/publish | news_id: int<br>publish: bool<br>token: string | Author
 news/setmainphoto | news_id: int<br>photo: base64 encoded photo<br>photo_type: string (photo file type (extension), optional)<br>token: string | Author
 news/addphoto | news_id: int<br>photo: base64 encoded photo<br>photo_type: string (photo file type (extension), optional)<br>token: string | Author
 news/deletephoto | news_id: int<br>photo_id: int<br>token: string | Author
+news/addtag | news_id: int<br>token: string<br>tag_id: int | Author
+news/deletetag | news_id: int<br>token: string<br>tag_id: int | Author
 news/addcomment | news_id: int<br>text: string<br>token: string | User
 news/deletecomment | comment_id: int<br>token: string | Admin
 news/getcomments | news_id: int<br>page: int | All
 news/delete | news_id: int<br>token: int | Author
 news/getdrafts | token: string<br>page: int | Author
+news/get | page: int | All
