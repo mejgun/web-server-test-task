@@ -21,7 +21,7 @@ data Req = Req
 instance A.FromJSON Req
 
 delete :: MyHandler Req Bool
-delete conn u =
+delete conn _ u =
   rIfAuthor conn (token u)
     $ rIfNewsExist conn (news_id u)
     $ rIfNewsAuthor conn (news_id u) (token u)

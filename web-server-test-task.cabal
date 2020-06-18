@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 12272facb57a5e7ef2ddce52dcb2a8b4b1f2d5e641b37ae7b093ee7d5622e383
+-- hash: 00f212277b89d596cb420c1d23894a5b1548fae36ed959eadc6b5479215e6f21
 
 name:           web-server-test-task
 version:        0.1.0.0
@@ -38,7 +38,6 @@ library
       Categories.EditCategory
       Categories.GetCategories
       Lib
-      Lib.Config
       Lib.Constants
       Lib.Functions
       Lib.Types
@@ -77,6 +76,7 @@ library
     , base64-bytestring
     , blaze-builder
     , bytestring
+    , data-default
     , directory
     , http-types
     , postgresql-simple
@@ -100,6 +100,7 @@ executable web-server-test-task-exe
     , base64-bytestring
     , blaze-builder
     , bytestring
+    , data-default
     , directory
     , http-types
     , postgresql-simple
@@ -125,6 +126,7 @@ test-suite web-server-test-task-test
     , base64-bytestring
     , blaze-builder
     , bytestring
+    , data-default
     , directory
     , http-types
     , postgresql-simple

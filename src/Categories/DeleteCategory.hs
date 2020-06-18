@@ -20,7 +20,7 @@ data Req = Req
 instance A.FromJSON Req
 
 delete :: MyHandler Req Bool
-delete conn u =
+delete conn _ u =
   rIfAdmin conn (token u)
     $   rIfCategoryExist conn (cat_id u)
     $   handleSqlErr

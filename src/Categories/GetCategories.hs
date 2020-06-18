@@ -29,7 +29,7 @@ data Req = Req
 instance A.FromJSON Req
 
 get :: MyHandler Req [Cat]
-get conn u =
+get conn _ u =
   rIfValidPage (page u)
     $ handleSqlErr
     $ OkJSON

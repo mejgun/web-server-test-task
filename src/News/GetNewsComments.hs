@@ -31,7 +31,7 @@ data Req = Req
 instance A.FromJSON Req
 
 getComments :: MyHandler Req [Comment]
-getComments conn u =
+getComments conn _ u =
   rIfValidPage (page u)
     $   rIfNewsPublished conn (news_id u)
     $   handleSqlErr

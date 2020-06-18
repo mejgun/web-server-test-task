@@ -5,11 +5,14 @@ module Main
   )
 where
 
+import           Data.Default
+import           GHC.IO.Handle                  ( hDuplicateTo )
 import           Network.Wai
 import           Network.Wai.Handler.Warp       ( run )
-import           Network.Wai.Middleware.RequestLogger
-                                                ( logStdout )
-
+import qualified Network.Wai.Middleware.RequestLogger
+                                               as RL
+import           System.IO                      ( stdout )
+                                                -- ( logStdout )
 import qualified Authors
 import qualified Categories
 import           Lib
@@ -22,10 +25,13 @@ main = do
   conf <- readConfig
   createImagesDir
   putStrLn "Server started"
-  run 8080 $ logStdout $ application $ connection conf
+  hDuplicateTo (h conf) stdout
+  l <- RL.mkRequestLogger
+    $ def { RL.autoFlush = True, RL.destination = RL.Handle (h conf) }
+  run 8080 $ l $ application (connection conf) (logger conf)
 
 application :: MyApp
-application c r rd = case pathInfo r of
+application c l r rd = case pathInfo r of
   ["user"    , "get"          ] -> norm Users.get
   ["user"    , "create"       ] -> norm Users.create
   ["user"    , "delete"       ] -> adm Users.delete
@@ -59,5 +65,5 @@ application c r rd = case pathInfo r of
   ["images"  , img            ] -> returnFile img rd
   _                             -> return404 rd
  where
-  norm x = normalHandler x c r rd
-  adm x = adminHandler x c r rd
+  norm x = normalHandler x c l r rd
+  adm x = adminHandler x c l r rd

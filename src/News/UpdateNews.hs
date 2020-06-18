@@ -23,7 +23,7 @@ data Req = Req
 instance A.FromJSON Req
 
 update :: MyHandler Req Bool
-update conn u =
+update conn _ u =
   rIfAuthor conn (token u)
     $   rIfNewsExist conn (news_id u)
     $   rIfNewsAuthor conn (news_id u) (token u)

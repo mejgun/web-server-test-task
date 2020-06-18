@@ -27,7 +27,7 @@ data Req = Req
 instance A.FromJSON Req
 
 setMainPhoto :: MyHandler Req Bool
-setMainPhoto conn u =
+setMainPhoto conn _ u =
   rIfAuthor conn (token u)
     $ rIfNewsExist conn (news_id u)
     $ rIfNewsAuthor conn (news_id u) (token u)

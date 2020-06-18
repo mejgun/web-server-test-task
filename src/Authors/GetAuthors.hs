@@ -31,7 +31,7 @@ data Req = Req
 instance A.FromJSON Req
 
 get :: MyHandler Req [Author]
-get conn u =
+get conn _ u =
   rIfAdmin conn (token u)
     $   rIfValidPage (page u)
     $   handleSqlErr

@@ -22,7 +22,7 @@ data Req = Req
 instance A.FromJSON Req
 
 deletePhoto :: MyHandler Req Bool
-deletePhoto conn u =
+deletePhoto conn _ u =
   rIfAuthor conn (token u)
     $ rIfNewsExist conn (news_id u)
     $ rIfNewsAuthor conn (news_id u) (token u)

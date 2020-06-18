@@ -20,7 +20,7 @@ data Req = Req
 instance A.FromJSON Req
 
 create :: MyHandler Req Bool
-create conn u =
+create conn _ u =
   rIfAdmin conn (token u)
     $   rIfTagNotExist conn (name u)
     $   handleSqlErr

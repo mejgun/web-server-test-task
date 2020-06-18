@@ -22,7 +22,7 @@ data Req = Req
 instance A.FromJSON Req
 
 edit :: MyHandler Req Bool
-edit conn u =
+edit conn _ u =
   rIfAdmin conn (token u)
     $   rIfCategoryExist conn (cat_id u)
     $   handleSqlErr

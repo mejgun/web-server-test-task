@@ -21,7 +21,7 @@ data Req = Req
 instance A.FromJSON Req
 
 make :: MyHandler Req Bool
-make conn u =
+make conn _ u =
   rIfAdmin conn (token u)
     $   rIfLoginExist conn (login u)
     $   handleSqlErr

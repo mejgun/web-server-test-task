@@ -21,7 +21,7 @@ data Req = Req
 instance A.FromJSON Req
 
 addComment :: MyHandler Req Bool
-addComment conn u =
+addComment conn _ u =
   rIfNewsPublished conn (news_id u)
     $   rIfUser conn (token u)
     $   handleSqlErr

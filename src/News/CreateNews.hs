@@ -30,7 +30,7 @@ data Req = Req
 instance A.FromJSON Req
 
 create :: MyHandler Req NewsId
-create conn u =
+create conn _ u =
   rIfAuthor conn (token u)
     $ rIfCategoryExist conn (cat_id u)
     $ handleSqlErr

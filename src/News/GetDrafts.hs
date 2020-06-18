@@ -76,7 +76,7 @@ data Req = Req
 instance A.FromJSON Req
 
 getDrafts :: MyHandler Req [Draft]
-getDrafts conn u =
+getDrafts conn _ u =
   rIfAuthor conn (token u)
     $   rIfValidPage (page u)
     $   handleSqlErr

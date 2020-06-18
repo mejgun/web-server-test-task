@@ -28,7 +28,7 @@ data Req = Req
 instance A.FromJSON Req
 
 create :: MyHandler Req Bool
-create conn u =
+create conn _ u =
   rIfLoginNotExist conn (login u) $ handleSqlErr $ case photo u of
     Nothing ->
       execute

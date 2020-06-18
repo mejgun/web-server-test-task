@@ -33,6 +33,7 @@ dependencies:
 - utf8-string
 - directory
 - text
+- data-default
 
 library:
   source-dirs: src

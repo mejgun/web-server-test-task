@@ -1,16 +1,22 @@
+{-# LANGUAGE DeriveGeneric #-}
+-- {-# LANGUAGE OverloadedStrings #-}
+
 module Lib.Types where
 
+import           Data.Aeson                    as A
+import           Database.PostgreSQL.Simple
+import           GHC.Generics
 import           Network.Wai
-
-import           Lib.Config
+import           System.IO                      ( Handle )
 
 type MyApp
   =  Connection
+  -> Logger
   -> Request
   -> (Response -> IO ResponseReceived)
   -> IO ResponseReceived
 
-type MyHandler a b = Connection -> a -> IO (ResultResponse b)
+type MyHandler a b = Connection -> Logger -> a -> IO (ResultResponse b)
 
 data ResultResponse a = Ok200
     | OkJSON a
@@ -28,3 +34,19 @@ data ResultResponse a = Ok200
     | ErrorNotYourNews
     | ErrorNotUser
     deriving Show
+
+type Logger = IO ()
+
+data Conf = Conf
+    { pgconfig  :: String
+    , log_level :: String
+    }
+    deriving (Generic, Show)
+
+instance A.FromJSON Conf
+
+data Config = Config
+    { connection :: Connection
+    , h          :: Handle
+    , logger     :: Logger
+    }

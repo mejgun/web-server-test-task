@@ -23,10 +23,11 @@ module Lib.Functions
   , calcOffset
   , normalHandler
   , adminHandler
+  , readConfig
+  , module Database.PostgreSQL.Simple
   )
 where
 
-import           Lib.Config
 import           Lib.Constants
 import           Lib.Types
 
@@ -40,9 +41,11 @@ import           Data.Aeson                    as A
 import qualified Data.ByteString               as B
                                                 ( ByteString )
 import qualified Data.ByteString.Char8         as B8
+import           Data.Maybe                     ( fromJust )
 import           Data.Maybe                     ( catMaybes )
 import qualified Data.Text                     as T
 import           Data.Text.Encoding             ( encodeUtf8 )
+import           Database.PostgreSQL.Simple
 import           Database.PostgreSQL.Simple.Types
                                                 ( PGArray(..)
                                                 , Query(..)
@@ -54,11 +57,24 @@ import           Network.HTTP.Types             ( HeaderName
                                                 , status404
                                                 )
 import           Network.Wai
+import           System.IO                      ( IOMode(..)
+                                                , openFile
+                                                )
 
 import           System.Directory               ( createDirectory
                                                 , doesDirectoryExist
                                                 , doesFileExist
                                                 )
+
+readConfig :: IO Config
+readConfig = do
+  j   <- fromJust <$> A.decodeFileStrict "config.json" :: IO Conf
+  c   <- connectPostgreSQL $ B8.pack $ pgconfig j
+  hnd <- openFile "app.log" AppendMode
+  return Config { connection = c, h = hnd, logger = lg }
+
+lg :: Logger
+lg = undefined
 
 handleSqlErr :: A.ToJSON a => IO (ResultResponse a) -> IO (ResultResponse a)
 handleSqlErr = handle $ checkSqlErr $ return ErrorBadRequest
@@ -76,9 +92,9 @@ rIfJsonBody
   => ResultResponse b
   -> MyHandler a b
   -> MyApp
-rIfJsonBody rs x conn req respond = do
+rIfJsonBody rs x conn logg req respond = do
   j <- bodyToJSON req
-  q <- maybe (return rs) (x conn) j
+  q <- maybe (return rs) (x conn logg) j
   respond $ resultToResponse q
  where
   bodyToJSON :: A.FromJSON a => Request -> IO (Maybe a)
