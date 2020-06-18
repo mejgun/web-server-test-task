@@ -25,7 +25,6 @@ release conn _ u =
   rIfAuthor conn (token u)
     $   rIfNewsExist conn (news_id u)
     $   rIfNewsAuthor conn (news_id u) (token u)
-    $   handleSqlErr
     $   execute
           conn
           "update news set published=? where id=? and author_id=(select id from authors where user_id=(select id from users where token=?));"

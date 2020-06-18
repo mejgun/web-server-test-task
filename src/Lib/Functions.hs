@@ -94,7 +94,7 @@ rIfJsonBody
   -> MyApp
 rIfJsonBody rs x conn logg req respond = do
   j <- bodyToJSON req
-  q <- maybe (return rs) (x conn logg) j
+  q <- maybe (return rs) (handleSqlErr . (x conn logg)) j
   respond $ resultToResponse q
  where
   bodyToJSON :: A.FromJSON a => Request -> IO (Maybe a)

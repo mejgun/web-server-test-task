@@ -26,7 +26,6 @@ deleteTag conn _ u =
     $   rIfNewsExist conn (news_id u)
     $   rIfNewsAuthor conn (news_id u) (token u)
     $   rIfTagExist conn (tag_id u)
-    $   handleSqlErr
     $   execute
           conn
           "delete from news_tags where tag_id=? and news_id=(select id from news where id=? and author_id=(select id from authors where user_id=(select id from users where token=?)));"

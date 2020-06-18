@@ -30,7 +30,6 @@ addPhoto conn _ u =
   rIfAuthor conn (token u)
     $ rIfNewsExist conn (news_id u)
     $ rIfNewsAuthor conn (news_id u) (token u)
-    $ handleSqlErr
     $ do
         let img = decodeLenient $ fromString $ photo u
             ext = maybe ".jpg" ((++) "." . (map toLower)) (photo_type u)

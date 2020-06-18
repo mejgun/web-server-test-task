@@ -25,7 +25,6 @@ edit :: MyHandler Req Bool
 edit conn _ u =
   rIfAdmin conn (token u)
     $   rIfCategoryExist conn (cat_id u)
-    $   handleSqlErr
     $   execute conn
                 "update categories set name=?, parent=? where id=?;"
                 (name u, parent u, cat_id u)

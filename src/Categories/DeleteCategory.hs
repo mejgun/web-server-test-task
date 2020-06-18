@@ -23,6 +23,5 @@ delete :: MyHandler Req Bool
 delete conn _ u =
   rIfAdmin conn (token u)
     $   rIfCategoryExist conn (cat_id u)
-    $   handleSqlErr
     $   execute conn "delete from categories where id=?;" [cat_id u]
     >>= rExecResult

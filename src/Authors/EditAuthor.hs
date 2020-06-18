@@ -24,7 +24,6 @@ edit :: MyHandler Req Bool
 edit conn _ u =
   rIfAdmin conn (token u)
     $   rIfAuthorExist conn (login u)
-    $   handleSqlErr
     $   execute
           conn
           "update authors set descr=? where user_id=(select id from users where login=?);"

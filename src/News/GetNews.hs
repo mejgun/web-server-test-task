@@ -86,7 +86,7 @@ data Req = Req
 instance A.FromJSON Req
 
 get :: MyHandler Req [News]
-get conn _ u = rIfValidPage (page u) $ handleSqlErr $ do
+get conn _ u = rIfValidPage (page u) $ do
   news <-
     query
       conn

@@ -79,7 +79,6 @@ getDrafts :: MyHandler Req [Draft]
 getDrafts conn _ u =
   rIfAuthor conn (token u)
     $   rIfValidPage (page u)
-    $   handleSqlErr
     $   OkJSON
     <$> (query
           conn

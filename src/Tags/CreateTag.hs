@@ -23,7 +23,6 @@ create :: MyHandler Req Bool
 create conn _ u =
   rIfAdmin conn (token u)
     $   rIfTagNotExist conn (name u)
-    $   handleSqlErr
     $   execute conn
                 "insert into tags (name) values(?) on conflict do nothing;"
                 [name u]

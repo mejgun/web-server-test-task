@@ -25,7 +25,6 @@ delete conn _ u =
   rIfAuthor conn (token u)
     $ rIfNewsExist conn (news_id u)
     $ rIfNewsAuthor conn (news_id u) (token u)
-    $ handleSqlErr
     $ do
         pf <-
           query

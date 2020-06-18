@@ -34,7 +34,6 @@ get :: MyHandler Req [Author]
 get conn _ u =
   rIfAdmin conn (token u)
     $   rIfValidPage (page u)
-    $   handleSqlErr
     $   OkJSON
     <$> (query
           conn

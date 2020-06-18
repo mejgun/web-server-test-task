@@ -23,7 +23,6 @@ delete :: MyHandler Req Bool
 delete conn _ u =
   rIfAdmin conn (token u)
     $   rIfAuthorExist conn (login u)
-    $   handleSqlErr
     $   execute
           conn
           "delete from authors where user_id=(select id from users where login=?);"

@@ -24,7 +24,6 @@ make :: MyHandler Req Bool
 make conn _ u =
   rIfAdmin conn (token u)
     $   rIfLoginExist conn (login u)
-    $   handleSqlErr
     $   execute
           conn
           "insert into authors (user_id,descr) values ((select id from users where login=?),?) on conflict (user_id) do update set descr=?;"

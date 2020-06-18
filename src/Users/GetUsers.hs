@@ -31,7 +31,6 @@ instance A.FromJSON Req
 get :: MyHandler Req [User]
 get conn _ u =
   rIfValidPage (page u)
-    $ handleSqlErr
     $ OkJSON
     <$> (query conn
                "select name,lastname,photo from users offset ? limit ?;"

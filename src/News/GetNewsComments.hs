@@ -34,7 +34,6 @@ getComments :: MyHandler Req [Comment]
 getComments conn _ u =
   rIfValidPage (page u)
     $   rIfNewsPublished conn (news_id u)
-    $   handleSqlErr
     $   OkJSON
     <$> (query
           conn

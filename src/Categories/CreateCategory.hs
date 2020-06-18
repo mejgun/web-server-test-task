@@ -23,7 +23,6 @@ instance A.FromJSON Req
 create :: MyHandler Req Bool
 create conn _ u =
   rIfAdmin conn (token u)
-    $   handleSqlErr
     $   execute
           conn
           "insert into categories (name,parent) values (?,(select id from categories where id=?)) on conflict do nothing;"

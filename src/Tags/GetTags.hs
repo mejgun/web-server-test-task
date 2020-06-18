@@ -30,7 +30,6 @@ instance A.FromJSON Req
 get :: MyHandler Req [Tag]
 get conn _ u =
   rIfValidPage (page u)
-    $ handleSqlErr
     $ OkJSON
     <$> (query conn "select id,name from tags offset ? limit ?;" (offset, limit) :: IO
             [Tag]

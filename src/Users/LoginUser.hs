@@ -28,7 +28,7 @@ instance FromRow Token
 instance A.ToJSON Token
 
 log_in :: MyHandler Req Token
-log_in conn _ u = handleSqlErr $ do
+log_in conn _ u = do
   t <-
     query conn
           "select token from users where login=? and password=md5(?);"
