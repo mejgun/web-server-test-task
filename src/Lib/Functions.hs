@@ -28,9 +28,6 @@ module Lib.Functions
   )
 where
 
-import           Lib.Constants
-import           Lib.Types
-
 import           Blaze.ByteString.Builder       ( Builder
                                                 , fromByteString
                                                 , fromLazyByteString
@@ -66,6 +63,9 @@ import           System.Directory               ( createDirectory
                                                 , doesDirectoryExist
                                                 , doesFileExist
                                                 )
+
+import           Lib.Constants
+import           Lib.Types
 
 readConfig :: IO Config
 readConfig = do

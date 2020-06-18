@@ -21,7 +21,7 @@ data Req = Req
 instance A.FromJSON Req
 
 delete :: MyHandler Req Bool
-delete conn _ u =
+delete conn logg u =
   rIfAuthor conn (token u)
     $ rIfNewsExist conn (news_id u)
     $ rIfNewsAuthor conn (news_id u) (token u)
@@ -38,6 +38,9 @@ delete conn _ u =
             "delete from news where id=? and author_id=(select id from authors where user_id=(select id from users where token=?)) returning main_photo;"
             (news_id u, token u) :: IO [Maybe (Only String)]
         case mf of
-          [Just (Only f)] -> removeFile f >> return Ok200
-          [Nothing      ] -> return Ok200
-          _               -> return ErrorBadRequest
+          [Just (Only f)] ->
+            logg LogDebug ("Removing file " ++ show (f))
+              >> removeFile f
+              >> return Ok200
+          [Nothing] -> return Ok200
+          _         -> return ErrorBadRequest

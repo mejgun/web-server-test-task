@@ -39,8 +39,8 @@ data LogLevel = LogDebug
     | LogQuiet
     deriving (Eq, Ord)
 
-
 type AppLogger = Handle -> LogLevel -> LogLevel -> String -> IO ()
+
 type Logger = LogLevel -> String -> IO ()
 
 data Conf = Conf

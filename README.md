@@ -1,10 +1,13 @@
 # web-server-test-task
 
 ## Config
-### `pgconfig.txt`
+### `config.json`
 
-text file with libpq connection string ([more](https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING))
+JSON type config
 
+fields:
+- pgconfig: libpq connection string ([more](https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING))
+- log_level: logging level (debug, normal, quiet)
 
 ## Create DB structure
 

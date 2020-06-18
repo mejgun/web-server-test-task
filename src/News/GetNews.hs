@@ -15,6 +15,7 @@ import           Database.PostgreSQL.Simple.FromRow
                                                 , fromRow
                                                 )
 import           GHC.Generics
+
 import           Lib
 
 data TempCat = TempCat

@@ -15,6 +15,7 @@ import           Database.PostgreSQL.Simple.FromRow
 import           Database.PostgreSQL.Simple.Types
                                                 ( PGArray(..) )
 import           GHC.Generics
+
 import           Lib
 
 data Draft = Draft

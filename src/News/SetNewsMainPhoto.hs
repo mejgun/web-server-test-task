@@ -39,7 +39,7 @@ setMainPhoto conn logg u =
             (news_id u, token u) :: IO [Maybe (Only String)]
         case p of
           [Just (Only f)] ->
-            logg LogNormal ("Removing file " ++ show (f)) >> removeFile f
+            logg LogDebug ("Removing file " ++ show (f)) >> removeFile f
           _ -> return ()
         let img = decodeLenient $ fromString $ photo u
             ext = maybe ".jpg" ((++) "." . (map toLower)) (photo_type u)
