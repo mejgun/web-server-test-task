@@ -88,16 +88,18 @@ readConfig = do
     "normal" -> LogNormal
     _        -> LogDebug
 
-handleSqlErr :: A.ToJSON a => IO (ResultResponse a) -> IO (ResultResponse a)
-handleSqlErr = handle $ checkSqlErr $ return ErrorBadRequest
+handleSqlErr
+  :: A.ToJSON a => Logger -> IO (ResultResponse a) -> IO (ResultResponse a)
+handleSqlErr logg = handle $ checkSqlErr $ return ErrorBadRequest
  where
   checkSqlErr
     :: A.ToJSON a => IO (ResultResponse a) -> SqlError -> IO (ResultResponse a)
   checkSqlErr x e = printErr e >> x
 
   printErr :: SqlError -> IO ()
-  printErr (SqlError q w t e r) =
-    B8.putStrLn $ B8.intercalate " " [q, B8.pack (show w), e, r, t]
+  printErr (SqlError q w t e r) = logg LogQuiet $ B8.unpack $ B8.intercalate
+    " "
+    [q, B8.pack (show w), e, r, t]
 
 rIfJsonBody
   :: (FromJSON a, ToJSON b, Show b)
@@ -106,7 +108,7 @@ rIfJsonBody
   -> MyApp
 rIfJsonBody rs x conn logg req respond = do
   j <- bodyToJSON req
-  q <- maybe (return rs) (handleSqlErr . (x conn logg)) j
+  q <- maybe (return rs) (handleSqlErr (logg) . (x conn logg)) j
   respond $ resultToResponse q
  where
   bodyToJSON :: A.FromJSON a => Request -> IO (Maybe a)
