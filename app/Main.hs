@@ -5,17 +5,14 @@ module Main
   )
 where
 
+import qualified Authors
+import qualified Categories
 import           Data.Default
-import           GHC.IO.Handle                  ( hDuplicateTo )
+import           Lib
 import           Network.Wai
 import           Network.Wai.Handler.Warp       ( run )
 import qualified Network.Wai.Middleware.RequestLogger
                                                as RL
-import           System.IO                      ( stdout )
-                                                -- ( logStdout )
-import qualified Authors
-import qualified Categories
-import           Lib
 import qualified News
 import qualified Tags
 import qualified Users
@@ -25,9 +22,14 @@ main = do
   conf <- readConfig
   createImagesDir
   putStrLn "Server started"
-  hDuplicateTo (h conf) stdout
-  l <- RL.mkRequestLogger
-    $ def { RL.autoFlush = True, RL.destination = RL.Handle (h conf) }
+  l <- RL.mkRequestLogger $ def
+    { RL.outputFormat = case loglevel conf of
+                          LogDebug  -> RL.Detailed False
+                          LogNormal -> RL.Apache RL.FromSocket
+                          LogQuiet  -> RL.CustomOutputFormat (\_ _ _ _ -> "")
+    , RL.autoFlush    = True
+    , RL.destination  = RL.Handle (h conf)
+    }
   run 8080 $ l $ application (connection conf) (logger conf)
 
 application :: MyApp

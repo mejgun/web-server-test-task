@@ -1,5 +1,4 @@
 {-# LANGUAGE DeriveGeneric #-}
--- {-# LANGUAGE OverloadedStrings #-}
 
 module Lib.Types where
 
@@ -37,6 +36,11 @@ data ResultResponse a = Ok200
 
 type Logger = IO ()
 
+data LogLevel = LogDebug
+    | LogNormal
+    | LogQuiet
+    deriving (Eq, Ord)
+
 data Conf = Conf
     { pgconfig  :: String
     , log_level :: String
@@ -49,4 +53,5 @@ data Config = Config
     { connection :: Connection
     , h          :: Handle
     , logger     :: Logger
+    , loglevel   :: LogLevel
     }

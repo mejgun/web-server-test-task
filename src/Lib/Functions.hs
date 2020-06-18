@@ -71,10 +71,20 @@ readConfig = do
   j   <- fromJust <$> A.decodeFileStrict "config.json" :: IO Conf
   c   <- connectPostgreSQL $ B8.pack $ pgconfig j
   hnd <- openFile "app.log" AppendMode
-  return Config { connection = c, h = hnd, logger = lg }
+  return Config { connection = c
+                , h          = hnd
+                , logger     = lg
+                , loglevel   = strToLogLevel $ log_level j
+                }
+ where
+  lg :: Logger
+  lg = undefined
 
-lg :: Logger
-lg = undefined
+  strToLogLevel :: String -> LogLevel
+  strToLogLevel s = case s of
+    "quiet"  -> LogQuiet
+    "normal" -> LogNormal
+    _        -> LogDebug
 
 handleSqlErr :: A.ToJSON a => IO (ResultResponse a) -> IO (ResultResponse a)
 handleSqlErr = handle $ checkSqlErr $ return ErrorBadRequest
