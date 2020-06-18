@@ -58,6 +58,7 @@ import           Network.HTTP.Types             ( HeaderName
                                                 )
 import           Network.Wai
 import           System.IO                      ( IOMode(..)
+                                                , hPutStrLn
                                                 , openFile
                                                 )
 
@@ -68,17 +69,18 @@ import           System.Directory               ( createDirectory
 
 readConfig :: IO Config
 readConfig = do
-  j   <- fromJust <$> A.decodeFileStrict "config.json" :: IO Conf
-  c   <- connectPostgreSQL $ B8.pack $ pgconfig j
-  hnd <- openFile "app.log" AppendMode
+  j <- fromJust <$> A.decodeFileStrict "config.json" :: IO Conf
+  c <- connectPostgreSQL $ B8.pack $ pgconfig j
+  h <- openFile "app.log" AppendMode
+  let lgLvl = strToLogLevel $ log_level j
   return Config { connection = c
-                , h          = hnd
-                , logger     = lg
-                , loglevel   = strToLogLevel $ log_level j
+                , hnd        = h
+                , logger     = lg h lgLvl
+                , loglevel   = lgLvl
                 }
  where
-  lg :: Logger
-  lg = undefined
+  lg :: AppLogger
+  lg h l1 l2 s = if l1 <= l2 then hPutStrLn h s else return ()
 
   strToLogLevel :: String -> LogLevel
   strToLogLevel s = case s of

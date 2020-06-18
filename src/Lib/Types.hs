@@ -34,12 +34,14 @@ data ResultResponse a = Ok200
     | ErrorNotUser
     deriving Show
 
-type Logger = IO ()
-
 data LogLevel = LogDebug
     | LogNormal
     | LogQuiet
     deriving (Eq, Ord)
+
+
+type AppLogger = Handle -> LogLevel -> LogLevel -> String -> IO ()
+type Logger = LogLevel -> String -> IO ()
 
 data Conf = Conf
     { pgconfig  :: String
@@ -51,7 +53,7 @@ instance A.FromJSON Conf
 
 data Config = Config
     { connection :: Connection
-    , h          :: Handle
+    , hnd        :: Handle
     , logger     :: Logger
     , loglevel   :: LogLevel
     }

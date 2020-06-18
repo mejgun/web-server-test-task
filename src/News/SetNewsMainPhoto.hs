@@ -27,7 +27,7 @@ data Req = Req
 instance A.FromJSON Req
 
 setMainPhoto :: MyHandler Req Bool
-setMainPhoto conn _ u =
+setMainPhoto conn logg u =
   rIfAuthor conn (token u)
     $ rIfNewsExist conn (news_id u)
     $ rIfNewsAuthor conn (news_id u) (token u)
@@ -38,8 +38,9 @@ setMainPhoto conn _ u =
             "select main_photo from news where id=? and author_id=(select id from authors where user_id=(select id from users where token=?));"
             (news_id u, token u) :: IO [Maybe (Only String)]
         case p of
-          [Just (Only f)] -> removeFile f
-          _               -> return ()
+          [Just (Only f)] ->
+            logg LogNormal ("Removing file " ++ show (f)) >> removeFile f
+          _ -> return ()
         let img = decodeLenient $ fromString $ photo u
             ext = maybe ".jpg" ((++) "." . (map toLower)) (photo_type u)
         q <-

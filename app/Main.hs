@@ -28,7 +28,7 @@ main = do
                           LogNormal -> RL.Apache RL.FromSocket
                           LogQuiet  -> RL.CustomOutputFormat (\_ _ _ _ -> "")
     , RL.autoFlush    = True
-    , RL.destination  = RL.Handle (h conf)
+    , RL.destination  = RL.Handle (hnd conf)
     }
   run 8080 $ l $ application (connection conf) (logger conf)
 
