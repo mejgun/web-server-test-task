@@ -22,7 +22,7 @@ instance A.FromJSON Req
 
 delete :: MyHandler Req String
 delete conn logg u =
-  rIfAdmin conn (token u) >> rIfLoginExist conn (login u) >> do
+  isAdmin conn (token u) >> ifLoginExist conn (login u) >> do
     q <- liftIO
       (query conn "delete from users where login=? returning photo;" [login u] :: IO
           [Maybe (Only String)]

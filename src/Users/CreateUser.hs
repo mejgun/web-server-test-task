@@ -28,7 +28,7 @@ data Req = Req
 instance A.FromJSON Req
 
 create :: MyHandler Req String
-create conn _ u = rIfLoginNotExist conn (login u) >> case photo u of
+create conn _ u = ifLoginNotExist conn (login u) >> case photo u of
   Nothing ->
     liftIO
         (execute
@@ -36,7 +36,7 @@ create conn _ u = rIfLoginNotExist conn (login u) >> case photo u of
           "insert into users (name,lastname,token,login,password) values(?,?,md5(random()::text),?,md5(?)) on conflict do nothing;"
           (name u, lastname u, login u, password u)
         )
-      >>= rExecResult
+      >>= execResult
   Just ph -> do
     let img = decodeLenient $ fromString ph
         ext = maybe ".jpg" ((++) "." . (map toLower)) (photo_type u)

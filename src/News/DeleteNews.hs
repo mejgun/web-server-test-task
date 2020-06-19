@@ -22,9 +22,9 @@ instance A.FromJSON Req
 
 delete :: MyHandler Req String
 delete conn logg u =
-  rIfAuthor conn (token u)
-    >> rIfNewsExist conn (news_id u)
-    >> rIfNewsAuthor conn (news_id u) (token u)
+  isAuthor conn (token u)
+    >> ifNewsExist conn (news_id u)
+    >> ifNewsAuthor conn (news_id u) (token u)
     >> do
          pf <- liftIO
            (query

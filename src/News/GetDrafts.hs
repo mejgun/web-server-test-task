@@ -6,7 +6,6 @@ module News.GetDrafts
   )
 where
 
--- import           Control.Monad                  ( liftM2 )
 import qualified Data.Aeson                    as A
 import           Database.PostgreSQL.Simple.FromRow
                                                 ( field
@@ -78,8 +77,8 @@ instance A.FromJSON Req
 
 getDrafts :: MyHandler Req [Draft]
 getDrafts conn _ u =
-  rIfAuthor conn (token u)
-    >>  rIfValidPage (page u)
+  isAuthor conn (token u)
+    >>  isValidPage (page u)
     >>  liftIO
           (query
             conn

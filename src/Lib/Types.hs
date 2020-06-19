@@ -2,12 +2,12 @@
 
 module Lib.Types where
 
+import           Control.Monad.Except
 import           Data.Aeson                    as A
 import           Database.PostgreSQL.Simple
 import           GHC.Generics
 import           Network.Wai
 import           System.IO                      ( Handle )
-import           Control.Monad.Except
 
 type MyApp
   =  Connection
@@ -26,7 +26,6 @@ data ResultResponseError = Error404
     | ErrorLoginNotExist
     | ErrorLoginAlreadyExist
     | ErrorBadPage
-    | ErrorAuthorNotExist
     | ErrorCategoryNotExist
     | ErrorTagAlreadyExist
     | ErrorTagNotExist

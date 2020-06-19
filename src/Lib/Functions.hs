@@ -3,20 +3,19 @@
 module Lib.Functions
   ( returnFile
   , return404
-  , rIfAdmin
-  , rIfAuthor
-  , rIfLoginExist
-  , rIfLoginNotExist
-  , rIfAuthorExist
-  , rExecResult
-  , rIfValidPage
-  , rIfCategoryExist
-  , rIfTagNotExist
-  , rIfTagExist
-  , rIfNewsExist
-  , rIfNewsPublished
-  , rIfNewsAuthor
-  , rIfUser
+  , isAdmin
+  , isAuthor
+  , ifLoginExist
+  , ifLoginNotExist
+  , execResult
+  , isValidPage
+  , ifCategoryExist
+  , ifTagNotExist
+  , ifTagExist
+  , ifNewsExist
+  , ifNewsPublished
+  , ifNewsAuthor
+  , isUser
   , createImagesDir
   , pgArrayToList
   , calcOffset
@@ -32,8 +31,6 @@ import           Blaze.ByteString.Builder       ( Builder
                                                 , fromByteString
                                                 , fromLazyByteString
                                                 )
--- import           Control.Exception              ( handle )
--- import           Control.Monad                  ( when )
 import           Data.Aeson                    as A
 import qualified Data.ByteString               as B
                                                 ( ByteString )
@@ -59,11 +56,11 @@ import           System.IO                      ( IOMode(..)
                                                 , openFile
                                                 )
 
+import           Control.Monad.Except
 import           System.Directory               ( createDirectory
                                                 , doesDirectoryExist
                                                 , doesFileExist
                                                 )
-import           Control.Monad.Except
 
 
 import           Lib.Constants
@@ -152,85 +149,78 @@ rIfDB c q val rElse = do
     [Only True] -> return True
     _           -> throwError rElse
 
-rIfAdmin :: Connection -> String -> HandlerMonad Bool
-rIfAdmin conn token = rIfDB
+isAdmin :: Connection -> String -> HandlerMonad Bool
+isAdmin conn token = rIfDB
   conn
   (Query "select admin from users where token=? limit 1;")
   [token]
   Error404
 
-rIfAuthor :: Connection -> String -> HandlerMonad Bool
-rIfAuthor c token = rIfDB
+isAuthor :: Connection -> String -> HandlerMonad Bool
+isAuthor c token = rIfDB
   c
   "select count(id)=1 from authors where user_id=(select id from users where token=?);"
   [token]
   ErrorNotAuthor
 
-rIfUser :: Connection -> String -> HandlerMonad Bool
-rIfUser conn token = rIfDB
+isUser :: Connection -> String -> HandlerMonad Bool
+isUser conn token = rIfDB
   conn
   (Query "select count(id)=1 from users where token=?;")
   [token]
   ErrorNotUser
 
-rIfLoginExist :: Connection -> String -> HandlerMonad Bool
-rIfLoginExist c login = rIfLogin 1 c login ErrorLoginNotExist
+ifLoginExist :: Connection -> String -> HandlerMonad Bool
+ifLoginExist c login = ifLogin 1 c login ErrorLoginNotExist
 
-rIfLoginNotExist :: Connection -> String -> HandlerMonad Bool
-rIfLoginNotExist c login = rIfLogin 0 c login ErrorLoginAlreadyExist
+ifLoginNotExist :: Connection -> String -> HandlerMonad Bool
+ifLoginNotExist c login = ifLogin 0 c login ErrorLoginAlreadyExist
 
-rIfLogin
+ifLogin
   :: Int -> Connection -> String -> ResultResponseError -> HandlerMonad Bool
-rIfLogin cond c login rElse =
+ifLogin cond c login rElse =
   rIfDB c "select count(id)=? from users where login=?;" (cond, login) rElse
 
-rIfAuthorExist :: Connection -> String -> HandlerMonad Bool
-rIfAuthorExist c login = rIfDB
-  c
-  "select count(id)=1 from authors where user_id=(select id from users where login=?);"
-  [login]
-  ErrorAuthorNotExist
-
-rIfCategoryExist :: Connection -> Int -> HandlerMonad Bool
-rIfCategoryExist c cat = rIfDB
+ifCategoryExist :: Connection -> Int -> HandlerMonad Bool
+ifCategoryExist c cat = rIfDB
   c
   "select count(id)=1 from categories where id=?;"
   [cat]
   ErrorCategoryNotExist
 
-rIfTagNotExist :: Connection -> String -> HandlerMonad Bool
-rIfTagNotExist c tag = rIfDB c
-                             "select count(id)=0 from tags where name=?;"
-                             [tag]
-                             ErrorTagAlreadyExist
+ifTagNotExist :: Connection -> String -> HandlerMonad Bool
+ifTagNotExist c tag = rIfDB c
+                            "select count(id)=0 from tags where name=?;"
+                            [tag]
+                            ErrorTagAlreadyExist
 
-rIfTagExist :: Connection -> Int -> HandlerMonad Bool
-rIfTagExist c tag_id =
+ifTagExist :: Connection -> Int -> HandlerMonad Bool
+ifTagExist c tag_id =
   rIfDB c "select count(id)=1 from tags where id=?;" [tag_id] ErrorTagNotExist
 
-rIfNewsExist :: Connection -> Int -> HandlerMonad Bool
-rIfNewsExist c news_id =
+ifNewsExist :: Connection -> Int -> HandlerMonad Bool
+ifNewsExist c news_id =
   rIfDB c "select count(id)=1 from news where id=?;" [news_id] ErrorNewsNotExist
 
-rIfNewsPublished :: Connection -> Int -> HandlerMonad Bool
-rIfNewsPublished c news_id = rIfDB
+ifNewsPublished :: Connection -> Int -> HandlerMonad Bool
+ifNewsPublished c news_id = rIfDB
   c
   "select count(id)=1 from news where id=? and published=true;"
   [news_id]
   ErrorNewsNotExist
 
-rIfNewsAuthor :: Connection -> Int -> String -> HandlerMonad Bool
-rIfNewsAuthor c news_id token = rIfDB
+ifNewsAuthor :: Connection -> Int -> String -> HandlerMonad Bool
+ifNewsAuthor c news_id token = rIfDB
   c
   "select count(id)=1 from news where id=? and author_id=(select id from authors where user_id=(select id from users where token=?));"
   (news_id, token)
   ErrorNotYourNews
 
-rIfValidPage :: Int -> HandlerMonad Bool
-rIfValidPage p = if p > 0 then return True else throwError ErrorBadPage
+isValidPage :: Int -> HandlerMonad Bool
+isValidPage p = if p > 0 then return True else throwError ErrorBadPage
 
-rExecResult :: GHC.Int.Int64 -> HandlerMonad String
-rExecResult i = case i of
+execResult :: GHC.Int.Int64 -> HandlerMonad String
+execResult i = case i of
   1 -> return ok
   _ -> throwError ErrorBadRequest
 

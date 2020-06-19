@@ -22,8 +22,8 @@ instance A.FromJSON Req
 
 edit :: MyHandler Req String
 edit conn _ u =
-  rIfAdmin conn (token u)
-    >>  rIfTagExist conn (tag_id u)
+  isAdmin conn (token u)
+    >>  ifTagExist conn (tag_id u)
     >>  liftIO
           (execute conn "update tags set name=? where id=?;" (name u, tag_id u))
-    >>= rExecResult
+    >>= execResult

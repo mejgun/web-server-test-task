@@ -6,7 +6,6 @@ module News.GetNews
   )
 where
 
--- import           Control.Monad                  ( liftM )
 import qualified Data.Aeson                    as A
 import           Data.List                      ( sort )
 import qualified Data.Text                     as T
@@ -87,7 +86,7 @@ data Req = Req
 instance A.FromJSON Req
 
 get :: MyHandler Req [News]
-get conn _ u = rIfValidPage (page u) >> do
+get conn _ u = isValidPage (page u) >> do
   news <- liftIO
     (query
       conn

@@ -31,7 +31,7 @@ data Req = Req
 instance A.FromJSON Req
 
 get :: MyHandler Req [Author]
-get conn _ u = rIfAdmin conn (token u) >> rIfValidPage (page u) >> do
+get conn _ u = isAdmin conn (token u) >> isValidPage (page u) >> do
   a <- liftIO
     (query
       conn

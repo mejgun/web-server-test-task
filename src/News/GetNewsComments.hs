@@ -32,8 +32,8 @@ instance A.FromJSON Req
 
 getComments :: MyHandler Req [Comment]
 getComments conn _ u =
-  rIfValidPage (page u)
-    >>  rIfNewsPublished conn (news_id u)
+  isValidPage (page u)
+    >>  ifNewsPublished conn (news_id u)
     >>  liftIO
           (query
             conn

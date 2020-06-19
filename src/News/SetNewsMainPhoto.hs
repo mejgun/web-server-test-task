@@ -28,9 +28,9 @@ instance A.FromJSON Req
 
 setMainPhoto :: MyHandler Req String
 setMainPhoto conn logg u =
-  rIfAuthor conn (token u)
-    >> rIfNewsExist conn (news_id u)
-    >> rIfNewsAuthor conn (news_id u) (token u)
+  isAuthor conn (token u)
+    >> ifNewsExist conn (news_id u)
+    >> ifNewsAuthor conn (news_id u) (token u)
     >> do
          p <- liftIO
            (query

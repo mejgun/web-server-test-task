@@ -31,7 +31,7 @@ instance A.FromJSON Req
 
 create :: MyHandler Req NewsId
 create conn _ u =
-  rIfAuthor conn (token u) >> rIfCategoryExist conn (cat_id u) >> do
+  isAuthor conn (token u) >> ifCategoryExist conn (cat_id u) >> do
     q <- liftIO
       (query
         conn

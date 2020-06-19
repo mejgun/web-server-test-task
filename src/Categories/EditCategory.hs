@@ -23,11 +23,11 @@ instance A.FromJSON Req
 
 edit :: MyHandler Req String
 edit conn _ u =
-  rIfAdmin conn (token u)
-    >>  rIfCategoryExist conn (cat_id u)
+  isAdmin conn (token u)
+    >>  ifCategoryExist conn (cat_id u)
     >>  liftIO
           (execute conn
                    "update categories set name=?, parent=? where id=?;"
                    (name u, parent u, cat_id u)
           )
-    >>= rExecResult
+    >>= execResult

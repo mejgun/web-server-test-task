@@ -30,7 +30,7 @@ instance A.FromJSON Req
 
 get :: MyHandler Req [Cat]
 get conn _ u =
-  rIfValidPage (page u)
+  isValidPage (page u)
     >>  liftIO
           (query conn
                  "select id,name,parent from categories offset ? limit ?;"

@@ -21,11 +21,11 @@ instance A.FromJSON Req
 
 create :: MyHandler Req String
 create conn _ u =
-  rIfAdmin conn (token u)
-    >>  rIfTagNotExist conn (name u)
+  isAdmin conn (token u)
+    >>  ifTagNotExist conn (name u)
     >>  liftIO
           (execute conn
                    "insert into tags (name) values(?) on conflict do nothing;"
                    [name u]
           )
-    >>= rExecResult
+    >>= execResult

@@ -27,9 +27,9 @@ instance A.FromJSON Req
 
 addPhoto :: MyHandler Req String
 addPhoto conn _ u =
-  rIfAuthor conn (token u)
-    >> rIfNewsExist conn (news_id u)
-    >> rIfNewsAuthor conn (news_id u) (token u)
+  isAuthor conn (token u)
+    >> ifNewsExist conn (news_id u)
+    >> ifNewsAuthor conn (news_id u) (token u)
     >> do
          let img = decodeLenient $ fromString $ photo u
              ext = maybe ".jpg" ((++) "." . (map toLower)) (photo_type u)

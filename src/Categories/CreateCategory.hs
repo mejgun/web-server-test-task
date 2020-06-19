@@ -22,11 +22,11 @@ instance A.FromJSON Req
 
 create :: MyHandler Req String
 create conn _ u =
-  rIfAdmin conn (token u)
+  isAdmin conn (token u)
     >>  liftIO
           (execute
             conn
             "insert into categories (name,parent) values (?,(select id from categories where id=?)) on conflict do nothing;"
             (name u, parent u)
           )
-    >>= rExecResult
+    >>= execResult
