@@ -6,6 +6,7 @@ module News.GetNews
   )
 where
 
+import           Control.Monad                  ( liftM )
 import qualified Data.Aeson                    as A
 import           Data.List                      ( sort )
 import qualified Data.Text                     as T
@@ -87,8 +88,8 @@ instance A.FromJSON Req
 
 get :: MyHandler Req [News]
 get conn _ u = isValidPage (page u) >> do
-  news <- liftIO
-    (query
+  news <-
+    query
       conn
       "select * from getNews(?,?,?,?,?,?,?,?,?,?,?,?,?);"
       ( created_at u
@@ -105,9 +106,7 @@ get conn _ u = isValidPage (page u) >> do
       , offset
       , limit
       ) :: IO [News]
-    )
-  cats <- liftIO
-    (query_ conn "select id,name,parent from categories;" :: IO [TempCat])
+  cats <- query_ conn "select id,name,parent from categories;" :: IO [TempCat]
   return $ map (buildAnswer cats) news
  where
   offset = calcOffset (page u) newsPerPage

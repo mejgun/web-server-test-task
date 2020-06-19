@@ -23,7 +23,7 @@ module Lib.Functions
   , adminHandler
   , readConfig
   , module Database.PostgreSQL.Simple
-  , module Control.Monad.Except
+  , module Control.Exception
   )
 where
 
@@ -31,6 +31,8 @@ import           Blaze.ByteString.Builder       ( Builder
                                                 , fromByteString
                                                 , fromLazyByteString
                                                 )
+import           Control.Exception
+import           Control.Monad                  ( when )
 import           Data.Aeson                    as A
 import qualified Data.ByteString               as B
                                                 ( ByteString )
@@ -51,15 +53,13 @@ import           Network.HTTP.Types             ( HeaderName
                                                 , status404
                                                 )
 import           Network.Wai
-import           System.IO                      ( IOMode(..)
-                                                , hPutStrLn
-                                                , openFile
-                                                )
-
-import           Control.Monad.Except
 import           System.Directory               ( createDirectory
                                                 , doesDirectoryExist
                                                 , doesFileExist
+                                                )
+import           System.IO                      ( IOMode(..)
+                                                , hPutStrLn
+                                                , openFile
                                                 )
 
 
@@ -88,18 +88,16 @@ readConfig = do
     "normal" -> LogNormal
     _        -> LogDebug
 
--- handleSqlErr
---   :: A.ToJSON a => Logger -> IO (ResultResponse a) -> IO (ResultResponse a)
--- handleSqlErr logg = handle $ checkSqlErr $ return ErrorBadRequest
---  where
---   checkSqlErr
---     :: A.ToJSON a => IO (ResultResponse a) -> SqlError -> IO (ResultResponse a)
---   checkSqlErr x e = printErr e >> x
+handleSqlErr :: A.ToJSON a => Logger -> IO a -> IO a
+handleSqlErr logg = handle $ checkSqlErr $ throw ErrorBadRequest
+ where
+  checkSqlErr :: A.ToJSON a => IO a -> SqlError -> IO a
+  checkSqlErr x e = printErr e >> x
 
---   printErr :: SqlError -> IO ()
---   printErr (SqlError q w t e r) = logg LogQuiet $ B8.unpack $ B8.intercalate
---     " "
---     [q, B8.pack (show w), e, r, t]
+  printErr :: SqlError -> IO ()
+  printErr (SqlError q w t e r) = logg LogQuiet $ B8.unpack $ B8.intercalate
+    " "
+    [q, B8.pack (show w), e, r, t]
 
 rIfJsonBody
   :: (FromJSON a, ToJSON b, Show b)
@@ -108,8 +106,7 @@ rIfJsonBody
   -> MyApp
 rIfJsonBody rs x conn logg req respond = do
   j <- bodyToJSON req
-  q <- runExceptT $ maybe (throwError rs) {-(handleSqlErr (logg) . (x conn logg))-}
-                                          (x conn logg) j
+  q <- try $ maybe (throw rs) (handleSqlErr (logg) . (x conn logg)) j
   respond $ eitherToResponse q
  where
   bodyToJSON :: A.FromJSON a => Request -> IO (Maybe a)
@@ -136,93 +133,86 @@ eitherToResponse r = case r of
   jsonCT :: [(HeaderName, B.ByteString)]
   jsonCT = [("Content-Type", "application/json")]
 
-rIfDB
-  :: ToRow a
-  => Connection
-  -> Query
-  -> a
-  -> ResultResponseError
-  -> HandlerMonad Bool
+rIfDB :: ToRow a => Connection -> Query -> a -> ResultResponseError -> IO Bool
 rIfDB c q val rElse = do
-  p <- liftIO (query c q val :: IO [Only Bool])
+  p <- query c q val :: IO [Only Bool]
   case p of
     [Only True] -> return True
-    _           -> throwError rElse
+    _           -> throw rElse
 
-isAdmin :: Connection -> String -> HandlerMonad Bool
+isAdmin :: Connection -> String -> IO Bool
 isAdmin conn token = rIfDB
   conn
   (Query "select admin from users where token=? limit 1;")
   [token]
   Error404
 
-isAuthor :: Connection -> String -> HandlerMonad Bool
+isAuthor :: Connection -> String -> IO Bool
 isAuthor c token = rIfDB
   c
   "select count(id)=1 from authors where user_id=(select id from users where token=?);"
   [token]
   ErrorNotAuthor
 
-isUser :: Connection -> String -> HandlerMonad Bool
+isUser :: Connection -> String -> IO Bool
 isUser conn token = rIfDB
   conn
   (Query "select count(id)=1 from users where token=?;")
   [token]
   ErrorNotUser
 
-ifLoginExist :: Connection -> String -> HandlerMonad Bool
+ifLoginExist :: Connection -> String -> IO Bool
 ifLoginExist c login = ifLogin 1 c login ErrorLoginNotExist
 
-ifLoginNotExist :: Connection -> String -> HandlerMonad Bool
+ifLoginNotExist :: Connection -> String -> IO Bool
 ifLoginNotExist c login = ifLogin 0 c login ErrorLoginAlreadyExist
 
-ifLogin
-  :: Int -> Connection -> String -> ResultResponseError -> HandlerMonad Bool
+ifLogin :: Int -> Connection -> String -> ResultResponseError -> IO Bool
 ifLogin cond c login rElse =
   rIfDB c "select count(id)=? from users where login=?;" (cond, login) rElse
 
-ifCategoryExist :: Connection -> Int -> HandlerMonad Bool
+ifCategoryExist :: Connection -> Int -> IO Bool
 ifCategoryExist c cat = rIfDB
   c
   "select count(id)=1 from categories where id=?;"
   [cat]
   ErrorCategoryNotExist
 
-ifTagNotExist :: Connection -> String -> HandlerMonad Bool
+ifTagNotExist :: Connection -> String -> IO Bool
 ifTagNotExist c tag = rIfDB c
                             "select count(id)=0 from tags where name=?;"
                             [tag]
                             ErrorTagAlreadyExist
 
-ifTagExist :: Connection -> Int -> HandlerMonad Bool
+ifTagExist :: Connection -> Int -> IO Bool
 ifTagExist c tag_id =
   rIfDB c "select count(id)=1 from tags where id=?;" [tag_id] ErrorTagNotExist
 
-ifNewsExist :: Connection -> Int -> HandlerMonad Bool
+ifNewsExist :: Connection -> Int -> IO Bool
 ifNewsExist c news_id =
   rIfDB c "select count(id)=1 from news where id=?;" [news_id] ErrorNewsNotExist
 
-ifNewsPublished :: Connection -> Int -> HandlerMonad Bool
+ifNewsPublished :: Connection -> Int -> IO Bool
 ifNewsPublished c news_id = rIfDB
   c
   "select count(id)=1 from news where id=? and published=true;"
   [news_id]
   ErrorNewsNotExist
 
-ifNewsAuthor :: Connection -> Int -> String -> HandlerMonad Bool
+ifNewsAuthor :: Connection -> Int -> String -> IO Bool
 ifNewsAuthor c news_id token = rIfDB
   c
   "select count(id)=1 from news where id=? and author_id=(select id from authors where user_id=(select id from users where token=?));"
   (news_id, token)
   ErrorNotYourNews
 
-isValidPage :: Int -> HandlerMonad Bool
-isValidPage p = if p > 0 then return True else throwError ErrorBadPage
+isValidPage :: Int -> IO Bool
+isValidPage p = if p > 0 then return True else throw ErrorBadPage
 
-execResult :: GHC.Int.Int64 -> HandlerMonad String
+execResult :: GHC.Int.Int64 -> IO String
 execResult i = case i of
   1 -> return ok
-  _ -> throwError ErrorBadRequest
+  _ -> throw ErrorBadRequest
 
 return404 :: (Response -> IO ResponseReceived) -> IO ResponseReceived
 return404 rd = rd $ responseBuilder status404 [] ""

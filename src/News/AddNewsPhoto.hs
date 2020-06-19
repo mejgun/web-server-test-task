@@ -33,13 +33,11 @@ addPhoto conn _ u =
     >> do
          let img = decodeLenient $ fromString $ photo u
              ext = maybe ".jpg" ((++) "." . (map toLower)) (photo_type u)
-         q <- liftIO
-           (query
-             conn
-             "insert into news_photos (news_id,photo) values ((select id from news where id=? and author_id=(select id from authors where user_id=(select id from users where token=?))),concat(?,md5(random()::text),?)) returning photo;"
-             (news_id u, token u, imagesDir, ext)
-           )
+         q <- query
+           conn
+           "insert into news_photos (news_id,photo) values ((select id from news where id=? and author_id=(select id from authors where user_id=(select id from users where token=?))),concat(?,md5(random()::text),?)) returning photo;"
+           (news_id u, token u, imagesDir, ext)
          case q of
-           [Only imgFile] -> liftIO (B.writeFile imgFile img) >> return ok
-           _              -> throwError ErrorBadRequest
+           [Only imgFile] -> B.writeFile imgFile img >> return ok
+           _              -> throw ErrorBadRequest
 

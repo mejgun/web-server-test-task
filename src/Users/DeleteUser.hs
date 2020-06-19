@@ -23,13 +23,13 @@ instance A.FromJSON Req
 delete :: MyHandler Req String
 delete conn logg u =
   isAdmin conn (token u) >> ifLoginExist conn (login u) >> do
-    q <- liftIO
-      (query conn "delete from users where login=? returning photo;" [login u] :: IO
-          [Maybe (Only String)]
-      )
+    q <-
+      query conn "delete from users where login=? returning photo;" [login u] :: IO
+        [Maybe (Only String)]
     case q of
       [Just (Only f)] ->
-        liftIO (logg LogDebug ("Removing file " ++ show (f)) >> removeFile f)
+        logg LogDebug ("Removing file " ++ show (f))
+          >> removeFile f
           >> return ok
       [Nothing] -> return ok
-      _         -> throwError ErrorBadRequest
+      _         -> throw ErrorBadRequest

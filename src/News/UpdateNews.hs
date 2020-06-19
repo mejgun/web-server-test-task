@@ -28,10 +28,8 @@ update conn _ u =
     >>  ifNewsExist conn (news_id u)
     >>  ifNewsAuthor conn (news_id u) (token u)
     >>  ifCategoryExist conn (cat_id u)
-    >>  liftIO
-          (execute
-            conn
-            "update news set name=?, category_id=?, text=? where id=? and author_id=(select id from authors where user_id=(select id from users where token=?));"
-            (name u, cat_id u, text u, news_id u, token u)
-          )
+    >>  execute
+          conn
+          "update news set name=?, category_id=?, text=? where id=? and author_id=(select id from authors where user_id=(select id from users where token=?));"
+          (name u, cat_id u, text u, news_id u, token u)
     >>= execResult

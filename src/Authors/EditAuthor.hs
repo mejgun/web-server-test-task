@@ -24,10 +24,8 @@ edit :: MyHandler Req String
 edit conn _ u =
   isAdmin conn (token u)
     >>  isAuthor conn (login u)
-    >>  liftIO
-          (execute
-            conn
-            "update authors set descr=? where user_id=(select id from users where login=?);"
-            [descr u, login u]
-          )
+    >>  execute
+          conn
+          "update authors set descr=? where user_id=(select id from users where login=?);"
+          [descr u, login u]
     >>= execResult

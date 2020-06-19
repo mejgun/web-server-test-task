@@ -24,6 +24,5 @@ edit :: MyHandler Req String
 edit conn _ u =
   isAdmin conn (token u)
     >>  ifTagExist conn (tag_id u)
-    >>  liftIO
-          (execute conn "update tags set name=? where id=?;" (name u, tag_id u))
+    >>  execute conn "update tags set name=? where id=?;" (name u, tag_id u)
     >>= execResult

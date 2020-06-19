@@ -29,11 +29,11 @@ data Req = Req
 instance A.FromJSON Req
 
 get :: MyHandler Req [User]
-get conn _ u = isValidPage (page u) >> liftIO
-  (query conn
-         "select name,lastname,photo from users offset ? limit ?;"
-         [offset, limit] :: IO [User]
-  )
+get conn _ u =
+  isValidPage (page u) >> query
+    conn
+    "select name,lastname,photo from users offset ? limit ?;"
+    [offset, limit] :: IO [User]
  where
   offset = calcOffset (page u) usersPerPage
   limit  = usersPerPage

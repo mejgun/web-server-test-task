@@ -2,7 +2,7 @@
 
 module Lib.Types where
 
-import           Control.Monad.Except
+import           Control.Exception
 import           Data.Aeson                    as A
 import           Database.PostgreSQL.Simple
 import           GHC.Generics
@@ -16,9 +16,7 @@ type MyApp
   -> (Response -> IO ResponseReceived)
   -> IO ResponseReceived
 
-type HandlerMonad = ExceptT ResultResponseError IO
-
-type MyHandler a b = Connection -> Logger -> a -> HandlerMonad b
+type MyHandler a b = Connection -> Logger -> a -> IO b
 
 data ResultResponseError = Error404
     | ErrorBadRequest
@@ -33,6 +31,8 @@ data ResultResponseError = Error404
     | ErrorNotYourNews
     | ErrorNotUser
     deriving Show
+
+instance Exception ResultResponseError
 
 data LogLevel = LogDebug
     | LogNormal

@@ -31,14 +31,11 @@ data Req = Req
 instance A.FromJSON Req
 
 get :: MyHandler Req [Author]
-get conn _ u = isAdmin conn (token u) >> isValidPage (page u) >> do
-  a <- liftIO
-    (query
-      conn
-      "select name,lastname,photo,descr from authors as a,users as u where a.user_id=u.id offset ? limit ?;"
-      [offset, limit] :: IO [Author]
-    )
-  return a
+get conn _ u =
+  isAdmin conn (token u) >> isValidPage (page u) >> query
+    conn
+    "select name,lastname,photo,descr from authors as a,users as u where a.user_id=u.id offset ? limit ?;"
+    [offset, limit] :: IO [Author]
  where
   offset = calcOffset (page u) usersPerPage
   limit  = authorsPerPage

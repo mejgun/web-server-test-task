@@ -23,9 +23,7 @@ create :: MyHandler Req String
 create conn _ u =
   isAdmin conn (token u)
     >>  ifTagNotExist conn (name u)
-    >>  liftIO
-          (execute conn
-                   "insert into tags (name) values(?) on conflict do nothing;"
-                   [name u]
-          )
+    >>  execute conn
+                "insert into tags (name) values(?) on conflict do nothing;"
+                [name u]
     >>= execResult

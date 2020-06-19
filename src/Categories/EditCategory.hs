@@ -25,9 +25,7 @@ edit :: MyHandler Req String
 edit conn _ u =
   isAdmin conn (token u)
     >>  ifCategoryExist conn (cat_id u)
-    >>  liftIO
-          (execute conn
-                   "update categories set name=?, parent=? where id=?;"
-                   (name u, parent u, cat_id u)
-          )
+    >>  execute conn
+                "update categories set name=?, parent=? where id=?;"
+                (name u, parent u, cat_id u)
     >>= execResult

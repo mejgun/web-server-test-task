@@ -12,13 +12,13 @@ fields:
 ## Create DB structure
 
 ```
-stack runhaskell db-scripts/CreateDB.hs
+stack runhaskell -- -isrc db-scripts/CreateDB.hs
 ```
 
 ## Test scripts
 - Insert some data
   ```
-  stack runhaskell test-scripts/InsertTestData.hs
+  stack runhaskell -- -isrc test-scripts/InsertTestData.hs
   ```
 - Run shell scripts from `test-scripts` or run all scripts
   ```

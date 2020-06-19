@@ -23,10 +23,8 @@ delete :: MyHandler Req String
 delete conn _ u =
   isAdmin conn (token u)
     >>  isAuthor conn (login u)
-    >>  liftIO
-          (execute
-            conn
-            "delete from authors where user_id=(select id from users where login=?);"
-            [login u]
-          )
+    >>  execute
+          conn
+          "delete from authors where user_id=(select id from users where login=?);"
+          [login u]
     >>= execResult

@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-import           Lib.PG
+import           Lib
 
 import           Database.PostgreSQL.Simple.Types
                                                 ( Query(..) )
@@ -9,7 +9,7 @@ import qualified Data.ByteString               as B
 
 main :: IO ()
 main = do
-  c <- pgconnect
+  c <- readConfig
   q <- Query <$> B.readFile "db-scripts/db.sql"
-  r <- execute_ c q
+  r <- execute_ (connection c) q
   print r

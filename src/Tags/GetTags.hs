@@ -30,12 +30,8 @@ instance A.FromJSON Req
 get :: MyHandler Req [Tag]
 get conn _ u =
   isValidPage (page u)
-    >>  liftIO
-          (query conn
-                 "select id,name from tags offset ? limit ?;"
-                 (offset, limit) :: IO [Tag]
-          )
-    >>= return
+    >> query conn "select id,name from tags offset ? limit ?;" (offset, limit) :: IO
+      [Tag]
  where
   offset = calcOffset (page u) tagsPerPage
   limit  = tagsPerPage

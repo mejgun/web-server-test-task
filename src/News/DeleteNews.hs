@@ -26,23 +26,21 @@ delete conn logg u =
     >> ifNewsExist conn (news_id u)
     >> ifNewsAuthor conn (news_id u) (token u)
     >> do
-         pf <- liftIO
-           (query
+         pf <-
+           query
              conn
              "delete from news_photos where news_id=(select id from news where id=? and author_id=(select id from authors where user_id=(select id from users where token=?))) returning photo;"
              (news_id u, token u) :: IO [Only String]
-           )
-         liftIO (mapM_ (\f -> removeFile (fromOnly f)) pf)
-         mf <- liftIO
-           (query
+         mapM_ (\f -> removeFile (fromOnly f)) pf
+         mf <-
+           query
              conn
              "delete from news where id=? and author_id=(select id from authors where user_id=(select id from users where token=?)) returning main_photo;"
              (news_id u, token u) :: IO [Maybe (Only String)]
-           )
          case mf of
            [Just (Only f)] ->
-             liftIO (logg LogDebug ("Removing file " ++ show (f)))
-               >> liftIO (removeFile f)
+             logg LogDebug ("Removing file " ++ show (f))
+               >> removeFile f
                >> return ok
            [Nothing] -> return ok
-           _         -> throwError ErrorBadRequest
+           _         -> throw ErrorBadRequest

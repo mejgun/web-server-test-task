@@ -24,11 +24,9 @@ addComment :: MyHandler Req String
 addComment conn _ u =
   ifNewsPublished conn (news_id u)
     >>  isUser conn (token u)
-    >>  liftIO
-          (execute
-            conn
-            "insert into news_comments (news_id,text,user_id) values ((select id from news where id=? and published=true),?,(select id from users where token=?)) on conflict do nothing;"
-            (news_id u, text u, token u)
-          )
+    >>  execute
+          conn
+          "insert into news_comments (news_id,text,user_id) values ((select id from news where id=? and published=true),?,(select id from users where token=?)) on conflict do nothing;"
+          (news_id u, text u, token u)
     >>= execResult
 

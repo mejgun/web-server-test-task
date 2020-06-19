@@ -26,10 +26,8 @@ deleteTag conn _ u =
     >>  ifNewsExist conn (news_id u)
     >>  ifNewsAuthor conn (news_id u) (token u)
     >>  ifTagExist conn (tag_id u)
-    >>  liftIO
-          (execute
-            conn
-            "delete from news_tags where tag_id=? and news_id=(select id from news where id=? and author_id=(select id from authors where user_id=(select id from users where token=?)));"
-            (tag_id u, news_id u, token u)
-          )
+    >>  execute
+          conn
+          "delete from news_tags where tag_id=? and news_id=(select id from news where id=? and author_id=(select id from authors where user_id=(select id from users where token=?)));"
+          (tag_id u, news_id u, token u)
     >>= execResult

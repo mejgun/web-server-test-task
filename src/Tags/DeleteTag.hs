@@ -23,5 +23,5 @@ delete :: MyHandler Req String
 delete conn _ u =
   isAdmin conn (token u)
     >>  ifTagExist conn (tag_id u)
-    >>  liftIO (execute conn "delete from tags where id=?;" [tag_id u])
+    >>  execute conn "delete from tags where id=?;" [tag_id u]
     >>= execResult
