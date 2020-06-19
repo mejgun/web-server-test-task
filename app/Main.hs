@@ -26,7 +26,11 @@ main = do
   hDuplicateTo stdout (hnd conf)
   createImagesDir
   putStrLn "Server started"
-  l <- RL.mkRequestLogger $ def
+  l <- mkReqLogger conf
+  run 8080 $ l $ application (connection conf) (logger conf)
+ where
+  mkReqLogger :: Config -> IO Middleware
+  mkReqLogger conf = RL.mkRequestLogger $ def
     { RL.outputFormat = case loglevel conf of
                           LogDebug  -> RL.Detailed False
                           LogNormal -> RL.Apache RL.FromSocket
@@ -34,7 +38,6 @@ main = do
     , RL.autoFlush    = True
     , RL.destination  = RL.Handle (hnd conf)
     }
-  run 8080 $ l $ application (connection conf) (logger conf)
 
 application :: MyApp
 application c l r rd = case pathInfo r of

@@ -3,7 +3,6 @@
 module Lib.Functions
   ( returnFile
   , return404
-  , handleSqlErr
   , rIfAdmin
   , rIfAuthor
   , rIfLoginExist
@@ -75,12 +74,13 @@ readConfig = do
   let lgLvl = strToLogLevel $ log_level j
   return Config { connection = c
                 , hnd        = h
-                , logger     = lg h lgLvl
+                , logger     = logg h lgLvl
                 , loglevel   = lgLvl
                 }
  where
-  lg :: AppLogger
-  lg h l1 l2 s = if l1 <= l2 then hPutStrLn h s else return ()
+  logg :: AppLogger
+  logg h appLogLvl msgLogLvl s =
+    if appLogLvl <= msgLogLvl then hPutStrLn h s else return ()
 
   strToLogLevel :: String -> LogLevel
   strToLogLevel s = case s of
