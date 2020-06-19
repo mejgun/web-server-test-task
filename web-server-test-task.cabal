@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 6edcba0b9874fe85b9d6ad0c5603770f4251497a6fc714b1ded2e146598f7e1a
+-- hash: 00f212277b89d596cb420c1d23894a5b1548fae36ed959eadc6b5479215e6f21
 
 name:           web-server-test-task
 version:        0.1.0.0
@@ -79,7 +79,6 @@ library
     , data-default
     , directory
     , http-types
-    , mtl
     , postgresql-simple
     , text
     , utf8-string
@@ -104,7 +103,6 @@ executable web-server-test-task-exe
     , data-default
     , directory
     , http-types
-    , mtl
     , postgresql-simple
     , text
     , utf8-string
@@ -131,7 +129,6 @@ test-suite web-server-test-task-test
     , data-default
     , directory
     , http-types
-    , mtl
     , postgresql-simple
     , text
     , utf8-string

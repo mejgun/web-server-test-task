@@ -9,6 +9,7 @@ module Lib.Functions
   , ifLoginNotExist
   , execResult
   , isValidPage
+  , ifAuthorExist
   , ifCategoryExist
   , ifTagNotExist
   , ifTagExist
@@ -170,6 +171,13 @@ ifLoginNotExist c login = ifLogin 0 c login ErrorLoginAlreadyExist
 ifLogin :: Int -> Connection -> String -> ResultResponseError -> IO Bool
 ifLogin cond c login rElse =
   rIfDB c "select count(id)=? from users where login=?;" (cond, login) rElse
+
+ifAuthorExist :: Connection -> String -> IO Bool
+ifAuthorExist c login = rIfDB
+  c
+  "select count(id)=1 from authors where user_id=(select id from users where login=?);"
+  [login]
+  ErrorAuthorNotExist
 
 ifCategoryExist :: Connection -> Int -> IO Bool
 ifCategoryExist c cat = rIfDB

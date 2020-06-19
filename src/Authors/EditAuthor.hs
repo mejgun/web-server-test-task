@@ -23,7 +23,7 @@ instance A.FromJSON Req
 edit :: MyHandler Req String
 edit conn _ u =
   isAdmin conn (token u)
-    >>  isAuthor conn (login u)
+    >>  ifAuthorExist conn (login u)
     >>  execute
           conn
           "update authors set descr=? where user_id=(select id from users where login=?);"

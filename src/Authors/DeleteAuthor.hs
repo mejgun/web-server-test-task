@@ -22,7 +22,7 @@ instance A.FromJSON Req
 delete :: MyHandler Req String
 delete conn _ u =
   isAdmin conn (token u)
-    >>  isAuthor conn (login u)
+    >>  ifAuthorExist conn (login u)
     >>  execute
           conn
           "delete from authors where user_id=(select id from users where login=?);"

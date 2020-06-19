@@ -30,6 +30,7 @@ data ResultResponseError = Error404
     | ErrorNewsNotExist
     | ErrorNotYourNews
     | ErrorNotUser
+    | ErrorAuthorNotExist
     deriving Show
 
 instance Exception ResultResponseError
