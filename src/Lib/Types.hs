@@ -7,6 +7,7 @@ import           Database.PostgreSQL.Simple
 import           GHC.Generics
 import           Network.Wai
 import           System.IO                      ( Handle )
+import           Control.Monad.Except
 
 type MyApp
   =  Connection
@@ -15,11 +16,11 @@ type MyApp
   -> (Response -> IO ResponseReceived)
   -> IO ResponseReceived
 
-type MyHandler a b = Connection -> Logger -> a -> IO (ResultResponse b)
+type HandlerMonad = ExceptT ResultResponseError IO
 
-data ResultResponse a = Ok200
-    | OkJSON a
-    | Error404
+type MyHandler a b = Connection -> Logger -> a -> HandlerMonad b
+
+data ResultResponseError = Error404
     | ErrorBadRequest
     | ErrorNotAuthor
     | ErrorLoginNotExist

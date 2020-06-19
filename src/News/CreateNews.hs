@@ -31,12 +31,13 @@ instance A.FromJSON Req
 
 create :: MyHandler Req NewsId
 create conn _ u =
-  rIfAuthor conn (token u) $ rIfCategoryExist conn (cat_id u) $ do
-    q <-
-      query
+  rIfAuthor conn (token u) >> rIfCategoryExist conn (cat_id u) >> do
+    q <- liftIO
+      (query
         conn
         "insert into news (name,date,author_id,category_id,text) values (?,now(),(select id from authors where user_id=(select id from users where token=?)),?,?) returning id;"
         (name u, token u, cat_id u, text u) :: IO [NewsId]
-    return $ case q of
-      [n] -> OkJSON n
-      _   -> ErrorBadRequest
+      )
+    case q of
+      [n] -> return n
+      _   -> throwError ErrorBadRequest

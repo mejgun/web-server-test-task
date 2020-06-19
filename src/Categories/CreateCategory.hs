@@ -20,11 +20,13 @@ data Req = Req
 
 instance A.FromJSON Req
 
-create :: MyHandler Req Bool
+create :: MyHandler Req String
 create conn _ u =
   rIfAdmin conn (token u)
-    $   execute
-          conn
-          "insert into categories (name,parent) values (?,(select id from categories where id=?)) on conflict do nothing;"
-          (name u, parent u)
+    >>  liftIO
+          (execute
+            conn
+            "insert into categories (name,parent) values (?,(select id from categories where id=?)) on conflict do nothing;"
+            (name u, parent u)
+          )
     >>= rExecResult

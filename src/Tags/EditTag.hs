@@ -20,9 +20,10 @@ data Req = Req
 
 instance A.FromJSON Req
 
-edit :: MyHandler Req Bool
+edit :: MyHandler Req String
 edit conn _ u =
   rIfAdmin conn (token u)
-    $   rIfTagExist conn (tag_id u)
-    $   execute conn "update tags set name=? where id=?;" (name u, tag_id u)
+    >>  rIfTagExist conn (tag_id u)
+    >>  liftIO
+          (execute conn "update tags set name=? where id=?;" (name u, tag_id u))
     >>= rExecResult

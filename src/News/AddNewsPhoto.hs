@@ -25,18 +25,21 @@ data Req = Req
 
 instance A.FromJSON Req
 
-addPhoto :: MyHandler Req Bool
+addPhoto :: MyHandler Req String
 addPhoto conn _ u =
   rIfAuthor conn (token u)
-    $ rIfNewsExist conn (news_id u)
-    $ rIfNewsAuthor conn (news_id u) (token u)
-    $ do
-        let img = decodeLenient $ fromString $ photo u
-            ext = maybe ".jpg" ((++) "." . (map toLower)) (photo_type u)
-        q <- query
-          conn
-          "insert into news_photos (news_id,photo) values ((select id from news where id=? and author_id=(select id from authors where user_id=(select id from users where token=?))),concat(?,md5(random()::text),?)) returning photo;"
-          (news_id u, token u, imagesDir, ext)
-        case q of
-          [Only imgFile] -> B.writeFile imgFile img >> return Ok200
-          _              -> return ErrorBadRequest
+    >> rIfNewsExist conn (news_id u)
+    >> rIfNewsAuthor conn (news_id u) (token u)
+    >> do
+         let img = decodeLenient $ fromString $ photo u
+             ext = maybe ".jpg" ((++) "." . (map toLower)) (photo_type u)
+         q <- liftIO
+           (query
+             conn
+             "insert into news_photos (news_id,photo) values ((select id from news where id=? and author_id=(select id from authors where user_id=(select id from users where token=?))),concat(?,md5(random()::text),?)) returning photo;"
+             (news_id u, token u, imagesDir, ext)
+           )
+         case q of
+           [Only imgFile] -> liftIO (B.writeFile imgFile img) >> return ok
+           _              -> throwError ErrorBadRequest
+

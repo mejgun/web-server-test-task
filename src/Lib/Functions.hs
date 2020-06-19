@@ -24,6 +24,7 @@ module Lib.Functions
   , adminHandler
   , readConfig
   , module Database.PostgreSQL.Simple
+  , module Control.Monad.Except
   )
 where
 
@@ -31,8 +32,8 @@ import           Blaze.ByteString.Builder       ( Builder
                                                 , fromByteString
                                                 , fromLazyByteString
                                                 )
-import           Control.Exception              ( handle )
-import           Control.Monad                  ( when )
+-- import           Control.Exception              ( handle )
+-- import           Control.Monad                  ( when )
 import           Data.Aeson                    as A
 import qualified Data.ByteString               as B
                                                 ( ByteString )
@@ -62,6 +63,8 @@ import           System.Directory               ( createDirectory
                                                 , doesDirectoryExist
                                                 , doesFileExist
                                                 )
+import           Control.Monad.Except
+
 
 import           Lib.Constants
 import           Lib.Types
@@ -88,28 +91,29 @@ readConfig = do
     "normal" -> LogNormal
     _        -> LogDebug
 
-handleSqlErr
-  :: A.ToJSON a => Logger -> IO (ResultResponse a) -> IO (ResultResponse a)
-handleSqlErr logg = handle $ checkSqlErr $ return ErrorBadRequest
- where
-  checkSqlErr
-    :: A.ToJSON a => IO (ResultResponse a) -> SqlError -> IO (ResultResponse a)
-  checkSqlErr x e = printErr e >> x
+-- handleSqlErr
+--   :: A.ToJSON a => Logger -> IO (ResultResponse a) -> IO (ResultResponse a)
+-- handleSqlErr logg = handle $ checkSqlErr $ return ErrorBadRequest
+--  where
+--   checkSqlErr
+--     :: A.ToJSON a => IO (ResultResponse a) -> SqlError -> IO (ResultResponse a)
+--   checkSqlErr x e = printErr e >> x
 
-  printErr :: SqlError -> IO ()
-  printErr (SqlError q w t e r) = logg LogQuiet $ B8.unpack $ B8.intercalate
-    " "
-    [q, B8.pack (show w), e, r, t]
+--   printErr :: SqlError -> IO ()
+--   printErr (SqlError q w t e r) = logg LogQuiet $ B8.unpack $ B8.intercalate
+--     " "
+--     [q, B8.pack (show w), e, r, t]
 
 rIfJsonBody
   :: (FromJSON a, ToJSON b, Show b)
-  => ResultResponse b
+  => ResultResponseError
   -> MyHandler a b
   -> MyApp
 rIfJsonBody rs x conn logg req respond = do
   j <- bodyToJSON req
-  q <- maybe (return rs) (handleSqlErr (logg) . (x conn logg)) j
-  respond $ resultToResponse q
+  q <- runExceptT $ maybe (throwError rs) {-(handleSqlErr (logg) . (x conn logg))-}
+                                          (x conn logg) j
+  respond $ eitherToResponse q
  where
   bodyToJSON :: A.FromJSON a => Request -> IO (Maybe a)
   bodyToJSON j = A.decode <$> lazyRequestBody j
@@ -120,153 +124,115 @@ normalHandler = rIfJsonBody ErrorBadRequest
 adminHandler :: (A.FromJSON a, A.ToJSON b, Show b) => MyHandler a b -> MyApp
 adminHandler = rIfJsonBody Error404
 
-resultToResponse :: (A.ToJSON a, Show a) => ResultResponse a -> Response
-resultToResponse r = case r of
-  Ok200 -> responseBuilder status200 jsonCT ok
-  OkJSON j ->
-    responseBuilder status200 jsonCT $ fromLazyByteString $ A.encode j
-  Error404 -> responseBuilder status404 [] ""
-  p        -> e p
+eitherToResponse :: A.ToJSON b => Either ResultResponseError b -> Response
+eitherToResponse r = case r of
+  Right j -> responseBuilder status200 jsonCT $ fromLazyByteString $ A.encode j
+  Left Error404 -> responseBuilder status404 [] ""
+  Left p -> e p
  where
-  ok :: Builder
-  ok = fromByteString "{\"ok\":\"ok\"}"
-
-  e :: Show a => ResultResponse a -> Response
+  e :: ResultResponseError -> Response
   e = responseBuilder status400 jsonCT . toErr . show
-
-  jsonCT :: [(HeaderName, B.ByteString)]
-  jsonCT = [("Content-Type", "application/json")]
 
   toErr :: String -> Builder
   toErr s = fromByteString $ B8.pack $ "{\"error\":\"" ++ s ++ "\"}"
+
+  jsonCT :: [(HeaderName, B.ByteString)]
+  jsonCT = [("Content-Type", "application/json")]
 
 rIfDB
   :: ToRow a
   => Connection
   -> Query
   -> a
-  -> IO (ResultResponse b)
-  -> ResultResponse b
-  -> IO (ResultResponse b)
-rIfDB c q val r1 r2 = do
-  p <- query c q val :: IO [Only Bool]
+  -> ResultResponseError
+  -> HandlerMonad Bool
+rIfDB c q val rElse = do
+  p <- liftIO (query c q val :: IO [Only Bool])
   case p of
-    [Only True] -> r1
-    _           -> return r2
+    [Only True] -> return True
+    _           -> throwError rElse
 
-rIfAdmin
-  :: Connection -> String -> IO (ResultResponse a) -> IO (ResultResponse a)
-rIfAdmin conn token r = rIfDB
+rIfAdmin :: Connection -> String -> HandlerMonad Bool
+rIfAdmin conn token = rIfDB
   conn
   (Query "select admin from users where token=? limit 1;")
   [token]
-  r
   Error404
 
-rIfAuthor
-  :: Connection -> String -> IO (ResultResponse a) -> IO (ResultResponse a)
-rIfAuthor c token r = rIfDB
+rIfAuthor :: Connection -> String -> HandlerMonad Bool
+rIfAuthor c token = rIfDB
   c
   "select count(id)=1 from authors where user_id=(select id from users where token=?);"
   [token]
-  r
   ErrorNotAuthor
 
-rIfUser
-  :: Connection -> String -> IO (ResultResponse a) -> IO (ResultResponse a)
-rIfUser conn token r = rIfDB
+rIfUser :: Connection -> String -> HandlerMonad Bool
+rIfUser conn token = rIfDB
   conn
   (Query "select count(id)=1 from users where token=?;")
   [token]
-  r
   ErrorNotUser
 
-rIfLoginExist
-  :: Connection -> String -> IO (ResultResponse a) -> IO (ResultResponse a)
-rIfLoginExist c login r = rIfLogin 1 c login r ErrorLoginNotExist
+rIfLoginExist :: Connection -> String -> HandlerMonad Bool
+rIfLoginExist c login = rIfLogin 1 c login ErrorLoginNotExist
 
-rIfLoginNotExist
-  :: Connection -> String -> IO (ResultResponse a) -> IO (ResultResponse a)
-rIfLoginNotExist c login r = rIfLogin 0 c login r ErrorLoginAlreadyExist
+rIfLoginNotExist :: Connection -> String -> HandlerMonad Bool
+rIfLoginNotExist c login = rIfLogin 0 c login ErrorLoginAlreadyExist
 
 rIfLogin
-  :: Int
-  -> Connection
-  -> String
-  -> IO (ResultResponse a)
-  -> ResultResponse a
-  -> IO (ResultResponse a)
-rIfLogin cond c login r rElse =
-  rIfDB c "select count(id)=? from users where login=?;" (cond, login) r rElse
+  :: Int -> Connection -> String -> ResultResponseError -> HandlerMonad Bool
+rIfLogin cond c login rElse =
+  rIfDB c "select count(id)=? from users where login=?;" (cond, login) rElse
 
-rIfAuthorExist
-  :: Connection -> String -> IO (ResultResponse a) -> IO (ResultResponse a)
-rIfAuthorExist c login r = rIfDB
+rIfAuthorExist :: Connection -> String -> HandlerMonad Bool
+rIfAuthorExist c login = rIfDB
   c
   "select count(id)=1 from authors where user_id=(select id from users where login=?);"
   [login]
-  r
   ErrorAuthorNotExist
 
-rIfCategoryExist
-  :: Connection -> Int -> IO (ResultResponse a) -> IO (ResultResponse a)
-rIfCategoryExist c cat r = rIfDB
+rIfCategoryExist :: Connection -> Int -> HandlerMonad Bool
+rIfCategoryExist c cat = rIfDB
   c
   "select count(id)=1 from categories where id=?;"
   [cat]
-  r
   ErrorCategoryNotExist
 
-rIfTagNotExist
-  :: Connection -> String -> IO (ResultResponse a) -> IO (ResultResponse a)
-rIfTagNotExist c tag r = rIfDB c
-                               "select count(id)=0 from tags where name=?;"
-                               [tag]
-                               r
-                               ErrorTagAlreadyExist
+rIfTagNotExist :: Connection -> String -> HandlerMonad Bool
+rIfTagNotExist c tag = rIfDB c
+                             "select count(id)=0 from tags where name=?;"
+                             [tag]
+                             ErrorTagAlreadyExist
 
-rIfTagExist
-  :: Connection -> Int -> IO (ResultResponse a) -> IO (ResultResponse a)
-rIfTagExist c tag_id r =
-  rIfDB c "select count(id)=1 from tags where id=?;" [tag_id] r ErrorTagNotExist
+rIfTagExist :: Connection -> Int -> HandlerMonad Bool
+rIfTagExist c tag_id =
+  rIfDB c "select count(id)=1 from tags where id=?;" [tag_id] ErrorTagNotExist
 
-rIfNewsExist
-  :: Connection -> Int -> IO (ResultResponse a) -> IO (ResultResponse a)
-rIfNewsExist c news_id r = rIfDB c
-                                 "select count(id)=1 from news where id=?;"
-                                 [news_id]
-                                 r
-                                 ErrorNewsNotExist
+rIfNewsExist :: Connection -> Int -> HandlerMonad Bool
+rIfNewsExist c news_id =
+  rIfDB c "select count(id)=1 from news where id=?;" [news_id] ErrorNewsNotExist
 
-rIfNewsPublished
-  :: Connection -> Int -> IO (ResultResponse a) -> IO (ResultResponse a)
-rIfNewsPublished c news_id r = rIfDB
+rIfNewsPublished :: Connection -> Int -> HandlerMonad Bool
+rIfNewsPublished c news_id = rIfDB
   c
   "select count(id)=1 from news where id=? and published=true;"
   [news_id]
-  r
   ErrorNewsNotExist
 
-rIfNewsAuthor
-  :: Connection
-  -> Int
-  -> String
-  -> IO (ResultResponse a)
-  -> IO (ResultResponse a)
-rIfNewsAuthor c news_id token r = rIfDB
+rIfNewsAuthor :: Connection -> Int -> String -> HandlerMonad Bool
+rIfNewsAuthor c news_id token = rIfDB
   c
   "select count(id)=1 from news where id=? and author_id=(select id from authors where user_id=(select id from users where token=?));"
   (news_id, token)
-  r
   ErrorNotYourNews
 
-rIfValidPage :: Int -> IO (ResultResponse a) -> IO (ResultResponse a)
-rIfValidPage p r = if p > 0 then r else return ErrorBadPage
+rIfValidPage :: Int -> HandlerMonad Bool
+rIfValidPage p = if p > 0 then return True else throwError ErrorBadPage
 
-rExecResult :: GHC.Int.Int64 -> IO (ResultResponse a)
-rExecResult i = return $ case i of
-  1 -> Ok200
-  _ -> ErrorBadRequest
+rExecResult :: GHC.Int.Int64 -> HandlerMonad String
+rExecResult i = case i of
+  1 -> return ok
+  _ -> throwError ErrorBadRequest
 
 return404 :: (Response -> IO ResponseReceived) -> IO ResponseReceived
 return404 rd = rd $ responseBuilder status404 [] ""

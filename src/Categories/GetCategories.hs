@@ -31,11 +31,12 @@ instance A.FromJSON Req
 get :: MyHandler Req [Cat]
 get conn _ u =
   rIfValidPage (page u)
-    $ OkJSON
-    <$> (query conn
-               "select id,name,parent from categories offset ? limit ?;"
-               (offset, limit) :: IO [Cat]
-        )
+    >>  liftIO
+          (query conn
+                 "select id,name,parent from categories offset ? limit ?;"
+                 (offset, limit) :: IO [Cat]
+          )
+    >>= return
  where
   offset = calcOffset (page u) categoriesPerPage
   limit  = categoriesPerPage

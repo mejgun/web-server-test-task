@@ -20,12 +20,14 @@ data Req = Req
 
 instance A.FromJSON Req
 
-edit :: MyHandler Req Bool
+edit :: MyHandler Req String
 edit conn _ u =
   rIfAdmin conn (token u)
-    $   rIfAuthorExist conn (login u)
-    $   execute
-          conn
-          "update authors set descr=? where user_id=(select id from users where login=?);"
-          [descr u, login u]
+    >>  rIfAuthorExist conn (login u)
+    >>  liftIO
+          (execute
+            conn
+            "update authors set descr=? where user_id=(select id from users where login=?);"
+            [descr u, login u]
+          )
     >>= rExecResult

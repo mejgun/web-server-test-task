@@ -20,12 +20,14 @@ data Req = Req
 
 instance A.FromJSON Req
 
-make :: MyHandler Req Bool
+make :: MyHandler Req String
 make conn _ u =
   rIfAdmin conn (token u)
-    $   rIfLoginExist conn (login u)
-    $   execute
-          conn
-          "insert into authors (user_id,descr) values ((select id from users where login=?),?) on conflict (user_id) do update set descr=?;"
-          [login u, descr u, descr u]
+    >>  rIfLoginExist conn (login u)
+    >>  liftIO
+          (execute
+            conn
+            "insert into authors (user_id,descr) values ((select id from users where login=?),?) on conflict (user_id) do update set descr=?;"
+            [login u, descr u, descr u]
+          )
     >>= rExecResult

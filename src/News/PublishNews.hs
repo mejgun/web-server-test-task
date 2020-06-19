@@ -20,13 +20,15 @@ data Req = Req
 
 instance A.FromJSON Req
 
-release :: MyHandler Req Int
+release :: MyHandler Req String
 release conn _ u =
   rIfAuthor conn (token u)
-    $   rIfNewsExist conn (news_id u)
-    $   rIfNewsAuthor conn (news_id u) (token u)
-    $   execute
-          conn
-          "update news set published=? where id=? and author_id=(select id from authors where user_id=(select id from users where token=?));"
-          (publish u, news_id u, token u)
+    >>  rIfNewsExist conn (news_id u)
+    >>  rIfNewsAuthor conn (news_id u) (token u)
+    >>  liftIO
+          (execute
+            conn
+            "update news set published=? where id=? and author_id=(select id from authors where user_id=(select id from users where token=?));"
+            (publish u, news_id u, token u)
+          )
     >>= rExecResult

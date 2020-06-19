@@ -20,16 +20,16 @@ data Req = Req
 
 instance A.FromJSON Req
 
-delete :: MyHandler Req Bool
+delete :: MyHandler Req String
 delete conn logg u =
-  rIfAdmin conn (token u) $ rIfLoginExist conn (login u) $ do
-    q <-
-      query conn "delete from users where login=? returning photo;" [login u] :: IO
-        [Maybe (Only String)]
+  rIfAdmin conn (token u) >> rIfLoginExist conn (login u) >> do
+    q <- liftIO
+      (query conn "delete from users where login=? returning photo;" [login u] :: IO
+          [Maybe (Only String)]
+      )
     case q of
       [Just (Only f)] ->
-        logg LogDebug ("Removing file " ++ show (f))
-          >> removeFile f
-          >> return Ok200
-      [Nothing] -> return Ok200
-      _         -> return ErrorBadRequest
+        liftIO (logg LogDebug ("Removing file " ++ show (f)) >> removeFile f)
+          >> return ok
+      [Nothing] -> return ok
+      _         -> throwError ErrorBadRequest

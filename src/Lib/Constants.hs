@@ -22,3 +22,6 @@ newsPerPage = 10
 
 imagesDir :: String
 imagesDir = "images/"
+
+ok :: String
+ok = "ok"

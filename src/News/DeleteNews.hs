@@ -20,27 +20,29 @@ data Req = Req
 
 instance A.FromJSON Req
 
-delete :: MyHandler Req Bool
+delete :: MyHandler Req String
 delete conn logg u =
   rIfAuthor conn (token u)
-    $ rIfNewsExist conn (news_id u)
-    $ rIfNewsAuthor conn (news_id u) (token u)
-    $ do
-        pf <-
-          query
-            conn
-            "delete from news_photos where news_id=(select id from news where id=? and author_id=(select id from authors where user_id=(select id from users where token=?))) returning photo;"
-            (news_id u, token u) :: IO [Only String]
-        mapM_ (\f -> removeFile (fromOnly f)) pf
-        mf <-
-          query
-            conn
-            "delete from news where id=? and author_id=(select id from authors where user_id=(select id from users where token=?)) returning main_photo;"
-            (news_id u, token u) :: IO [Maybe (Only String)]
-        case mf of
-          [Just (Only f)] ->
-            logg LogDebug ("Removing file " ++ show (f))
-              >> removeFile f
-              >> return Ok200
-          [Nothing] -> return Ok200
-          _         -> return ErrorBadRequest
+    >> rIfNewsExist conn (news_id u)
+    >> rIfNewsAuthor conn (news_id u) (token u)
+    >> do
+         pf <- liftIO
+           (query
+             conn
+             "delete from news_photos where news_id=(select id from news where id=? and author_id=(select id from authors where user_id=(select id from users where token=?))) returning photo;"
+             (news_id u, token u) :: IO [Only String]
+           )
+         liftIO (mapM_ (\f -> removeFile (fromOnly f)) pf)
+         mf <- liftIO
+           (query
+             conn
+             "delete from news where id=? and author_id=(select id from authors where user_id=(select id from users where token=?)) returning main_photo;"
+             (news_id u, token u) :: IO [Maybe (Only String)]
+           )
+         case mf of
+           [Just (Only f)] ->
+             liftIO (logg LogDebug ("Removing file " ++ show (f)))
+               >> liftIO (removeFile f)
+               >> return ok
+           [Nothing] -> return ok
+           _         -> throwError ErrorBadRequest

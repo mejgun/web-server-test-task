@@ -29,8 +29,9 @@ instance A.ToJSON Token
 
 log_in :: MyHandler Req Token
 log_in conn _ u = do
-  t <-
-    query conn
-          "select token from users where login=? and password=md5(?);"
-          [login u, password u] :: IO [Token]
-  return $ if null t then ErrorBadRequest else OkJSON $ head t
+  t <- liftIO
+    (query conn
+           "select token from users where login=? and password=md5(?);"
+           [login u, password u] :: IO [Token]
+    )
+  if null t then throwError ErrorBadRequest else return $ head t

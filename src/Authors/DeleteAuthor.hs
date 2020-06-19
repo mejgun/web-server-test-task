@@ -19,12 +19,14 @@ data Req = Req
 
 instance A.FromJSON Req
 
-delete :: MyHandler Req Bool
+delete :: MyHandler Req String
 delete conn _ u =
   rIfAdmin conn (token u)
-    $   rIfAuthorExist conn (login u)
-    $   execute
-          conn
-          "delete from authors where user_id=(select id from users where login=?);"
-          [login u]
+    >>  rIfAuthorExist conn (login u)
+    >>  liftIO
+          (execute
+            conn
+            "delete from authors where user_id=(select id from users where login=?);"
+            [login u]
+          )
     >>= rExecResult

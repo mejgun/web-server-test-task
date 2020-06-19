@@ -19,9 +19,9 @@ data Req = Req
 
 instance A.FromJSON Req
 
-delete :: MyHandler Req Bool
+delete :: MyHandler Req String
 delete conn _ u =
   rIfAdmin conn (token u)
-    $   rIfTagExist conn (tag_id u)
-    $   execute conn "delete from tags where id=?;" [tag_id u]
+    >>  rIfTagExist conn (tag_id u)
+    >>  liftIO (execute conn "delete from tags where id=?;" [tag_id u])
     >>= rExecResult
