@@ -33,7 +33,6 @@ import           Blaze.ByteString.Builder       ( Builder
                                                 , fromLazyByteString
                                                 )
 import           Control.Exception
-import           Control.Monad                  ( when )
 import           Data.Aeson                    as A
 import qualified Data.ByteString               as B
                                                 ( ByteString )
@@ -54,11 +53,14 @@ import           Network.HTTP.Types             ( HeaderName
                                                 , status404
                                                 )
 import           Network.Wai
-import           System.Directory               ( createDirectory
-                                                , doesDirectoryExist
+import           System.Directory               ( createDirectoryIfMissing
                                                 , doesFileExist
+                                                , getPermissions
+                                                , readable
+                                                , writable
                                                 )
 import           System.IO                      ( IOMode(..)
+                                                , hFlush
                                                 , hPutStrLn
                                                 , openFile
                                                 )
@@ -81,7 +83,7 @@ readConfig f = do
  where
   logg :: AppLogger
   logg h appLogLvl msgLogLvl s =
-    if appLogLvl <= msgLogLvl then hPutStrLn h s else return ()
+    if appLogLvl <= msgLogLvl then hPutStrLn h s >> hFlush h else return ()
 
   strToLogLevel :: String -> LogLevel
   strToLogLevel s = case s of
@@ -241,9 +243,17 @@ returnFile f rd = do
       let ext = encodeUtf8 $ T.toLower $ last l
       in  [("Content-Type", "application/" <> ext)]
 
-createImagesDir :: IO ()
-createImagesDir = doesDirectoryExist imagesDir
-  >>= \exist -> when (not exist) $ createDirectory imagesDir
+createImagesDir :: Logger -> IO ()
+createImagesDir l = do
+  handle (\e -> l LogQuiet (show (e :: IOException)) >> throw e)
+    $ createDirectoryIfMissing False imagesDir
+  p <- getPermissions imagesDir
+  if readable p && writable p
+    then return ()
+    else do
+      let e = imagesDir ++ " access denied"
+      l LogQuiet e
+      error e
 
 pgArrayToList :: PGArray (Maybe a) -> [a]
 pgArrayToList p = catMaybes $ fromPGArray p

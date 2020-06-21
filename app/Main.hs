@@ -9,19 +9,20 @@ where
 import qualified Authors
 import qualified Categories
 import           Data.Default
-import           Lib
 import           Network.Wai
 import           Network.Wai.Handler.Warp       ( run )
 import qualified Network.Wai.Middleware.RequestLogger
                                                as RL
+
 import qualified News
 import qualified Tags
+import           Lib
 import qualified Users
 
 main :: IO ()
 main = do
   conf <- readConfig configFile
-  createImagesDir
+  createImagesDir (logger conf)
   putStrLn "Server started"
   l <- mkReqLogger conf
   run 8080 $ l $ application (connection conf) (logger conf)
