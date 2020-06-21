@@ -1,4 +1,5 @@
 {
     "pgconfig": "postgresql://pgusername:pguserpassword@127.0.0.1/pgdbname",
-    "log_level": "debug"
+    "log_level": "debug",
+    "log_file": "app.log"
 }

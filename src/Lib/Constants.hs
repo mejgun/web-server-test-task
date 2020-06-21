@@ -25,3 +25,6 @@ imagesDir = "images/"
 
 ok :: String
 ok = "ok"
+
+configFile :: FilePath
+configFile = "config.json"

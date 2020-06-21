@@ -9,21 +9,18 @@ where
 import qualified Authors
 import qualified Categories
 import           Data.Default
-import           GHC.IO.Handle                  ( hDuplicateTo )
 import           Lib
 import           Network.Wai
 import           Network.Wai.Handler.Warp       ( run )
 import qualified Network.Wai.Middleware.RequestLogger
                                                as RL
 import qualified News
-import           System.IO                      ( stdout )
 import qualified Tags
 import qualified Users
 
 main :: IO ()
 main = do
-  conf <- readConfig
-  hDuplicateTo stdout (hnd conf)
+  conf <- readConfig configFile
   createImagesDir
   putStrLn "Server started"
   l <- mkReqLogger conf

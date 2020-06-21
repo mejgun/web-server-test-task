@@ -47,6 +47,7 @@ type Logger = LogLevel -> String -> IO ()
 data Conf = Conf
     { pgconfig  :: String
     , log_level :: String
+    , log_file  :: String
     }
     deriving (Generic, Show)
 

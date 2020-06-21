@@ -67,11 +67,11 @@ import           System.IO                      ( IOMode(..)
 import           Lib.Constants
 import           Lib.Types
 
-readConfig :: IO Config
-readConfig = do
-  j <- fromJust <$> A.decodeFileStrict "config.json" :: IO Conf
+readConfig :: FilePath -> IO Config
+readConfig f = do
+  j <- fromJust <$> A.decodeFileStrict f :: IO Conf
   c <- connectPostgreSQL $ B8.pack $ pgconfig j
-  h <- openFile "app.log" AppendMode
+  h <- openFile (log_file j) AppendMode
   let lgLvl = strToLogLevel $ log_level j
   return Config { connection = c
                 , hnd        = h
