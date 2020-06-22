@@ -42,4 +42,4 @@ create conn logg u = ifLoginNotExist conn (login u) >> case photo u of
       (name u, lastname u, login u, password u, imagesDir, ext)
     case q of
       [Only imgFile] -> saveFile logg imgFile img >> return ok
-      _              -> throw ErrBadRequest
+      _              -> throw ErrorBadRequest

@@ -45,4 +45,4 @@ setMainPhoto conn logg u =
              (imagesDir, ext, news_id u, token u) :: IO [Maybe (Only String)]
          case q of
            [Just (Only imgFile)] -> saveFile logg imgFile img >> return ok
-           _                     -> throw ErrBadRequest
+           _                     -> throw ErrorBadRequest

@@ -36,4 +36,4 @@ deletePhoto conn logg u =
              logg LogDebug ("Removing file " ++ show (f))
                >> deleteFile logg f
                >> return ok
-           _ -> throw ErrBadRequest
+           _ -> throw ErrorBadRequest

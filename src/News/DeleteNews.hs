@@ -42,4 +42,4 @@ delete conn logg u =
                >> deleteFile logg f
                >> return ok
            [Nothing] -> return ok
-           _         -> throw ErrBadRequest
+           _         -> throw ErrorBadRequest

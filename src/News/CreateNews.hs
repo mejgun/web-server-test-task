@@ -39,4 +39,4 @@ create conn _ u =
         (name u, token u, cat_id u, text u) :: IO [NewsId]
     case q of
       [n] -> return n
-      _   -> throw ErrBadRequest
+      _   -> throw ErrorBadRequest

@@ -9,7 +9,7 @@ import qualified Data.ByteString               as B
 
 main :: IO ()
 main = do
-  c <- readConfig
+  c <- readConfig configFile
   q <- Query <$> B.readFile "db-scripts/db.sql"
   r <- execute_ (connection c) q
   print r

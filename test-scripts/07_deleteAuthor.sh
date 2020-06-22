@@ -9,6 +9,3 @@ set -x
 
 : delete author - user not admin
 ./curl.sh author/delete '{"login":"l","token":"8e37ca708c492c66383247ae57009531"}'
-
-: 
-

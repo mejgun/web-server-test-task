@@ -103,7 +103,7 @@ readConfig f = do
     _        -> LogDebug
 
 handleSqlErr :: A.ToJSON a => Logger -> IO a -> IO a
-handleSqlErr logg = handle $ checkSqlErr $ throw ErrBadRequest
+handleSqlErr logg = handle $ checkSqlErr $ throw ErrorBadRequest
  where
   checkSqlErr :: A.ToJSON a => IO a -> SqlError -> IO a
   checkSqlErr x e = printErr e >> x
@@ -127,17 +127,17 @@ rIfJsonBody rs x conn logg req respond = do
   bodyToJSON j = A.decode <$> lazyRequestBody j
 
 normalHandler :: (A.FromJSON a, A.ToJSON b, Show b) => MyHandler a b -> MyApp
-normalHandler = rIfJsonBody ErrBadRequest
+normalHandler = rIfJsonBody ErrorBadRequest
 
 adminHandler :: (A.FromJSON a, A.ToJSON b, Show b) => MyHandler a b -> MyApp
-adminHandler = rIfJsonBody ErrNotFound
+adminHandler = rIfJsonBody ErrorNotFound
 
 eitherToResponse :: A.ToJSON b => Either ResultResponseError b -> Response
 eitherToResponse r = case r of
   Right j -> responseBuilder status200 jsonCT $ fromLazyByteString $ A.encode j
-  Left  ErrNotFound -> responseBuilder status404 [] "404 Not Found"
-  Left  ErrInternal -> responseBuilder status500 [] "500 Internal Server Error"
-  Left  p           -> e p
+  Left  ErrorNotFound -> responseBuilder status404 [] "Not Found"
+  Left  ErrorInternal -> responseBuilder status500 [] "Internal Server Error"
+  Left  p             -> e p
  where
   e :: ResultResponseError -> Response
   e = responseBuilder status400 jsonCT . toErr . show
@@ -160,27 +160,27 @@ isAdmin conn token = rIfDB
   conn
   (Query "select admin from users where token=? limit 1;")
   [token]
-  ErrNotFound
+  ErrorNotFound
 
 isAuthor :: Connection -> String -> IO Bool
 isAuthor c token = rIfDB
   c
   "select count(id)=1 from authors where user_id=(select id from users where token=?);"
   [token]
-  ErrNotAuthor
+  ErrorNotAuthor
 
 isUser :: Connection -> String -> IO Bool
 isUser conn token = rIfDB
   conn
   (Query "select count(id)=1 from users where token=?;")
   [token]
-  ErrNotUser
+  ErrorNotUser
 
 ifLoginExist :: Connection -> String -> IO Bool
-ifLoginExist c login = ifLogin 1 c login ErrLoginNotExist
+ifLoginExist c login = ifLogin 1 c login ErrorLoginNotExist
 
 ifLoginNotExist :: Connection -> String -> IO Bool
-ifLoginNotExist c login = ifLogin 0 c login ErrLoginAlreadyExist
+ifLoginNotExist c login = ifLogin 0 c login ErrorLoginAlreadyExist
 
 ifLogin :: Int -> Connection -> String -> ResultResponseError -> IO Bool
 ifLogin cond c login rElse =
@@ -191,48 +191,50 @@ ifAuthorExist c login = rIfDB
   c
   "select count(id)=1 from authors where user_id=(select id from users where login=?);"
   [login]
-  ErrAuthorNotExist
+  ErrorAuthorNotExist
 
 ifCategoryExist :: Connection -> Int -> IO Bool
 ifCategoryExist c cat = rIfDB
   c
   "select count(id)=1 from categories where id=?;"
   [cat]
-  ErrCategoryNotExist
+  ErrorCategoryNotExist
 
 ifTagNotExist :: Connection -> String -> IO Bool
-ifTagNotExist c tag =
-  rIfDB c "select count(id)=0 from tags where name=?;" [tag] ErrTagAlreadyExist
+ifTagNotExist c tag = rIfDB c
+                            "select count(id)=0 from tags where name=?;"
+                            [tag]
+                            ErrorTagAlreadyExist
 
 ifTagExist :: Connection -> Int -> IO Bool
 ifTagExist c tag_id =
-  rIfDB c "select count(id)=1 from tags where id=?;" [tag_id] ErrTagNotExist
+  rIfDB c "select count(id)=1 from tags where id=?;" [tag_id] ErrorTagNotExist
 
 ifNewsExist :: Connection -> Int -> IO Bool
 ifNewsExist c news_id =
-  rIfDB c "select count(id)=1 from news where id=?;" [news_id] ErrNewsNotExist
+  rIfDB c "select count(id)=1 from news where id=?;" [news_id] ErrorNewsNotExist
 
 ifNewsPublished :: Connection -> Int -> IO Bool
 ifNewsPublished c news_id = rIfDB
   c
   "select count(id)=1 from news where id=? and published=true;"
   [news_id]
-  ErrNewsNotExist
+  ErrorNewsNotExist
 
 ifNewsAuthor :: Connection -> Int -> String -> IO Bool
 ifNewsAuthor c news_id token = rIfDB
   c
   "select count(id)=1 from news where id=? and author_id=(select id from authors where user_id=(select id from users where token=?));"
   (news_id, token)
-  ErrNotYourNews
+  ErrorNotYourNews
 
 isValidPage :: Int -> IO Bool
-isValidPage p = if p > 0 then return True else throw ErrBadPage
+isValidPage p = if p > 0 then return True else throw ErrorBadPage
 
 execResult :: GHC.Int.Int64 -> IO String
 execResult i = case i of
   1 -> return ok
-  _ -> throw ErrBadRequest
+  _ -> throw ErrorBadRequest
 
 return404 :: (Response -> IO ResponseReceived) -> IO ResponseReceived
 return404 rd = rd $ responseBuilder status404 [] ""
@@ -270,7 +272,7 @@ deleteFile l f =
   removeFile f
     `catch` (\e ->
               l LogQuiet ("Cannot delete file. " ++ (show (e :: IOException)))
-                >> throw ErrInternal
+                >> throw ErrorInternal
             )
 
 saveFile :: Logger -> FilePath -> B.ByteString -> IO ()
@@ -278,7 +280,7 @@ saveFile l f dat =
   B.writeFile f dat
     `catch` (\e ->
               l LogQuiet ("Cannot save file. " ++ (show (e :: IOException)))
-                >> throw ErrInternal
+                >> throw ErrorInternal
             )
 pgArrayToList :: PGArray (Maybe a) -> [a]
 pgArrayToList = catMaybes . fromPGArray
@@ -287,7 +289,7 @@ calcOffset :: Int -> Int -> Int
 calcOffset page perpage = (page - 1) * perpage
 
 makeExt :: Maybe String -> String
-makeExt = maybe ".jpg" ((++) "." . (map toLower))
+makeExt = maybe ".jpg" $ (++) "." . (map toLower)
 
 decodeBase64 :: String -> B.ByteString
 decodeBase64 = decodeLenient . fromString

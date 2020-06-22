@@ -35,5 +35,5 @@ addPhoto conn logg u =
            (news_id u, token u, imagesDir, ext)
          case q of
            [Only imgFile] -> saveFile logg imgFile img >> return ok
-           _              -> throw ErrBadRequest
+           _              -> throw ErrorBadRequest
 

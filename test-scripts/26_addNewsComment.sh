@@ -11,7 +11,7 @@ set -x
 ./curl.sh news/addcomment '{"news_id":2,"token":"b185b4ee226a682ff359b7640212c1c5","text":"test_comment_text"}'
 
 : news add comment - user not found
-./curl.sh news/addcomment '{"news_id":1,"token":"0","text":"test_comment_text"}'
+./curl.sh news/addcomment '{"news_id":2,"token":"0","text":"test_comment_text"}'
 
 : news add comment - news not found
 ./curl.sh news/addcomment '{"news_id":999999,"token":"0","text":"test_comment_text"}'
