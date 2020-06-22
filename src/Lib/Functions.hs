@@ -46,7 +46,7 @@ import           Data.ByteString.Base64         ( decodeLenient )
 import qualified Data.ByteString.Char8         as B8
 import           Data.ByteString.UTF8           ( fromString )
 import           Data.Char                      ( toLower )
-import           Data.Maybe                     ( fromJust )
+import           Data.Maybe                     ( fromMaybe )
 import           Data.Maybe                     ( catMaybes )
 import qualified Data.Text                     as T
 import           Data.Text.Encoding             ( encodeUtf8 )
@@ -82,7 +82,7 @@ import           Lib.Types
 
 readConfig :: FilePath -> IO Config
 readConfig f = do
-  j <- fromJust <$> A.decodeFileStrict f :: IO Conf
+  j <- fromMaybe (error "ERROR: Bad config") <$> A.decodeFileStrict f :: IO Conf
   c <- connectPostgreSQL $ B8.pack $ pgconfig j
   h <- openFile (log_file j) AppendMode
   let lgLvl = strToLogLevel $ log_level j
