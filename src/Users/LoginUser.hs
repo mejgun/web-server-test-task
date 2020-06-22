@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Users.LoginUser
-  ( log_in
+  ( logIn
   )
 where
 
@@ -27,10 +27,10 @@ data Token = Token
 instance FromRow Token
 instance A.ToJSON Token
 
-log_in :: MyHandler Req Token
-log_in conn _ u = do
+logIn :: MyHandler Req Token
+logIn conn _ u = do
   t <-
     query conn
           "select token from users where login=? and password=md5(?);"
           [login u, password u] :: IO [Token]
-  if null t then throw ErrorBadRequest else return $ head t
+  if null t then throw ErrBadRequest else return $ head t

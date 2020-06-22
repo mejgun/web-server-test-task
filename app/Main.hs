@@ -14,9 +14,9 @@ import           Network.Wai.Handler.Warp       ( run )
 import qualified Network.Wai.Middleware.RequestLogger
                                                as RL
 
+import           Lib
 import qualified News
 import qualified Tags
-import           Lib
 import qualified Users
 
 main :: IO ()
@@ -42,7 +42,7 @@ application c l r rd = case pathInfo r of
   ["user"    , "get"          ] -> norm Users.get
   ["user"    , "create"       ] -> norm Users.create
   ["user"    , "delete"       ] -> adm Users.delete
-  ["user"    , "login"        ] -> norm Users.log_in
+  ["user"    , "login"        ] -> norm Users.logIn
   ["author"  , "make"         ] -> adm Authors.make
   ["author"  , "edit"         ] -> adm Authors.edit
   ["author"  , "delete"       ] -> adm Authors.delete

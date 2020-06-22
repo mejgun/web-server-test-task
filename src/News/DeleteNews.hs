@@ -8,7 +8,6 @@ where
 
 import qualified Data.Aeson                    as A
 import           GHC.Generics
-import           System.Directory               ( removeFile )
 
 import           Lib
 
@@ -31,7 +30,7 @@ delete conn logg u =
              conn
              "delete from news_photos where news_id=(select id from news where id=? and author_id=(select id from authors where user_id=(select id from users where token=?))) returning photo;"
              (news_id u, token u) :: IO [Only String]
-         mapM_ (\f -> removeFile (fromOnly f)) pf
+         mapM_ (deleteFile logg . fromOnly) pf
          mf <-
            query
              conn
@@ -40,7 +39,7 @@ delete conn logg u =
          case mf of
            [Just (Only f)] ->
              logg LogDebug ("Removing file " ++ show (f))
-               >> removeFile f
+               >> deleteFile logg f
                >> return ok
            [Nothing] -> return ok
-           _         -> throw ErrorBadRequest
+           _         -> throw ErrBadRequest

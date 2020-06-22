@@ -8,7 +8,6 @@ where
 
 import qualified Data.Aeson                    as A
 import           GHC.Generics
-import           System.Directory               ( removeFile )
 
 import           Lib
 
@@ -29,7 +28,7 @@ delete conn logg u =
     case q of
       [Just (Only f)] ->
         logg LogDebug ("Removing file " ++ show (f))
-          >> removeFile f
+          >> deleteFile logg f
           >> return ok
       [Nothing] -> return ok
-      _         -> throw ErrorBadRequest
+      _         -> throw ErrBadRequest

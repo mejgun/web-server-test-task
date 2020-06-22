@@ -18,19 +18,20 @@ type MyApp
 
 type MyHandler a b = Connection -> Logger -> a -> IO b
 
-data ResultResponseError = Error404
-    | ErrorBadRequest
-    | ErrorNotAuthor
-    | ErrorLoginNotExist
-    | ErrorLoginAlreadyExist
-    | ErrorBadPage
-    | ErrorCategoryNotExist
-    | ErrorTagAlreadyExist
-    | ErrorTagNotExist
-    | ErrorNewsNotExist
-    | ErrorNotYourNews
-    | ErrorNotUser
-    | ErrorAuthorNotExist
+data ResultResponseError = ErrNotFound
+    | ErrBadRequest
+    | ErrNotAuthor
+    | ErrLoginNotExist
+    | ErrLoginAlreadyExist
+    | ErrBadPage
+    | ErrCategoryNotExist
+    | ErrTagAlreadyExist
+    | ErrTagNotExist
+    | ErrNewsNotExist
+    | ErrNotYourNews
+    | ErrNotUser
+    | ErrAuthorNotExist
+    | ErrInternal
     deriving Show
 
 instance Exception ResultResponseError
