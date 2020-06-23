@@ -64,4 +64,4 @@ news/deletecomment | comment_id: int<br>token: string | Admin
 news/getcomments | news_id: int<br>page: int | All
 news/delete | news_id: int<br>token: int | Author
 news/getdrafts | token: string<br>page: int | Author
-news/get | created_at: string (optional)<br>created_before: string (optional)<br>created_after: string (optional)<br>author_contains: string (optional)<br>name_contains: string (optional)<br>text_contains: string (optional)<br>anything_contains:  string (optional)<br>cat_id: int (optional)<br>tags_all: list int (optional)<br>tags_any: list int (optional)<br>sort_by: "author" or "category" or "photos" (optional)<br>page: i | All
+news/get | **filters**<br>created_at: string (optional)<br>created_before: string (optional)<br>created_after: string (optional)<br>author_contains: string (optional)<br>name_contains: string (optional)<br>text_contains: string (optional)<br>anything_contains:  string (optional)<br>cat_id: int (optional)<br>tags_all: list int (optional)<br>tags_any: list int (optional)<br>**sorting & pagination**<br>sort_by: "author" or "category" or "photos" (optional)<br>page: int | All
