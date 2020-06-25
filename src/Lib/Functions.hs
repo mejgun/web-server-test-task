@@ -45,7 +45,6 @@ import           Data.ByteString.Base64         ( decodeLenient )
 import qualified Data.ByteString.Char8         as B8
 import           Data.ByteString.UTF8           ( fromString )
 import           Data.Char                      ( toLower )
-import           Data.Maybe                     ( fromMaybe )
 import           Data.Maybe                     ( catMaybes )
 import qualified Data.Text                     as T
 import           Data.Text.Encoding             ( encodeUtf8 )
@@ -69,12 +68,6 @@ import           System.Directory               ( createDirectoryIfMissing
                                                 , removeFile
                                                 , writable
                                                 )
-import           System.IO                      ( IOMode(..)
-                                                , hFlush
-                                                , hPutStrLn
-                                                , openFile
-                                                )
-
 
 import           Lib.Constants
 import           Lib.Types

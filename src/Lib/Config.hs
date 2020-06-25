@@ -2,7 +2,16 @@
 
 module Lib.Config where
 
-import           Lib.Types
+import           Data.Aeson                    as A
+import qualified Data.ByteString.Char8         as B8
+import           Data.Maybe                     ( fromMaybe )
+import           System.IO                      ( IOMode(..)
+                                                , hFlush
+                                                , hPutStrLn
+                                                , openFile
+                                                )
+
+import           Lib
 
 read :: FilePath -> IO Config
 read f = do

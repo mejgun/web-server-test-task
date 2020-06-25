@@ -14,7 +14,7 @@ import qualified Network.Wai.Middleware.RequestLogger
                                                as RL
 
 import           Lib
-import qualified Lib.Config
+import qualified Lib.Config                    as Config
 import qualified News
 import qualified Tags
 import qualified Users
