@@ -17,13 +17,10 @@ module Lib.Functions
   , ifNewsPublished
   , ifNewsAuthor
   , isUser
-  , createImagesDir
   , pgArrayToList
   , calcOffset
   , normalHandler
   , adminHandler
-  , deleteFile
-  , saveFile
   , makeExt
   , decodeBase64
   , module Database.PostgreSQL.Simple
@@ -38,9 +35,7 @@ import           Blaze.ByteString.Builder       ( Builder
 import           Control.Exception
 import           Data.Aeson                    as A
 import qualified Data.ByteString               as B
-                                                ( ByteString
-                                                , writeFile
-                                                )
+                                                ( ByteString )
 import           Data.ByteString.Base64         ( decodeLenient )
 import qualified Data.ByteString.Char8         as B8
 import           Data.ByteString.UTF8           ( fromString )
@@ -61,13 +56,7 @@ import           Network.HTTP.Types             ( HeaderName
                                                 , status500
                                                 )
 import           Network.Wai
-import           System.Directory               ( createDirectoryIfMissing
-                                                , doesFileExist
-                                                , getPermissions
-                                                , readable
-                                                , removeFile
-                                                , writable
-                                                )
+import           System.Directory               ( doesFileExist )
 
 import           Lib.Constants
 import qualified Lib.Logger                    as Logger
@@ -227,35 +216,6 @@ returnFile f rd = do
       let ext = encodeUtf8 $ T.toLower $ last l
       in  [("Content-Type", "image/" <> ext)]
 
-createImagesDir :: Logger.Logger -> IO ()
-createImagesDir l = do
-  handle (\e -> l Logger.LogQuiet (show (e :: IOException)) >> throw e)
-    $ createDirectoryIfMissing False imagesDir
-  p <- getPermissions imagesDir
-  if readable p && writable p
-    then return ()
-    else do
-      let e = imagesDir ++ " access denied"
-      l Logger.LogQuiet e
-      error e
-
-deleteFile :: Logger.Logger -> FilePath -> IO ()
-deleteFile l f =
-  removeFile f
-    `catch` (\e ->
-              l Logger.LogQuiet
-                ("Cannot delete file. " ++ (show (e :: IOException)))
-                >> throw ErrorInternal
-            )
-
-saveFile :: Logger.Logger -> FilePath -> B.ByteString -> IO ()
-saveFile l f dat =
-  B.writeFile f dat
-    `catch` (\e ->
-              l Logger.LogQuiet
-                ("Cannot save file. " ++ (show (e :: IOException)))
-                >> throw ErrorInternal
-            )
 pgArrayToList :: PGArray (Maybe a) -> [a]
 pgArrayToList = catMaybes . fromPGArray
 

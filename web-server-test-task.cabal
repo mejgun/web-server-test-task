@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 557fe43919ac25f6f7fc32899343eb55751d8dd35cb6b5fbdd61167d531f0476
+-- hash: b724e59f21b05a09b28c224297460c974939a8c2c3858db506bcc84fc9cb3ae0
 
 name:           web-server-test-task
 version:        0.1.0.0
@@ -40,6 +40,7 @@ library
       Lib
       Lib.Config
       Lib.Constants
+      Lib.FSUtils
       Lib.Functions
       Lib.Logger
       Lib.Logger.Impl.FileHandle

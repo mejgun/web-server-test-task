@@ -10,6 +10,7 @@ import qualified Data.Aeson                    as A
 import           GHC.Generics
 
 import           Lib
+import           Lib.FSUtils                    ( saveFile )
 
 data Req = Req
     { news_id    :: Int

@@ -12,6 +12,7 @@ import           Data.ByteString.UTF8           ( fromString )
 import           GHC.Generics
 
 import           Lib
+import           Lib.FSUtils                    ( saveFile )
 
 data Req = Req
     { name       :: String

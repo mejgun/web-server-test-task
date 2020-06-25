@@ -19,6 +19,7 @@ import           System.IO                      ( Handle
 
 import           Lib
 import qualified Lib.Config                    as Config
+import           Lib.FSUtils                    ( createImagesDir )
 import qualified Lib.Logger                    as Logger
 import qualified Lib.Logger.Impl.FileHandle    as Logger.Impl.FileHandle
 import qualified News
