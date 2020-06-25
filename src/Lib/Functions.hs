@@ -70,18 +70,20 @@ import           System.Directory               ( createDirectoryIfMissing
                                                 )
 
 import           Lib.Constants
+import qualified Lib.Logger                    as Logger
 import           Lib.Types
 
-handleSqlErr :: A.ToJSON a => Logger -> IO a -> IO a
+handleSqlErr :: A.ToJSON a => Logger.Logger -> IO a -> IO a
 handleSqlErr logg = handle $ checkSqlErr $ throw ErrorBadRequest
  where
   checkSqlErr :: A.ToJSON a => IO a -> SqlError -> IO a
   checkSqlErr x e = printErr e >> x
 
   printErr :: SqlError -> IO ()
-  printErr (SqlError q w t e r) = logg LogQuiet $ B8.unpack $ B8.intercalate
-    " "
-    [q, B8.pack (show w), e, r, t]
+  printErr (SqlError q w t e r) =
+    logg Logger.LogQuiet $ B8.unpack $ B8.intercalate
+      " "
+      [q, B8.pack (show w), e, r, t]
 
 rIfJsonBody
   :: (FromJSON a, ToJSON b, Show b)
@@ -225,31 +227,33 @@ returnFile f rd = do
       let ext = encodeUtf8 $ T.toLower $ last l
       in  [("Content-Type", "image/" <> ext)]
 
-createImagesDir :: Logger -> IO ()
+createImagesDir :: Logger.Logger -> IO ()
 createImagesDir l = do
-  handle (\e -> l LogQuiet (show (e :: IOException)) >> throw e)
+  handle (\e -> l Logger.LogQuiet (show (e :: IOException)) >> throw e)
     $ createDirectoryIfMissing False imagesDir
   p <- getPermissions imagesDir
   if readable p && writable p
     then return ()
     else do
       let e = imagesDir ++ " access denied"
-      l LogQuiet e
+      l Logger.LogQuiet e
       error e
 
-deleteFile :: Logger -> FilePath -> IO ()
+deleteFile :: Logger.Logger -> FilePath -> IO ()
 deleteFile l f =
   removeFile f
     `catch` (\e ->
-              l LogQuiet ("Cannot delete file. " ++ (show (e :: IOException)))
+              l Logger.LogQuiet
+                ("Cannot delete file. " ++ (show (e :: IOException)))
                 >> throw ErrorInternal
             )
 
-saveFile :: Logger -> FilePath -> B.ByteString -> IO ()
+saveFile :: Logger.Logger -> FilePath -> B.ByteString -> IO ()
 saveFile l f dat =
   B.writeFile f dat
     `catch` (\e ->
-              l LogQuiet ("Cannot save file. " ++ (show (e :: IOException)))
+              l Logger.LogQuiet
+                ("Cannot save file. " ++ (show (e :: IOException)))
                 >> throw ErrorInternal
             )
 pgArrayToList :: PGArray (Maybe a) -> [a]

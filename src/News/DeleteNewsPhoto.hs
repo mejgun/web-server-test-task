@@ -10,6 +10,7 @@ import qualified Data.Aeson                    as A
 import           GHC.Generics
 
 import           Lib
+import qualified Lib.Logger                    as Logger
 
 data Req = Req
     { photo_id :: Int
@@ -33,7 +34,7 @@ deletePhoto conn logg u =
              (photo_id u, news_id u, token u) :: IO [Maybe (Only String)]
          case p of
            [Just (Only f)] ->
-             logg LogDebug ("Removing file " ++ show (f))
+             logg Logger.LogDebug ("Removing file " ++ show (f))
                >> deleteFile logg f
                >> return ok
            _ -> throw ErrorBadRequest

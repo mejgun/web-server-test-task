@@ -10,6 +10,7 @@ import qualified Data.Aeson                    as A
 import           GHC.Generics
 
 import           Lib
+import qualified Lib.Logger                    as Logger
 
 data Req = Req
     { news_id    :: Int
@@ -34,7 +35,8 @@ setMainPhoto conn logg u =
              (news_id u, token u) :: IO [Maybe (Only String)]
          case p of
            [Just (Only f)] ->
-             logg LogDebug ("Removing file " ++ show (f)) >> deleteFile logg f
+             logg Logger.LogDebug ("Removing file " ++ show (f))
+               >> deleteFile logg f
            _ -> return ()
          let img = decodeBase64 $ photo u
              ext = makeExt $ photo_type u

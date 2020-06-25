@@ -10,6 +10,7 @@ import qualified Data.Aeson                    as A
 import           GHC.Generics
 
 import           Lib
+import qualified Lib.Logger                    as Logger
 
 data Req = Req
     { login :: String
@@ -27,7 +28,7 @@ delete conn logg u =
         [Maybe (Only String)]
     case q of
       [Just (Only f)] ->
-        logg LogDebug ("Removing file " ++ show (f))
+        logg Logger.LogDebug ("Removing file " ++ show (f))
           >> deleteFile logg f
           >> return ok
       [Nothing] -> return ok
