@@ -22,7 +22,6 @@ module Lib.Functions
   , calcOffset
   , normalHandler
   , adminHandler
-  , readConfig
   , deleteFile
   , saveFile
   , makeExt
@@ -79,28 +78,6 @@ import           System.IO                      ( IOMode(..)
 
 import           Lib.Constants
 import           Lib.Types
-
-readConfig :: FilePath -> IO Config
-readConfig f = do
-  j <- fromMaybe (error "ERROR: Bad config") <$> A.decodeFileStrict f :: IO Conf
-  c <- connectPostgreSQL $ B8.pack $ pgconfig j
-  h <- openFile (log_file j) AppendMode
-  let lgLvl = strToLogLevel $ log_level j
-  return Config { connection = c
-                , hnd        = h
-                , logger     = logg h lgLvl
-                , loglevel   = lgLvl
-                }
- where
-  logg :: AppLogger
-  logg h appLogLvl msgLogLvl s =
-    if appLogLvl <= msgLogLvl then hPutStrLn h s >> hFlush h else return ()
-
-  strToLogLevel :: String -> LogLevel
-  strToLogLevel s = case s of
-    "quiet"  -> LogQuiet
-    "normal" -> LogNormal
-    _        -> LogDebug
 
 handleSqlErr :: A.ToJSON a => Logger -> IO a -> IO a
 handleSqlErr logg = handle $ checkSqlErr $ throw ErrorBadRequest

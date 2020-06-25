@@ -5,7 +5,6 @@ module Main
   )
 where
 
-
 import qualified Authors
 import qualified Categories
 import           Data.Default
@@ -15,13 +14,14 @@ import qualified Network.Wai.Middleware.RequestLogger
                                                as RL
 
 import           Lib
+import qualified Lib.Config
 import qualified News
 import qualified Tags
 import qualified Users
 
 main :: IO ()
 main = do
-  conf <- readConfig configFile
+  conf <- Config.read configFile
   createImagesDir (logger conf)
   putStrLn "Server started"
   l <- mkReqLogger conf
