@@ -6,9 +6,14 @@ import           Network.Wai
 
 import           Lib.Functions
 import qualified Lib.Logic                     as Logic
+import qualified Lib.Logic                     as Logger
 import           Lib.Types
 
-runApp :: MyApp
+runApp
+  :: Logic.Handle
+  -> Request
+  -> (Response -> IO ResponseReceived)
+  -> IO ResponseReceived
 runApp logicH request respond = case pathInfo request of
   ["user"  , "get"   ] -> norm $ Logic.getUsers
   ["user"  , "create"] -> norm $ Logic.createUser

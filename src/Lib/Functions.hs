@@ -40,16 +40,6 @@ import qualified Lib.Logger                    as Logger
 import qualified Lib.Logic                     as Logic
 import           Lib.Types
 
--- handleSqlErr :: A.ToJSON a => Logger.Logger -> IO a -> IO a
--- handleSqlErr logg = handle $ checkSqlErr $ throw ErrorBadRequest
---  where
---   checkSqlErr :: A.ToJSON a => IO a -> SqlError -> IO a
---   checkSqlErr x e = printErr e >> x
---   printErr :: SqlError -> IO ()
---   printErr (SqlError q w t e r) =
---     logg Logger.LogQuiet $ B8.unpack $ B8.intercalate
---       " "
---       [q, B8.pack (show w), e, r, t]
 rIfJsonBody
   :: (FromJSON a, ToJSON b, Show b)
   => Logic.ResultResponseError

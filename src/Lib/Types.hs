@@ -10,12 +10,6 @@ import           Network.Wai
 import qualified Lib.Logger                    as Logger
 import qualified Lib.Logic                     as Logic
 
-type MyApp
-  =  Logic.Handle
-  -> Request
-  -> (Response -> IO ResponseReceived)
-  -> IO ResponseReceived
-
 data Conf =
   Conf
     { pgconfig :: String
