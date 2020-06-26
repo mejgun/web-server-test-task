@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b724e59f21b05a09b28c224297460c974939a8c2c3858db506bcc84fc9cb3ae0
+-- hash: 9d2e7fe826f52eee765efc20315b88c6e71aa036bb6f3d595b8b1cf5bce65c5b
 
 name:           web-server-test-task
 version:        0.1.0.0
@@ -27,16 +27,6 @@ source-repository head
 
 library
   exposed-modules:
-      Authors
-      Authors.DeleteAuthor
-      Authors.EditAuthor
-      Authors.GetAuthors
-      Authors.MakeAuthor
-      Categories
-      Categories.CreateCategory
-      Categories.DeleteCategory
-      Categories.EditCategory
-      Categories.GetCategories
       Lib
       Lib.Config
       Lib.Constants
@@ -44,32 +34,12 @@ library
       Lib.Functions
       Lib.Logger
       Lib.Logger.Impl.FileHandle
+      Lib.Logic
+      Lib.Logic.Impl.PostgreSQL
+      Lib.Requests.CreateUser
+      Lib.Requests.GetUsers
+      Lib.Routes
       Lib.Types
-      News
-      News.AddNewsComment
-      News.AddNewsPhoto
-      News.AddNewsTag
-      News.CreateNews
-      News.DeleteNews
-      News.DeleteNewsComment
-      News.DeleteNewsPhoto
-      News.DeleteNewsTag
-      News.GetDrafts
-      News.GetNews
-      News.GetNewsComments
-      News.PublishNews
-      News.SetNewsMainPhoto
-      News.UpdateNews
-      Tags
-      Tags.CreateTag
-      Tags.DeleteTag
-      Tags.EditTag
-      Tags.GetTags
-      Users
-      Users.CreateUser
-      Users.DeleteUser
-      Users.GetUsers
-      Users.LoginUser
   other-modules:
       Paths_web_server_test_task
   hs-source-dirs:
@@ -83,6 +53,7 @@ library
     , data-default
     , directory
     , http-types
+    , mtl
     , postgresql-simple
     , text
     , utf8-string
@@ -107,6 +78,7 @@ executable web-server-test-task-exe
     , data-default
     , directory
     , http-types
+    , mtl
     , postgresql-simple
     , text
     , utf8-string
@@ -133,6 +105,7 @@ test-suite web-server-test-task-test
     , data-default
     , directory
     , http-types
+    , mtl
     , postgresql-simple
     , text
     , utf8-string

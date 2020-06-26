@@ -3,9 +3,9 @@ module Lib.Logger.Impl.FileHandle
   )
 where
 
-import           System.IO                      ( hFlush
+import           System.IO                      ( Handle
+                                                , hFlush
                                                 , hPutStrLn
-                                                , Handle
                                                 )
 
 import qualified Lib.Logger                    as Logger

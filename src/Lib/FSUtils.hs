@@ -1,6 +1,7 @@
 module Lib.FSUtils where
 
 import           Control.Exception
+import           Control.Monad.Except
 import qualified Data.ByteString               as B
                                                 ( ByteString
                                                 , writeFile
@@ -14,6 +15,7 @@ import           System.Directory               ( createDirectoryIfMissing
 
 import qualified Lib.Constants                 as Constants
 import qualified Lib.Logger                    as Logger
+import qualified Lib.Logic                     as Logic
 import qualified Lib.Types                     as Types
 
 createImagesDir :: Logger.Logger -> IO ()
@@ -27,21 +29,3 @@ createImagesDir l = do
       let e = Constants.imagesDir ++ " access denied"
       l Logger.LogQuiet e
       error e
-
-deleteFile :: Logger.Logger -> FilePath -> IO ()
-deleteFile l f =
-  removeFile f
-    `catch` (\e ->
-              l Logger.LogQuiet
-                ("Cannot delete file. " ++ (show (e :: IOException)))
-                >> throw Types.ErrorInternal
-            )
-
-saveFile :: Logger.Logger -> FilePath -> B.ByteString -> IO ()
-saveFile l f dat =
-  B.writeFile f dat
-    `catch` (\e ->
-              l Logger.LogQuiet
-                ("Cannot save file. " ++ (show (e :: IOException)))
-                >> throw Types.ErrorInternal
-            )

@@ -2,10 +2,10 @@
 
 import           Lib
 
-import           Database.PostgreSQL.Simple.Types
-                                                ( Query(..) )
 import qualified Data.ByteString               as B
                                                 ( readFile )
+import           Database.PostgreSQL.Simple.Types
+                                                ( Query(..) )
 
 main :: IO ()
 main = do

@@ -34,6 +34,7 @@ dependencies:
 - directory
 - text
 - data-default
+- mtl
 
 library:
   source-dirs: src

@@ -5,11 +5,15 @@ module Lib.Logger
   )
 where
 
-data LogLevel = LogDebug
-    | LogNormal
-    | LogQuiet
-    deriving (Eq, Ord)
+data LogLevel
+  = LogDebug
+  | LogNormal
+  | LogQuiet
+  deriving (Eq, Ord)
 
 type Logger = LogLevel -> String -> IO ()
 
-newtype Handle = Handle {logg::Logger}
+newtype Handle =
+  Handle
+    { logg :: Logger
+    }

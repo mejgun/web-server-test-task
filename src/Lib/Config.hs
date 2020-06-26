@@ -5,7 +5,7 @@ module Lib.Config where
 import           Data.Aeson                    as A
 import qualified Data.ByteString.Char8         as B8
 import           Data.Maybe                     ( fromMaybe )
-
+import           Database.PostgreSQL.Simple
 
 import           Lib
 import qualified Lib.Logger                    as Logger
