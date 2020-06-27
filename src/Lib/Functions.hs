@@ -13,10 +13,11 @@ import           Blaze.ByteString.Builder       ( Builder
                                                 , fromLazyByteString
                                                 )
 import           Control.Exception
-import           Control.Monad.Except
 import           Data.Aeson                    as A
 import qualified Data.ByteString               as B
-                                                ( ByteString )
+                                                ( ByteString
+                                                , writeFile
+                                                )
 import qualified Data.ByteString.Char8         as B8
 import qualified Data.Text                     as T
 import           Data.Text.Encoding             ( encodeUtf8 )
@@ -49,7 +50,7 @@ rIfJsonBody
   -> IO ResponseReceived
 rIfJsonBody rs x req respond = do
   j <- bodyToJSON req
-  q <- runExceptT $ maybe (throwError rs) x j
+  q <- maybe (throw rs) x j
   respond $ eitherToResponse q
  where
   bodyToJSON :: A.FromJSON a => Request -> IO (Maybe a)
@@ -71,13 +72,14 @@ adminHandler
   -> IO ResponseReceived
 adminHandler = rIfJsonBody Logic.ErrorNotFound
 
-eitherToResponse :: A.ToJSON b => Either Logic.ResultResponseError b -> Response
+eitherToResponse :: A.ToJSON b => Logic.ResultResponse b -> Response
 eitherToResponse r = case r of
-  Right j -> responseBuilder status200 jsonCT $ fromLazyByteString $ A.encode j
-  Left Logic.ErrorNotFound -> responseBuilder status404 [] "Not Found"
-  Left Logic.ErrorInternal ->
+  Logic.Success j ->
+    responseBuilder status200 jsonCT $ fromLazyByteString $ A.encode j
+  Logic.Error Logic.ErrorNotFound -> responseBuilder status404 [] "Not Found"
+  Logic.Error Logic.ErrorInternal ->
     responseBuilder status500 [] "Internal Server Error"
-  Left p -> e p
+  Logic.Error p -> e p
  where
   e :: Logic.ResultResponseError -> Response
   e = responseBuilder status400 jsonCT . toErr . show

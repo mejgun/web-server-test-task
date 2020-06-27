@@ -1,17 +1,23 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Lib.Logic
   ( Handle(..)
-  , ExceptMonad
   , ResultResponseError(..)
+  , ResultResponse(..)
   , MyHandler
+  , MyResult
   )
 where
 
+import           Control.Exception
 import           Control.Monad.Except
 
 import qualified Lib.Requests.CreateUser
 import qualified Lib.Requests.GetUsers
 
-type ExceptMonad = ExceptT ResultResponseError IO
+data ResultResponse a
+  = Error ResultResponseError
+  | Success (Maybe a)
 
 data ResultResponseError
   = ErrorNotFound
@@ -30,10 +36,14 @@ data ResultResponseError
   | ErrorInternal
   deriving (Show)
 
-type MyHandler a b = a -> ExceptMonad b
+instance Exception ResultResponseError
+
+type MyResult b = IO (ResultResponse b)
+
+type MyHandler a b = a -> MyResult b
 
 data Handle =
   Handle
-    { createUser :: Lib.Requests.CreateUser.Request -> ExceptMonad String
-    , getUsers :: Lib.Requests.GetUsers.Request -> ExceptMonad [Lib.Requests.GetUsers.User]
+    { createUser :: MyHandler Lib.Requests.CreateUser.Request Bool
+    , getUsers :: MyHandler Lib.Requests.GetUsers.Request [Lib.Requests.GetUsers.User]
     }

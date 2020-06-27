@@ -8,13 +8,11 @@ where
 import           Control.Exception              ( IOException
                                                 , catch
                                                 , handle
+                                                , throw
                                                 , try
                                                 )
-import           Control.Monad.Except
 import qualified Data.ByteString               as B
-                                                ( ByteString
-                                                , writeFile
-                                                )
+                                                ( ByteString )
 import           Data.ByteString.Base64         ( decodeLenient )
 import qualified Data.ByteString.Char8         as B8
 import           Data.ByteString.UTF8           ( fromString )
@@ -26,7 +24,6 @@ import           Database.PostgreSQL.Simple.Types
                                                 , Query(..)
                                                 )
 import qualified GHC.Int                        ( Int64 )
-import           System.Directory               ( removeFile )
 
 import           Lib                     hiding ( ifLoginNotExist
                                                 , isValidPage
@@ -42,17 +39,18 @@ type Login = String
 
 newHandle :: Connection -> Logger.Logger -> Logic.Handle
 newHandle conn logger = Logic.Handle
-  { Logic.getUsers   = funcGetUsers conn logger
-  , Logic.createUser = funcCreateUsers conn logger
+  { Logic.getUsers   = catchE funcGetUsers
+  , Logic.createUser = catchE funcCreateUsers
   }
+  where catchE func req = catchErrors logger $ func conn logger req
 
-executeResult :: GHC.Int.Int64 -> Logic.ExceptMonad String
+executeResult :: GHC.Int.Int64 -> Logic.MyResult b
 executeResult i = case i of
-  1 -> return ok
-  _ -> throwError Logic.ErrorBadRequest
+  1 -> return $ Logic.Success Nothing
+  _ -> throw Logic.ErrorBadRequest
 
-isValidPage :: Int -> Logic.ExceptMonad Bool
-isValidPage p = if p > 0 then return True else throwError Logic.ErrorBadPage
+isValidPage :: Int -> IO Bool
+isValidPage p = if p > 0 then return True else throw Logic.ErrorBadPage
 
 calcOffsetAndLimil :: Int -> Int -> [Int]
 calcOffsetAndLimil page perPage =
@@ -61,30 +59,20 @@ calcOffsetAndLimil page perPage =
   in  [offset, limit]
 
 rIfDB
-  :: ToRow a
-  => Connection
-  -> Query
-  -> a
-  -> Logic.ResultResponseError
-  -> Logic.ExceptMonad Bool
+  :: ToRow a => Connection -> Query -> a -> Logic.ResultResponseError -> IO Bool
 rIfDB conn qry val rElse = do
-  p <- liftIO (query conn qry val :: IO [Only Bool])
+  p <- query conn qry val :: IO [Only Bool]
   case p of
     [Only True] -> return True
-    _           -> throwError rElse
+    _           -> throw rElse
 
-ifLoginExist :: Connection -> Login -> Logic.ExceptMonad Bool
+ifLoginExist :: Connection -> Login -> IO Bool
 ifLoginExist conn login = ifLogin 1 conn login Logic.ErrorLoginNotExist
 
-ifLoginNotExist :: Connection -> Login -> Logic.ExceptMonad Bool
+ifLoginNotExist :: Connection -> Login -> IO Bool
 ifLoginNotExist conn login = ifLogin 0 conn login Logic.ErrorLoginAlreadyExist
 
-ifLogin
-  :: Int
-  -> Connection
-  -> Login
-  -> Logic.ResultResponseError
-  -> Logic.ExceptMonad Bool
+ifLogin :: Int -> Connection -> Login -> Logic.ResultResponseError -> IO Bool
 ifLogin cond conn login rElse =
   rIfDB conn "select count(id)=? from users where login=?;" (cond, login) rElse
 
@@ -141,44 +129,15 @@ ifLogin cond conn login rElse =
 --   "select count(id)=1 from news where id=? and author_id=(select id from authors where user_id=(select id from users where token=?));"
 --   (news_id, token)
 --   ErrorNotYourNews
-
 pgArrayToList :: PGArray (Maybe a) -> [a]
 pgArrayToList = catMaybes . fromPGArray
 
-makeExt :: Maybe String -> String
-makeExt = maybe ".jpg" $ (++) "." . (map toLower)
-
-decodeBase64 :: String -> B.ByteString
-decodeBase64 = decodeLenient . fromString
-
-safeExecute
-  :: ToRow q
-  => Logger.Logger
-  -> Connection
-  -> Query
-  -> q
-  -> Logic.ExceptMonad GHC.Int.Int64
-safeExecute logg conn qry val = handleSqlErr logg $ execute conn qry val
-
-safeQuery
-  :: (ToRow q, FromRow b)
-  => Logger.Logger
-  -> Connection
-  -> Query
-  -> q
-  -> Logic.ExceptMonad [b]
-safeQuery logg conn qry val = handleSqlErr logg $ query conn qry val
-
 funcCreateUsers
-  :: Connection
-  -> Logger.Logger
-  -> CreateUser.Request
-  -> Logic.ExceptMonad String
+  :: Connection -> Logger.Logger -> Logic.MyHandler CreateUser.Request Bool
 funcCreateUsers conn logg req =
   ifLoginNotExist conn (CreateUser.login req) >> case CreateUser.photo req of
     Nothing ->
-      safeExecute
-          logg
+      execute
           conn
           "insert into users (name,lastname,token,login,password) values(?,?,md5(random()::text),?,md5(?)) on conflict do nothing;"
           ( CreateUser.name req
@@ -190,8 +149,7 @@ funcCreateUsers conn logg req =
     Just ph -> do
       let img = decodeBase64 ph
           ext = makeExt $ CreateUser.photo_type req
-      q <- safeQuery
-        logg
+      q <- query
         conn
         "insert into users (name,lastname,token,login,password,photo) values(?,?,md5(random()::text),?,md5(?),concat(?,md5(random()::text),?)) on conflict do nothing returning photo;"
         ( CreateUser.name req
@@ -202,48 +160,34 @@ funcCreateUsers conn logg req =
         , ext
         )
       case q of
-        [Only imgFile] -> saveFile logg imgFile img >> return ok
-        _              -> throwError Logic.ErrorBadRequest
+        [Only imgFile] -> do
+          FSUtils.saveFile logg imgFile img
+          return $ Logic.Success Nothing
+        _ -> throw Logic.ErrorBadRequest
 
 funcGetUsers
   :: Connection
   -> Logger.Logger
-  -> GetUsers.Request
-  -> Logic.ExceptMonad [GetUsers.User]
+  -> Logic.MyHandler GetUsers.Request [GetUsers.User]
 funcGetUsers conn logg req = isValidPage (GetUsers.page req) >> do
-  r <- safeQuery logg
-                 conn
-                 "select name,lastname,photo from users offset ? limit ?;"
-                 (calcOffsetAndLimil (GetUsers.page req) usersPerPage)
-  return r
+  r <- query conn
+             "select name,lastname,photo from users offset ? limit ?;"
+             (calcOffsetAndLimil (GetUsers.page req) usersPerPage)
+  return $ Logic.Success $ Just r
 
-deleteFile :: Logger.Logger -> FilePath -> Logic.ExceptMonad Bool
-deleteFile logg file = do
-  res <- liftIO $ try $ removeFile file
-  case res of
-    Left e -> do
-      liftIO $ logg Logger.LogQuiet $ "Cannot delete file. " <> show
-        (e :: IOException)
-      throwError Logic.ErrorInternal
-    _ -> return True
+catchErrors :: Logger.Logger -> Logic.MyResult a -> Logic.MyResult a
+catchErrors logg cmd = do
+  cmd
+    `catch` (\(SqlError q w t e r) -> do
+              logg Logger.LogQuiet $ B8.unpack $ B8.intercalate
+                " "
+                [q, B8.pack (show w), e, r, t]
+              return $ Logic.Error Logic.ErrorBadRequest
+            )
+    `catch` (\e -> return $ Logic.Error (e :: Logic.ResultResponseError))
 
-saveFile :: Logger.Logger -> FilePath -> B.ByteString -> Logic.ExceptMonad Bool
-saveFile logg file dat = do
-  res <- liftIO $ try $ B.writeFile file dat
-  case res of
-    Left e -> do
-      liftIO $ logg Logger.LogQuiet $ "Cannot save file. " <> show
-        (e :: IOException)
-      throwError Logic.ErrorInternal
-    _ -> return True
+makeExt :: Maybe String -> String
+makeExt = maybe ".jpg" $ (++) "." . (map toLower)
 
-handleSqlErr :: Logger.Logger -> IO a -> Logic.ExceptMonad a
-handleSqlErr logg cmd = do
-  res <- liftIO $ try cmd
-  case res of
-    Left (SqlError q w t e r) -> do
-      liftIO $ logg Logger.LogQuiet $ B8.unpack $ B8.intercalate
-        " "
-        [q, B8.pack (show w), e, r, t]
-      throwError Logic.ErrorBadRequest
-    Right r -> return r
+decodeBase64 :: String -> B.ByteString
+decodeBase64 = decodeLenient . fromString
