@@ -25,27 +25,60 @@ import           Database.PostgreSQL.Simple.Types
                                                 )
 import qualified GHC.Int                        ( Int64 )
 
-import           Lib                     hiding ( ifLoginNotExist
-                                                , isValidPage
-                                                )
+import           Lib
 import qualified Lib.Constants                 as Constants
 import qualified Lib.FSUtils                   as FSUtils
 import qualified Lib.Logger                    as Logger
 import qualified Lib.Logic                     as Logic
-import qualified Lib.Requests.CreateUser       as CreateUser
-import qualified Lib.Requests.GetUsers         as GetUsers
 
-type Login = String
+import qualified Lib.Types.AddNewsComment      as AddNewsComment
+import qualified Lib.Types.AddNewsPhoto        as AddNewsPhoto
+import qualified Lib.Types.AddNewsTag          as AddNewsTag
+import qualified Lib.Types.CreateCategory      as CreateCategory
+import qualified Lib.Types.CreateNews          as CreateNews
+import qualified Lib.Types.CreateTag           as CreateTag
+import qualified Lib.Types.CreateUser          as CreateUser
+import qualified Lib.Types.DeleteAuthor        as DeleteAuthor
+import qualified Lib.Types.DeleteCategory      as DeleteCategory
+import qualified Lib.Types.DeleteNews          as DeleteNews
+import qualified Lib.Types.DeleteNewsComment   as DeleteNewsComment
+import qualified Lib.Types.DeleteNewsPhoto     as DeleteNewsPhoto
+import qualified Lib.Types.DeleteNewsTag       as DeleteNewsTag
+import qualified Lib.Types.DeleteTag           as DeleteTag
+import qualified Lib.Types.DeleteUser          as DeleteUser
+import qualified Lib.Types.EditAuthor          as EditAuthor
+import qualified Lib.Types.EditCategory        as EditCategory
+import qualified Lib.Types.EditTag             as EditTag
+import qualified Lib.Types.GetAuthors          as GetAuthors
+import qualified Lib.Types.GetCategories       as GetCategories
+import qualified Lib.Types.GetDrafts           as GetDrafts
+import qualified Lib.Types.GetNews             as GetNews
+import qualified Lib.Types.GetNewsComments     as GetNewsComments
+import qualified Lib.Types.GetTags             as GetTags
+import qualified Lib.Types.GetUsers            as GetUsers
+import qualified Lib.Types.LoginUser           as LoginUser
+import qualified Lib.Types.MakeAuthor          as MakeAuthor
+import qualified Lib.Types.PublishNews         as PublishNews
+import qualified Lib.Types.SetNewsMainPhoto    as SetNewsMainPhoto
+import qualified Lib.Types.UpdateNews          as UpdateNews
+
+type UserLogin = String
+
+type UserToken = String
 
 newHandle :: Connection -> Logger.Logger -> Logic.Handle
 newHandle conn logger = Logic.Handle
-  { Logic.getUsers   = catchE funcGetUsers
-  , Logic.createUser = catchE funcCreateUsers
+  { Logic.getUsers     = catchE funcGetUsers
+  , Logic.createUser   = catchE funcCreateUsers
+  , Logic.deleteUser   = catchE funcDeleteUser
+  , Logic.loginUser    = catchE funcLoginUser
+  , Logic.deleteAuthor = catchE funcDeleteAuthor
+  , Logic.editAuthor   = catchE funcEditAuthor
   }
   where catchE func req = catchErrors logger $ func conn logger req
 
-executeResult :: GHC.Int.Int64 -> Logic.MyResult b
-executeResult i = case i of
+execResult :: GHC.Int.Int64 -> Logic.MyResult b
+execResult i = case i of
   1 -> return $ Logic.Success Nothing
   _ -> throw Logic.ErrorBadRequest
 
@@ -58,6 +91,23 @@ calcOffsetAndLimil page perPage =
       limit  = perPage
   in  [offset, limit]
 
+catchErrors :: Logger.Logger -> Logic.MyResult a -> Logic.MyResult a
+catchErrors logg cmd = do
+  cmd
+    `catch` (\(SqlError q w t e r) -> do
+              logg Logger.LogQuiet $ B8.unpack $ B8.intercalate
+                " "
+                [q, B8.pack (show w), e, r, t]
+              return $ Logic.Error Logic.ErrorBadRequest
+            )
+    `catch` (\e -> return $ Logic.Error (e :: Logic.ResultResponseError))
+
+makeExt :: Maybe String -> String
+makeExt = maybe ".jpg" $ (++) "." . (map toLower)
+
+decodeBase64 :: String -> B.ByteString
+decodeBase64 = decodeLenient . fromString
+
 rIfDB
   :: ToRow a => Connection -> Query -> a -> Logic.ResultResponseError -> IO Bool
 rIfDB conn qry val rElse = do
@@ -66,69 +116,84 @@ rIfDB conn qry val rElse = do
     [Only True] -> return True
     _           -> throw rElse
 
-ifLoginExist :: Connection -> Login -> IO Bool
+ifLoginExist :: Connection -> UserLogin -> IO Bool
 ifLoginExist conn login = ifLogin 1 conn login Logic.ErrorLoginNotExist
 
-ifLoginNotExist :: Connection -> Login -> IO Bool
+ifLoginNotExist :: Connection -> UserLogin -> IO Bool
 ifLoginNotExist conn login = ifLogin 0 conn login Logic.ErrorLoginAlreadyExist
 
-ifLogin :: Int -> Connection -> Login -> Logic.ResultResponseError -> IO Bool
+ifLogin
+  :: Int -> Connection -> UserLogin -> Logic.ResultResponseError -> IO Bool
 ifLogin cond conn login rElse =
   rIfDB conn "select count(id)=? from users where login=?;" (cond, login) rElse
 
--- isAdmin :: Connection -> String -> IO Bool
--- isAdmin conn token = rIfDB
---   conn
---   (Query "select admin from users where token=? limit 1;")
---   [token]
---   ErrorNotFound
--- isAuthor :: Connection -> String -> IO Bool
--- isAuthor c token = rIfDB
---   c
---   "select count(id)=1 from authors where user_id=(select id from users where token=?);"
---   [token]
---   ErrorNotAuthor
--- isUser :: Connection -> String -> IO Bool
--- isUser conn token = rIfDB
---   conn
---   (Query "select count(id)=1 from users where token=?;")
---   [token]
---   ErrorNotUser
--- ifAuthorExist :: Connection -> String -> IO Bool
--- ifAuthorExist c login = rIfDB
---   c
---   "select count(id)=1 from authors where user_id=(select id from users where login=?);"
---   [login]
---   ErrorAuthorNotExist
--- ifCategoryExist :: Connection -> Int -> IO Bool
--- ifCategoryExist c cat = rIfDB
---   c
---   "select count(id)=1 from categories where id=?;"
---   [cat]
---   ErrorCategoryNotExist
--- ifTagNotExist :: Connection -> String -> IO Bool
--- ifTagNotExist c tag = rIfDB c
---                             "select count(id)=0 from tags where name=?;"
---                             [tag]
---                             ErrorTagAlreadyExist
--- ifTagExist :: Connection -> Int -> IO Bool
--- ifTagExist c tag_id =
---   rIfDB c "select count(id)=1 from tags where id=?;" [tag_id] ErrorTagNotExist
--- ifNewsExist :: Connection -> Int -> IO Bool
--- ifNewsExist c news_id =
---   rIfDB c "select count(id)=1 from news where id=?;" [news_id] ErrorNewsNotExist
--- ifNewsPublished :: Connection -> Int -> IO Bool
--- ifNewsPublished c news_id = rIfDB
---   c
---   "select count(id)=1 from news where id=? and published=true;"
---   [news_id]
---   ErrorNewsNotExist
--- ifNewsAuthor :: Connection -> Int -> String -> IO Bool
--- ifNewsAuthor c news_id token = rIfDB
---   c
---   "select count(id)=1 from news where id=? and author_id=(select id from authors where user_id=(select id from users where token=?));"
---   (news_id, token)
---   ErrorNotYourNews
+isAdmin :: Connection -> UserToken -> IO Bool
+isAdmin conn token = rIfDB
+  conn
+  (Query "select admin from users where token=? limit 1;")
+  [token]
+  Logic.ErrorNotFound
+
+isAuthor :: Connection -> UserToken -> IO Bool
+isAuthor conn token = rIfDB
+  conn
+  "select count(id)=1 from authors where user_id=(select id from users where token=?);"
+  [token]
+  Logic.ErrorNotAuthor
+
+isUser :: Connection -> UserToken -> IO Bool
+isUser conn token = rIfDB
+  conn
+  (Query "select count(id)=1 from users where token=?;")
+  [token]
+  Logic.ErrorNotUser
+
+ifAuthorExist :: Connection -> UserLogin -> IO Bool
+ifAuthorExist conn login = rIfDB
+  conn
+  "select count(id)=1 from authors where user_id=(select id from users where login=?);"
+  [login]
+  Logic.ErrorAuthorNotExist
+
+ifCategoryExist :: Connection -> Int -> IO Bool
+ifCategoryExist conn cat = rIfDB
+  conn
+  "select count(id)=1 from categories where id=?;"
+  [cat]
+  Logic.ErrorCategoryNotExist
+
+ifTagNotExist :: Connection -> String -> IO Bool
+ifTagNotExist conn tag = rIfDB conn
+                               "select count(id)=0 from tags where name=?;"
+                               [tag]
+                               Logic.ErrorTagAlreadyExist
+
+ifTagExist :: Connection -> Int -> IO Bool
+ifTagExist conn tag_id = rIfDB conn
+                               "select count(id)=1 from tags where id=?;"
+                               [tag_id]
+                               Logic.ErrorTagNotExist
+
+ifNewsExist :: Connection -> Int -> IO Bool
+ifNewsExist conn news_id = rIfDB conn
+                                 "select count(id)=1 from news where id=?;"
+                                 [news_id]
+                                 Logic.ErrorNewsNotExist
+
+ifNewsPublished :: Connection -> Int -> IO Bool
+ifNewsPublished conn news_id = rIfDB
+  conn
+  "select count(id)=1 from news where id=? and published=true;"
+  [news_id]
+  Logic.ErrorNewsNotExist
+
+ifNewsAuthor :: Connection -> Int -> String -> IO Bool
+ifNewsAuthor conn news_id token = rIfDB
+  conn
+  "select count(id)=1 from news where id=? and author_id=(select id from authors where user_id=(select id from users where token=?));"
+  (news_id, token)
+  Logic.ErrorNotYourNews
+
 pgArrayToList :: PGArray (Maybe a) -> [a]
 pgArrayToList = catMaybes . fromPGArray
 
@@ -145,7 +210,7 @@ funcCreateUsers conn logg req =
           , CreateUser.login req
           , CreateUser.password req
           )
-        >>= executeResult
+        >>= execResult
     Just ph -> do
       let img = decodeBase64 ph
           ext = makeExt $ CreateUser.photo_type req
@@ -175,19 +240,55 @@ funcGetUsers conn logg req = isValidPage (GetUsers.page req) >> do
              (calcOffsetAndLimil (GetUsers.page req) usersPerPage)
   return $ Logic.Success $ Just r
 
-catchErrors :: Logger.Logger -> Logic.MyResult a -> Logic.MyResult a
-catchErrors logg cmd = do
-  cmd
-    `catch` (\(SqlError q w t e r) -> do
-              logg Logger.LogQuiet $ B8.unpack $ B8.intercalate
-                " "
-                [q, B8.pack (show w), e, r, t]
-              return $ Logic.Error Logic.ErrorBadRequest
-            )
-    `catch` (\e -> return $ Logic.Error (e :: Logic.ResultResponseError))
+funcDeleteUser
+  :: Connection -> Logger.Logger -> Logic.MyHandler DeleteUser.Request Bool
+funcDeleteUser conn logg req =
+  isAdmin conn (DeleteUser.token req)
+    >> ifLoginExist conn (DeleteUser.login req)
+    >> do
+         q <-
+           query conn
+                 "delete from users where login=? returning photo;"
+                 [DeleteUser.login req] :: IO [Maybe (Only String)]
+         case q of
+           [Just (Only f)] ->
+             logg Logger.LogDebug ("Removing file " ++ show (f))
+               >> FSUtils.deleteFile logg f
+               >> return (Logic.Success Nothing)
+           [Nothing] -> return $ Logic.Success Nothing
+           _         -> throw Logic.ErrorBadRequest
 
-makeExt :: Maybe String -> String
-makeExt = maybe ".jpg" $ (++) "." . (map toLower)
+funcLoginUser
+  :: Connection
+  -> Logger.Logger
+  -> Logic.MyHandler LoginUser.Request LoginUser.Token
+funcLoginUser conn _ req = do
+  t <-
+    query conn
+          "select token from users where login=? and password=md5(?);"
+          [LoginUser.login req, LoginUser.password req] :: IO [LoginUser.Token]
+  if null t
+    then throw Logic.ErrorBadRequest
+    else return $ Logic.Success $ Just (head t)
 
-decodeBase64 :: String -> B.ByteString
-decodeBase64 = decodeLenient . fromString
+funcDeleteAuthor
+  :: Connection -> Logger.Logger -> Logic.MyHandler DeleteAuthor.Request Bool
+funcDeleteAuthor conn _ req =
+  isAdmin conn (DeleteAuthor.token req)
+    >>  ifAuthorExist conn (DeleteAuthor.login req)
+    >>  execute
+          conn
+          "delete from authors where user_id=(select id from users where login=?);"
+          [DeleteAuthor.login req]
+    >>= execResult
+
+funcEditAuthor
+  :: Connection -> Logger.Logger -> Logic.MyHandler EditAuthor.Request Bool
+funcEditAuthor conn _ u =
+  isAdmin conn (EditAuthor.token u)
+    >>  ifAuthorExist conn (EditAuthor.login u)
+    >>  execute
+          conn
+          "update authors set descr=? where user_id=(select id from users where login=?);"
+          [EditAuthor.descr u, EditAuthor.login u]
+    >>= execResult

@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 9ecb5c11c8f126f60117516b6818af13276a9865af0b942046a8571c0c03c83f
+-- hash: 048d927acb856b4edbc0b9d75db318e50e6b3e6419c0d99337413afa8eb0c848
 
 name:           web-server-test-task
 version:        0.1.0.0
@@ -37,10 +37,38 @@ library
       Lib.Logger.Impl.Null
       Lib.Logic
       Lib.Logic.Impl.PostgreSQL
-      Lib.Requests.CreateUser
-      Lib.Requests.GetUsers
       Lib.Routes
       Lib.Types
+      Lib.Types.AddNewsComment
+      Lib.Types.AddNewsPhoto
+      Lib.Types.AddNewsTag
+      Lib.Types.CreateCategory
+      Lib.Types.CreateNews
+      Lib.Types.CreateTag
+      Lib.Types.CreateUser
+      Lib.Types.DeleteAuthor
+      Lib.Types.DeleteCategory
+      Lib.Types.DeleteNews
+      Lib.Types.DeleteNewsComment
+      Lib.Types.DeleteNewsPhoto
+      Lib.Types.DeleteNewsTag
+      Lib.Types.DeleteTag
+      Lib.Types.DeleteUser
+      Lib.Types.EditAuthor
+      Lib.Types.EditCategory
+      Lib.Types.EditTag
+      Lib.Types.GetAuthors
+      Lib.Types.GetCategories
+      Lib.Types.GetDrafts
+      Lib.Types.GetNews
+      Lib.Types.GetNewsComments
+      Lib.Types.GetTags
+      Lib.Types.GetUsers
+      Lib.Types.LoginUser
+      Lib.Types.MakeAuthor
+      Lib.Types.PublishNews
+      Lib.Types.SetNewsMainPhoto
+      Lib.Types.UpdateNews
   other-modules:
       Paths_web_server_test_task
   hs-source-dirs:
