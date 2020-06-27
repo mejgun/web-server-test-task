@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 9d2e7fe826f52eee765efc20315b88c6e71aa036bb6f3d595b8b1cf5bce65c5b
+-- hash: 9ecb5c11c8f126f60117516b6818af13276a9865af0b942046a8571c0c03c83f
 
 name:           web-server-test-task
 version:        0.1.0.0
@@ -34,6 +34,7 @@ library
       Lib.Functions
       Lib.Logger
       Lib.Logger.Impl.FileHandle
+      Lib.Logger.Impl.Null
       Lib.Logic
       Lib.Logic.Impl.PostgreSQL
       Lib.Requests.CreateUser
