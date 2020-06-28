@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 048d927acb856b4edbc0b9d75db318e50e6b3e6419c0d99337413afa8eb0c848
+-- hash: 0f35b7d931082c7a7b03aca20a456c7dc11d7dee9d3e61945ec844920f8ca988
 
 name:           web-server-test-task
 version:        0.1.0.0
@@ -27,18 +27,17 @@ source-repository head
 
 library
   exposed-modules:
-      Lib
       Lib.Config
       Lib.Constants
+      Lib.DB
+      Lib.DB.Impl.PostgreSQL
       Lib.FSUtils
       Lib.Functions
+      Lib.Handlers
       Lib.Logger
       Lib.Logger.Impl.FileHandle
       Lib.Logger.Impl.Null
-      Lib.Logic
-      Lib.Logic.Impl.PostgreSQL
       Lib.Routes
-      Lib.Types
       Lib.Types.AddNewsComment
       Lib.Types.AddNewsPhoto
       Lib.Types.AddNewsTag

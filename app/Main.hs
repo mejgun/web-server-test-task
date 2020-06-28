@@ -15,30 +15,30 @@ import           System.IO                      ( Handle
                                                 , openFile
                                                 )
 
-import           Lib
 import qualified Lib.Config                    as Config
+import qualified Lib.Constants                 as Constants
+import qualified Lib.DB                        as DB
+import qualified Lib.DB.Impl.PostgreSQL        as DB.Impl.PostgreSQL
 import           Lib.FSUtils                    ( createImagesDir )
 import qualified Lib.Logger                    as Logger
 import qualified Lib.Logger.Impl.FileHandle    as Logger.Impl.FileHandle
-import qualified Lib.Logic                     as Logic
-import qualified Lib.Logic.Impl.PostgreSQL     as Logic.Impl.PostgreSQL
 import qualified Lib.Routes                    as Routes
 
 main :: IO ()
 main = do
-  conf  <- Config.read configFile
-  fileH <- openFile (logFile conf) AppendMode
-  let logger =
-        Logger.logg $ Logger.Impl.FileHandle.newHandle fileH (logLevel conf)
-  let postgresH = Logic.Impl.PostgreSQL.newHandle (connection conf) logger
+  conf  <- Config.read Constants.configFile
+  fileH <- openFile (Config.logFile conf) AppendMode
+  let logger = Logger.logg
+        $ Logger.Impl.FileHandle.newHandle fileH (Config.logLevel conf)
+  let postgresH = DB.Impl.PostgreSQL.newHandle (Config.connection conf) logger
   createImagesDir logger
   putStrLn "Server started"
   l <- mkReqLogger fileH conf
-  run 8080 $ l $ Routes.runApp postgresH
+  run 8080 $ l $ Routes.runApp postgresH logger
 
-mkReqLogger :: Handle -> Config -> IO Middleware
+mkReqLogger :: Handle -> Config.Config -> IO Middleware
 mkReqLogger hnd conf = RL.mkRequestLogger $ def
-  { RL.outputFormat = case logLevel conf of
+  { RL.outputFormat = case Config.logLevel conf of
     Logger.LogDebug  -> RL.Detailed False
     Logger.LogNormal -> RL.Apache RL.FromSocket
     Logger.LogQuiet  -> RL.CustomOutputFormat (\_ _ _ _ -> "")

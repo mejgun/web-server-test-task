@@ -4,19 +4,20 @@ module Lib.Routes where
 
 import           Network.Wai
 
+import qualified Lib.DB                        as DB
 import           Lib.Functions
-import qualified Lib.Logic                     as Logic
-import qualified Lib.Logic                     as Logger
-import           Lib.Types
+import qualified Lib.Handlers                  as Handlers
+import qualified Lib.Logger                    as Logger
 
 runApp
-  :: Logic.Handle
+  :: DB.Handle
+  -> Logger.Logger
   -> Request
   -> (Response -> IO ResponseReceived)
   -> IO ResponseReceived
-runApp logicH request respond = case pathInfo request of
-  ["user"  , "get"   ] -> norm $ Logic.getUsers
-  ["user"  , "create"] -> norm $ Logic.createUser
+runApp dbH logger request respond = case pathInfo request of
+  ["user"  , "get"   ] -> norm $ Handlers.getUsers
+  ["user"  , "create"] -> norm $ Handlers.createUser
 --   ["user"    , "delete"       ] -> adm Users.delete
 --   ["user"    , "login"        ] -> norm Users.logIn
 --   ["author"  , "make"         ] -> adm Authors.make
@@ -48,5 +49,5 @@ runApp logicH request respond = case pathInfo request of
   ["images", img     ] -> returnFile img respond
   _                    -> return404 respond
  where
-  norm x = normalHandler (x logicH) request respond
-  adm x = adminHandler (x logicH) request respond
+  norm x = normalHandler (x dbH) request respond
+  adm x = adminHandler (x dbH) request respond

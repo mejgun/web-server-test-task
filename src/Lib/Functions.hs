@@ -13,6 +13,7 @@ import           Blaze.ByteString.Builder       ( Builder
                                                 , fromLazyByteString
                                                 )
 import           Control.Exception
+import           Control.Monad.Except
 import           Data.Aeson                    as A
 import qualified Data.ByteString               as B
                                                 ( ByteString
@@ -37,20 +38,19 @@ import           Network.Wai
 import           System.Directory               ( doesFileExist )
 
 import           Lib.Constants
+import qualified Lib.Handlers                  as Handlers
 import qualified Lib.Logger                    as Logger
-import qualified Lib.Logic                     as Logic
-import           Lib.Types
 
 rIfJsonBody
   :: (FromJSON a, ToJSON b, Show b)
-  => Logic.ResultResponseError
-  -> Logic.MyHandler a b
+  => Handlers.ResultResponseError
+  -> (a -> Handlers.Result b)
   -> Request
   -> (Response -> IO ResponseReceived)
   -> IO ResponseReceived
 rIfJsonBody rs x req respond = do
   j <- bodyToJSON req
-  q <- maybe (throw rs) x j
+  q <- try $ maybe (throw rs) x j
   respond $ eitherToResponse q
  where
   bodyToJSON :: A.FromJSON a => Request -> IO (Maybe a)
@@ -58,30 +58,30 @@ rIfJsonBody rs x req respond = do
 
 normalHandler
   :: (A.FromJSON a, A.ToJSON b, Show b)
-  => Logic.MyHandler a b
+  => (a -> Handlers.Result b)
   -> Request
   -> (Response -> IO ResponseReceived)
   -> IO ResponseReceived
-normalHandler = rIfJsonBody Logic.ErrorBadRequest
+normalHandler = rIfJsonBody Handlers.ErrorBadRequest
 
 adminHandler
   :: (A.FromJSON a, A.ToJSON b, Show b)
-  => Logic.MyHandler a b
+  => (a -> Handlers.Result b)
   -> Request
   -> (Response -> IO ResponseReceived)
   -> IO ResponseReceived
-adminHandler = rIfJsonBody Logic.ErrorNotFound
+adminHandler = rIfJsonBody Handlers.ErrorNotFound
 
-eitherToResponse :: A.ToJSON b => Logic.ResultResponse b -> Response
+eitherToResponse
+  :: A.ToJSON b => Either Handlers.ResultResponseError b -> Response
 eitherToResponse r = case r of
-  Logic.Success j ->
-    responseBuilder status200 jsonCT $ fromLazyByteString $ A.encode j
-  Logic.Error Logic.ErrorNotFound -> responseBuilder status404 [] "Not Found"
-  Logic.Error Logic.ErrorInternal ->
+  Right j -> responseBuilder status200 jsonCT $ fromLazyByteString $ A.encode j
+  Left Handlers.ErrorNotFound -> responseBuilder status404 [] "Not Found"
+  Left Handlers.ErrorInternal ->
     responseBuilder status500 [] "Internal Server Error"
-  Logic.Error p -> e p
+  Left p -> e p
  where
-  e :: Logic.ResultResponseError -> Response
+  e :: Handlers.ResultResponseError -> Response
   e = responseBuilder status400 jsonCT . toErr . show
   toErr :: String -> Builder
   toErr s = fromByteString $ B8.pack $ "{\"error\":\"" ++ s ++ "\"}"
