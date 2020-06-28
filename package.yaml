@@ -35,6 +35,7 @@ dependencies:
 - text
 - data-default
 - mtl
+- hspec
 
 library:
   source-dirs: src

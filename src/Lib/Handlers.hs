@@ -15,6 +15,7 @@ import           Control.Monad                  ( unless
                                                 , when
                                                 )
 import           Control.Monad.Except
+import           Data.Char                      ( toLower )
 import           Data.Maybe                     ( fromJust
                                                 , isJust
                                                 )
@@ -84,12 +85,13 @@ createUser dbH req = do
     Nothing    -> throw ErrorBadRequest
   if isJust (CreateUser.photo req)
     then do
+      let ext = makeExt (CreateUser.photo_type req)
       r <- DB.createUserWithPhoto dbH
                                   (CreateUser.name req)
                                   (CreateUser.lastname req)
                                   (CreateUser.login req)
                                   (CreateUser.password req)
-                                  (CreateUser.photo_type req)
+                                  ext
       case r of
         Just fileName -> do
           DB.saveFile dbH fileName $ fromJust (CreateUser.photo req)
@@ -202,3 +204,6 @@ isValidPage = (> 0)
 
 justOK :: String
 justOK = "ok"
+
+makeExt :: Maybe String -> String
+makeExt = maybe ".jpg" $ (++) "." . (map toLower)

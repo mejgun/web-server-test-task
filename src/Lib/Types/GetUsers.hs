@@ -20,7 +20,7 @@ data User =
     , lastname :: String
     , photo :: Maybe String
     }
-  deriving (Generic, Show)
+  deriving (Generic, Show, Eq)
 
 instance A.ToJSON User
 

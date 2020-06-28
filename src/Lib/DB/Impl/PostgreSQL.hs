@@ -18,7 +18,6 @@ import qualified Data.ByteString               as B
 import           Data.ByteString.Base64         ( decodeLenient )
 import qualified Data.ByteString.Char8         as B8
 import           Data.ByteString.UTF8           ( fromString )
-import           Data.Char                      ( toLower )
 import           Data.Maybe                     ( catMaybes )
 import           Database.PostgreSQL.Simple
 import           Database.PostgreSQL.Simple.Types
@@ -93,9 +92,6 @@ catchErrors logg func = do
                 [q, B8.pack (show w), e, r, t]
               return Nothing
             )
-
-makeExt :: Maybe String -> String
-makeExt = maybe ".jpg" $ (++) "." . (map toLower)
 
 decodeBase64 :: String -> B.ByteString
 decodeBase64 = decodeLenient . fromString
@@ -199,14 +195,13 @@ funcCreateUserWithPhoto
   -> DB.LastName
   -> DB.Login
   -> DB.Password
-  -> Maybe DB.PhotoExt
+  -> DB.PhotoExt
   -> DB.Result String
 funcCreateUserWithPhoto conn logg name lastname login password photoExt = do
-  let ext = makeExt photoExt
   q <- query
     conn
     "insert into users (name,lastname,token,login,password,photo) values(?,?,md5(random()::text),?,md5(?),concat(?,md5(random()::text),?)) on conflict do nothing returning photo;"
-    (name, lastname, login, password, Constants.imagesDir, ext)
+    (name, lastname, login, password, Constants.imagesDir, photoExt)
   case q of
     [Only imgFile] -> return $ Just imgFile
     _              -> return Nothing

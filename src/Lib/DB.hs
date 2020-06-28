@@ -32,7 +32,7 @@ type Result a = IO (Maybe a)
 data Handle =
   Handle
     { createUser :: Name -> LastName -> Login -> Password -> Result Bool
-    , createUserWithPhoto :: Name -> LastName -> Login -> Password -> Maybe PhotoExt -> Result String
+    , createUserWithPhoto :: Name -> LastName -> Login -> Password -> PhotoExt -> Result String
     , getUsers :: Page -> Count -> Result [GetUsers.User]
     , ifLoginNotExist :: Login -> Result Bool
     , ifLoginExist :: Login -> Result Bool
