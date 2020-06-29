@@ -81,7 +81,7 @@ type Result = IO
 
 createUser :: DB.Handle -> CreateUser.Request -> Result String
 createUser dbH req = do
-  exist <- DB.ifLoginNotExist dbH (CreateUser.login req)
+  exist <- DB.isLoginNotExist dbH (CreateUser.login req)
   unless exist (throw ErrorLoginAlreadyExist)
   if isJust (CreateUser.photo req)
     then do
@@ -117,7 +117,7 @@ deleteUser :: DB.Handle -> DeleteUser.Request -> Result String
 deleteUser dbH req = do
   admin <- DB.isAdmin dbH (DeleteUser.token req)
   unless admin (throw ErrorNotFound)
-  exist <- DB.ifLoginExist dbH (DeleteUser.login req)
+  exist <- DB.isLoginExist dbH (DeleteUser.login req)
   unless exist (throw ErrorBadRequest)
   photo <- DB.deleteUser dbH (DeleteUser.login req)
   case photo of
@@ -136,7 +136,7 @@ deleteAuthor :: DB.Handle -> DeleteAuthor.Request -> Result String
 deleteAuthor dbH req = do
   admin <- DB.isAdmin dbH (DeleteAuthor.token req)
   unless admin (throw ErrorNotFound)
-  exist <- DB.ifAuthorExist dbH (DeleteAuthor.login req)
+  exist <- DB.isAuthorExist dbH (DeleteAuthor.login req)
   unless exist (throw ErrorAuthorNotExist)
   res <- DB.deleteAuthor dbH (DeleteAuthor.login req)
   if isJust res then return justOK else throw ErrorBadRequest
@@ -145,7 +145,7 @@ editAuthor :: DB.Handle -> EditAuthor.Request -> Result String
 editAuthor dbH req = do
   admin <- DB.isAdmin dbH (EditAuthor.token req)
   unless admin (throw ErrorNotFound)
-  exist <- DB.ifAuthorExist dbH (EditAuthor.login req)
+  exist <- DB.isAuthorExist dbH (EditAuthor.login req)
   unless exist (throw ErrorAuthorNotExist)
   res <- DB.editAuthor dbH (EditAuthor.login req) (EditAuthor.descr req)
   if isJust res then return justOK else throw ErrorBadRequest

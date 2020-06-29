@@ -71,12 +71,16 @@ newHandle conn logger = DB.Handle
   , DB.loginUser           = loginUser conn logger
   , DB.deleteAuthor        = deleteAuthor conn logger
   , DB.editAuthor          = editAuthor conn logger
-  , DB.ifLoginNotExist     = ifLoginNotExist conn logger
-  , DB.ifLoginExist        = ifLoginExist conn logger
-  , DB.ifAuthorExist       = ifAuthorExist conn logger
+  , DB.isLoginNotExist     = isLoginNotExist conn logger
+  , DB.isLoginExist        = isLoginExist conn logger
+  , DB.isAuthorExist       = isAuthorExist conn logger
   , DB.saveImage           = saveImage logger
   , DB.deleteFile          = deleteFile logger
   , DB.isAdmin             = isAdmin conn logger
+  , DB.isAuthor            = isAuthor conn logger
+  , DB.isUser              = isUser conn logger
+  , DB.isCategoryExist     = isCategoryExist conn logger
+  , DB.isTagNotExist       = isTagNotExist conn logger
   }
 
 execResult :: GHC.Int.Int64 -> DB.MaybeResult Bool
@@ -110,11 +114,11 @@ rIfDB conn qry val = do
     [Only a] -> return a
     _        -> return False
 
-ifLoginExist :: Connection -> Logger.Logger -> DB.Login -> DB.Result Bool
-ifLoginExist conn _ login = ifLogin 1 conn login
+isLoginExist :: Connection -> Logger.Logger -> DB.Login -> DB.Result Bool
+isLoginExist conn _ login = ifLogin 1 conn login
 
-ifLoginNotExist :: Connection -> Logger.Logger -> DB.Login -> DB.Result Bool
-ifLoginNotExist conn _ login = ifLogin 0 conn login
+isLoginNotExist :: Connection -> Logger.Logger -> DB.Login -> DB.Result Bool
+isLoginNotExist conn _ login = ifLogin 0 conn login
 
 ifLogin :: Int -> Connection -> DB.Login -> DB.Result Bool
 ifLogin cond conn login =
@@ -124,35 +128,31 @@ isAdmin :: Connection -> Logger.Logger -> DB.Token -> DB.Result Bool
 isAdmin conn _ token =
   rIfDB conn "select admin from users where token=? limit 1;" [token]
 
--- isAuthor :: Connection -> UserToken -> IO Bool
--- isAuthor conn token = rIfDB
---   conn
---   "select count(id)=1 from authors where user_id=(select id from users where token=?);"
---   [token]
---   Logic.ErrorNotAuthor
--- isUser :: Connection -> UserToken -> IO Bool
--- isUser conn token = rIfDB
---   conn
---   (Query "select count(id)=1 from users where token=?;")
---   [token]
---   Logic.ErrorNotUser
-ifAuthorExist :: Connection -> Logger.Logger -> DB.Login -> DB.Result Bool
-ifAuthorExist conn _ login = rIfDB
+isAuthor :: Connection -> Logger.Logger -> DB.Token -> DB.Result Bool
+isAuthor conn _ token = rIfDB
+  conn
+  "select count(id)=1 from authors where user_id=(select id from users where token=?);"
+  [token]
+
+isUser :: Connection -> Logger.Logger -> DB.Token -> IO Bool
+isUser conn _ token =
+  rIfDB conn (Query "select count(id)=1 from users where token=?;") [token]
+
+isAuthorExist :: Connection -> Logger.Logger -> DB.Login -> DB.Result Bool
+isAuthorExist conn _ login = rIfDB
   conn
   "select count(id)=1 from authors where user_id=(select id from users where login=?);"
   [login]
 
--- ifCategoryExist :: Connection -> Int -> IO Bool
--- ifCategoryExist conn cat = rIfDB
---   conn
---   "select count(id)=1 from categories where id=?;"
---   [cat]
---   Logic.ErrorCategoryNotExist
--- ifTagNotExist :: Connection -> String -> IO Bool
--- ifTagNotExist conn tag = rIfDB conn
---                                "select count(id)=0 from tags where name=?;"
---                                [tag]
---                                Logic.ErrorTagAlreadyExist
+isCategoryExist
+  :: Connection -> Logger.Logger -> DB.CategoryID -> DB.Result Bool
+isCategoryExist conn _ catID =
+  rIfDB conn "select count(id)=1 from categories where id=?;" [catID]
+
+isTagNotExist :: Connection -> Logger.Logger -> DB.TagName -> DB.Result Bool
+isTagNotExist conn _ tag =
+  rIfDB conn "select count(id)=0 from tags where name=?;" [tag]
+
 -- ifTagExist :: Connection -> Int -> IO Bool
 -- ifTagExist conn tag_id = rIfDB conn
 --                                "select count(id)=1 from tags where id=?;"

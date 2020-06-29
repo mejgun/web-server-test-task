@@ -24,6 +24,10 @@ type PhotoPath = String
 
 type Description = String
 
+type CategoryID = Int
+
+type TagName = String
+
 type MaybeResult a = IO (Maybe a)
 
 type EitherResult a = IO (Either Bool (Maybe a))
@@ -39,10 +43,14 @@ data Handle =
     , loginUser :: Login -> Password -> MaybeResult Token
     , deleteAuthor :: Login -> MaybeResult Bool
     , editAuthor :: Login -> Description -> MaybeResult Bool
-    , ifLoginNotExist :: Login -> Result Bool
-    , ifLoginExist :: Login -> Result Bool
+    , isLoginNotExist :: Login -> Result Bool
+    , isLoginExist :: Login -> Result Bool
     , isAdmin :: Token -> Result Bool
-    , ifAuthorExist :: Login -> Result Bool
+    , isAuthor :: Token -> Result Bool
+    , isUser :: Token -> Result Bool
+    , isAuthorExist :: Login -> Result Bool
+    , isTagNotExist :: TagName -> Result Bool
+    , isCategoryExist :: CategoryID -> Result Bool
     , saveImage :: FilePath -> Base64String -> MaybeResult Bool
     , deleteFile :: FilePath -> MaybeResult Bool
     }
