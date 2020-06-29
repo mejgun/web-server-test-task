@@ -19,7 +19,7 @@ data Token =
   Token
     { token :: String
     }
-  deriving (Generic, Show)
+  deriving (Generic, Show, Eq)
 
 instance FromRow Token
 

@@ -34,6 +34,7 @@ data Handle =
     , createUserWithPhoto :: Name -> LastName -> Login -> Password -> PhotoExt -> MaybeResult PhotoPath
     , getUsers :: Page -> Count -> MaybeResult [GetUsers.User]
     , deleteUser :: Login -> EitherResult PhotoPath
+    , loginUser :: Login -> Password -> MaybeResult Token
     , ifLoginNotExist :: Login -> Result Bool
     , ifLoginExist :: Login -> Result Bool
     , isAdmin :: Token -> Result Bool

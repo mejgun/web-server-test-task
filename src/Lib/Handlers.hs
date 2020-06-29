@@ -6,6 +6,7 @@ module Lib.Handlers
   , getUsers
   , createUser
   , deleteUser
+  , loginUser
   )
 where
 
@@ -123,7 +124,11 @@ deleteUser dbH req = do
     _              -> return justOK
 
 loginUser :: DB.Handle -> LoginUser.Request -> Result LoginUser.Token
-loginUser dbH req = undefined
+loginUser dbH req = do
+  res <- DB.loginUser dbH (LoginUser.login req) (LoginUser.password req)
+  case res of
+    Just token -> return $ LoginUser.Token { LoginUser.token = token }
+    _          -> throw ErrorBadRequest
 
 deleteAuthor :: DB.Handle -> DeleteAuthor.Request -> Result String
 deleteAuthor dbH req = undefined

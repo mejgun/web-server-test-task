@@ -14,6 +14,7 @@ newHandle = DB.Handle { DB.createUser          = createUser
                       , DB.createUserWithPhoto = createUserWithPhoto
                       , DB.getUsers            = getUsers
                       , DB.deleteUser          = deleteUser
+                      , DB.loginUser           = loginUser
                       , DB.ifLoginNotExist     = ifLoginNotExist
                       , DB.ifLoginExist        = ifLoginExist
                       , DB.isAdmin             = isAdmin
@@ -45,6 +46,10 @@ getUsers page count = return $ Just []
 
 deleteUser :: DB.Login -> DB.EitherResult DB.PhotoPath
 deleteUser _ = return $ Right $ Just "file"
+
+loginUser :: DB.Login -> DB.Password -> DB.MaybeResult DB.Token
+loginUser "login" "password" = return $ Just "token"
+loginUser _       _          = return Nothing
 
 ifLoginNotExist :: DB.Login -> DB.Result Bool
 ifLoginNotExist login = return $ login == "notexistlogin"

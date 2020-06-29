@@ -120,7 +120,6 @@ main = hspec $ do
                                           }
       `shouldReturn` "ok"
 
-
     it "throws exception if user not admin"
       $             Handlers.deleteUser
                       dbH
@@ -135,4 +134,30 @@ main = hspec $ do
                       DeleteUser.Request { DeleteUser.token = "admin"
                                          , DeleteUser.login = "notexistlogin"
                                          }
+      `shouldThrow` anyException
+
+  describe "Handlers.loginUser" $ do
+
+    it "logins user"
+      $              Handlers.loginUser
+                       dbH
+                       LoginUser.Request { LoginUser.password = "password"
+                                         , LoginUser.login    = "login"
+                                         }
+      `shouldReturn` LoginUser.Token { LoginUser.token = "token" }
+
+    it "throws exception if password not valid"
+      $             Handlers.loginUser
+                      dbH
+                      LoginUser.Request { LoginUser.password = "nopassword"
+                                        , LoginUser.login    = "login"
+                                        }
+      `shouldThrow` anyException
+
+    it "throws exception if login not valid"
+      $             Handlers.loginUser
+                      dbH
+                      LoginUser.Request { LoginUser.password = "admin"
+                                        , LoginUser.login    = "nologin"
+                                        }
       `shouldThrow` anyException

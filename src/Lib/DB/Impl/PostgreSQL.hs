@@ -68,6 +68,7 @@ newHandle conn logger = DB.Handle
   , DB.createUserWithPhoto = сreateUserWithPhoto conn logger
   , DB.getUsers            = getUsers conn logger
   , DB.deleteUser          = deleteUser conn logger
+  , DB.loginUser           = loginUser conn logger
   , DB.ifLoginNotExist     = ifLoginNotExist conn logger
   , DB.ifLoginExist        = ifLoginExist conn logger
   , DB.saveImage           = saveImage logger
@@ -230,18 +231,19 @@ deleteUser conn _ login = do
     [Nothing      ] -> return $ Right Nothing
     _               -> return $ Left False
 
--- funcLoginUser
---   :: Connection
---   -> Logger.Logger
---   -> Logic.MyHandler LoginUser.Request LoginUser.Token
--- funcLoginUser conn _ req = do
---   t <-
---     query conn
---           "select token from users where login=? and password=md5(?);"
---           [LoginUser.login req, LoginUser.password req] :: IO [LoginUser.Token]
---   if null t
---     then throw Logic.ErrorBadRequest
---     else return $ Logic.Success $ Just (head t)
+loginUser
+  :: Connection
+  -> Logger.Logger
+  -> DB.Login
+  -> DB.Password
+  -> DB.MaybeResult DB.Token
+loginUser conn _ login password = do
+  t <-
+    query conn
+          "select token from users where login=? and password=md5(?);"
+          [login, password] :: IO [DB.Token]
+  if null t then return Nothing else return $ Just (head t)
+
 -- funcDeleteAuthor
 --   :: Connection -> Logger.Logger -> Logic.MyHandler DeleteAuthor.Request Bool
 -- funcDeleteAuthor conn _ req =
