@@ -69,8 +69,10 @@ newHandle conn logger = DB.Handle
   , DB.getUsers            = getUsers conn logger
   , DB.deleteUser          = deleteUser conn logger
   , DB.loginUser           = loginUser conn logger
+  , DB.deleteAuthor        = deleteAuthor conn logger
   , DB.ifLoginNotExist     = ifLoginNotExist conn logger
   , DB.ifLoginExist        = ifLoginExist conn logger
+  , DB.ifAuthorExist       = ifAuthorExist conn logger
   , DB.saveImage           = saveImage logger
   , DB.deleteFile          = deleteFile logger
   , DB.isAdmin             = isAdmin conn logger
@@ -119,7 +121,7 @@ ifLogin cond conn login =
 
 isAdmin :: Connection -> Logger.Logger -> DB.Token -> DB.Result Bool
 isAdmin conn _ token =
-  rIfDB conn (Query "select admin from users where token=? limit 1;") [token]
+  rIfDB conn "select admin from users where token=? limit 1;" [token]
 
 -- isAuthor :: Connection -> UserToken -> IO Bool
 -- isAuthor conn token = rIfDB
@@ -133,12 +135,11 @@ isAdmin conn _ token =
 --   (Query "select count(id)=1 from users where token=?;")
 --   [token]
 --   Logic.ErrorNotUser
--- ifAuthorExist :: Connection -> UserLogin -> IO Bool
--- ifAuthorExist conn login = rIfDB
---   conn
---   "select count(id)=1 from authors where user_id=(select id from users where login=?);"
---   [login]
---   Logic.ErrorAuthorNotExist
+ifAuthorExist :: Connection -> Logger.Logger -> DB.Login -> DB.Result Bool
+ifAuthorExist conn _ login = rIfDB
+  conn
+  "select count(id)=1 from authors where user_id=(select id from users where login=?);"
+  [login]
 -- ifCategoryExist :: Connection -> Int -> IO Bool
 -- ifCategoryExist conn cat = rIfDB
 --   conn
@@ -244,16 +245,14 @@ loginUser conn _ login password = do
           [login, password] :: IO [DB.Token]
   if null t then return Nothing else return $ Just (head t)
 
--- funcDeleteAuthor
---   :: Connection -> Logger.Logger -> Logic.MyHandler DeleteAuthor.Request Bool
--- funcDeleteAuthor conn _ req =
---   isAdmin conn (DeleteAuthor.token req)
---     >>  ifAuthorExist conn (DeleteAuthor.login req)
---     >>  execute
---           conn
---           "delete from authors where user_id=(select id from users where login=?);"
---           [DeleteAuthor.login req]
---     >>= execResult
+deleteAuthor :: Connection -> Logger.Logger -> DB.Login -> DB.MaybeResult Bool
+deleteAuthor conn _ login =
+  execute
+      conn
+      "delete from authors where user_id=(select id from users where login=?);"
+      [login]
+    >>= execResult
+
 -- funcEditAuthor
 --   :: Connection -> Logger.Logger -> Logic.MyHandler EditAuthor.Request Bool
 -- funcEditAuthor conn _ u =
@@ -264,6 +263,7 @@ loginUser conn _ login password = do
 --           "update authors set descr=? where user_id=(select id from users where login=?);"
 --           [EditAuthor.descr u, EditAuthor.login u]
 --     >>= execResult
+
 deleteFile :: Logger.Logger -> FilePath -> DB.MaybeResult Bool
 deleteFile logg file = do
   res <- try $ removeFile file

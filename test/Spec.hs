@@ -161,3 +161,29 @@ main = hspec $ do
                                         , LoginUser.login    = "nologin"
                                         }
       `shouldThrow` anyException
+
+  describe "Handlers.deleteAuthor" $ do
+
+    it "deletes author"
+      $              Handlers.deleteAuthor
+                       dbH
+                       DeleteAuthor.Request { DeleteAuthor.token = "admin"
+                                            , DeleteAuthor.login = "authorlogin"
+                                            }
+      `shouldReturn` "ok"
+
+    it "throws exception if user not admin"
+      $             Handlers.deleteAuthor
+                      dbH
+                      DeleteAuthor.Request { DeleteAuthor.token = "notadmin"
+                                           , DeleteAuthor.login = "authorlogin"
+                                           }
+      `shouldThrow` anyException
+
+    it "throws exception if author not exist"
+      $             Handlers.deleteAuthor
+                      dbH
+                      DeleteAuthor.Request { DeleteAuthor.token = "admin"
+                                           , DeleteAuthor.login = "notauthorlogin"
+                                           }
+      `shouldThrow` anyException

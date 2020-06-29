@@ -14,9 +14,11 @@ newHandle = DB.Handle { DB.createUser          = createUser
                       , DB.createUserWithPhoto = createUserWithPhoto
                       , DB.getUsers            = getUsers
                       , DB.deleteUser          = deleteUser
+                      , DB.deleteAuthor        = deleteAuthor
                       , DB.loginUser           = loginUser
                       , DB.ifLoginNotExist     = ifLoginNotExist
                       , DB.ifLoginExist        = ifLoginExist
+                      , DB.ifAuthorExist       = ifAuthorExist
                       , DB.isAdmin             = isAdmin
                       , DB.saveImage           = saveImage
                       , DB.deleteFile          = deleteFile
@@ -51,11 +53,17 @@ loginUser :: DB.Login -> DB.Password -> DB.MaybeResult DB.Token
 loginUser "login" "password" = return $ Just "token"
 loginUser _       _          = return Nothing
 
+deleteAuthor :: DB.Login -> DB.MaybeResult Bool
+deleteAuthor _ = return $ Just True
+
 ifLoginNotExist :: DB.Login -> DB.Result Bool
 ifLoginNotExist login = return $ login == "notexistlogin"
 
 ifLoginExist :: DB.Login -> DB.Result Bool
 ifLoginExist login = return $ login == "existlogin"
+
+ifAuthorExist :: DB.Login -> DB.Result Bool
+ifAuthorExist login = return $ login == "authorlogin"
 
 isAdmin :: DB.Token -> DB.Result Bool
 isAdmin login = return $ login == "admin"

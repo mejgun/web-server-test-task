@@ -35,9 +35,11 @@ data Handle =
     , getUsers :: Page -> Count -> MaybeResult [GetUsers.User]
     , deleteUser :: Login -> EitherResult PhotoPath
     , loginUser :: Login -> Password -> MaybeResult Token
+    , deleteAuthor :: Login -> MaybeResult Bool
     , ifLoginNotExist :: Login -> Result Bool
     , ifLoginExist :: Login -> Result Bool
     , isAdmin :: Token -> Result Bool
+    ,ifAuthorExist::Login -> Result Bool
     , saveImage :: FilePath -> Base64String -> MaybeResult Bool
     , deleteFile :: FilePath -> MaybeResult Bool
     }

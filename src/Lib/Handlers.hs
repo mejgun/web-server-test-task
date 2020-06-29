@@ -7,6 +7,7 @@ module Lib.Handlers
   , createUser
   , deleteUser
   , loginUser
+  , deleteAuthor
   )
 where
 
@@ -131,7 +132,13 @@ loginUser dbH req = do
     _          -> throw ErrorBadRequest
 
 deleteAuthor :: DB.Handle -> DeleteAuthor.Request -> Result String
-deleteAuthor dbH req = undefined
+deleteAuthor dbH req = do
+  admin <- DB.isAdmin dbH (DeleteAuthor.token req)
+  unless admin (throw ErrorNotFound)
+  exist <- DB.ifAuthorExist dbH (DeleteAuthor.login req)
+  unless exist (throw ErrorAuthorNotExist)
+  res <- DB.deleteAuthor dbH (DeleteAuthor.login req)
+  if isJust res then return justOK else throw ErrorBadRequest
 
 editAuthor :: DB.Handle -> EditAuthor.Request -> Result String
 editAuthor dbH req = undefined
@@ -218,3 +225,8 @@ justOK = "ok"
 
 makeExt :: Maybe String -> String
 makeExt = maybe ".jpg" $ (++) "." . (map toLower)
+
+ifAdmin :: DB.Handle -> DB.Login -> DB.Result ()
+ifAdmin dbH token = do
+  admin <- DB.isAdmin dbH token
+  unless admin (throw ErrorNotFound)
