@@ -8,6 +8,7 @@ module Lib.Handlers
   , deleteUser
   , loginUser
   , deleteAuthor
+  , editAuthor
   )
 where
 
@@ -141,7 +142,13 @@ deleteAuthor dbH req = do
   if isJust res then return justOK else throw ErrorBadRequest
 
 editAuthor :: DB.Handle -> EditAuthor.Request -> Result String
-editAuthor dbH req = undefined
+editAuthor dbH req = do
+  admin <- DB.isAdmin dbH (EditAuthor.token req)
+  unless admin (throw ErrorNotFound)
+  exist <- DB.ifAuthorExist dbH (EditAuthor.login req)
+  unless exist (throw ErrorAuthorNotExist)
+  res <- DB.editAuthor dbH (EditAuthor.login req) (EditAuthor.descr req)
+  if isJust res then return justOK else throw ErrorBadRequest
 
 getAuthors :: DB.Handle -> GetAuthors.Request -> Result [GetAuthors.Author]
 getAuthors dbH req = undefined

@@ -70,6 +70,7 @@ newHandle conn logger = DB.Handle
   , DB.deleteUser          = deleteUser conn logger
   , DB.loginUser           = loginUser conn logger
   , DB.deleteAuthor        = deleteAuthor conn logger
+  , DB.editAuthor          = editAuthor conn logger
   , DB.ifLoginNotExist     = ifLoginNotExist conn logger
   , DB.ifLoginExist        = ifLoginExist conn logger
   , DB.ifAuthorExist       = ifAuthorExist conn logger
@@ -140,6 +141,7 @@ ifAuthorExist conn _ login = rIfDB
   conn
   "select count(id)=1 from authors where user_id=(select id from users where login=?);"
   [login]
+
 -- ifCategoryExist :: Connection -> Int -> IO Bool
 -- ifCategoryExist conn cat = rIfDB
 --   conn
@@ -253,16 +255,18 @@ deleteAuthor conn _ login =
       [login]
     >>= execResult
 
--- funcEditAuthor
---   :: Connection -> Logger.Logger -> Logic.MyHandler EditAuthor.Request Bool
--- funcEditAuthor conn _ u =
---   isAdmin conn (EditAuthor.token u)
---     >>  ifAuthorExist conn (EditAuthor.login u)
---     >>  execute
---           conn
---           "update authors set descr=? where user_id=(select id from users where login=?);"
---           [EditAuthor.descr u, EditAuthor.login u]
---     >>= execResult
+editAuthor
+  :: Connection
+  -> Logger.Logger
+  -> DB.Login
+  -> DB.Description
+  -> DB.MaybeResult Bool
+editAuthor conn _ login descr =
+  execute
+      conn
+      "update authors set descr=? where user_id=(select id from users where login=?);"
+      [descr, login]
+    >>= execResult
 
 deleteFile :: Logger.Logger -> FilePath -> DB.MaybeResult Bool
 deleteFile logg file = do

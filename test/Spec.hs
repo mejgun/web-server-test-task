@@ -187,3 +187,32 @@ main = hspec $ do
                                            , DeleteAuthor.login = "notauthorlogin"
                                            }
       `shouldThrow` anyException
+
+  describe "Handlers.editAuthor" $ do
+
+    it "edits author"
+      $              Handlers.editAuthor
+                       dbH
+                       EditAuthor.Request { EditAuthor.token = "admin"
+                                          , EditAuthor.login = "authorlogin"
+                                          , EditAuthor.descr = "descr"
+                                          }
+      `shouldReturn` "ok"
+
+    it "throws exception if user not admin"
+      $             Handlers.editAuthor
+                      dbH
+                      EditAuthor.Request { EditAuthor.token = "notadmin"
+                                         , EditAuthor.descr = "descr"
+                                         , EditAuthor.login = "authorlogin"
+                                         }
+      `shouldThrow` anyException
+
+    it "throws exception if author not exist"
+      $             Handlers.editAuthor
+                      dbH
+                      EditAuthor.Request { EditAuthor.token = "admin"
+                                         , EditAuthor.descr = "descr"
+                                         , EditAuthor.login = "notauthorlogin"
+                                         }
+      `shouldThrow` anyException

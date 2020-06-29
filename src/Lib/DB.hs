@@ -22,6 +22,8 @@ type PhotoExt = String
 
 type PhotoPath = String
 
+type Description = String
+
 type MaybeResult a = IO (Maybe a)
 
 type EitherResult a = IO (Either Bool (Maybe a))
@@ -36,10 +38,11 @@ data Handle =
     , deleteUser :: Login -> EitherResult PhotoPath
     , loginUser :: Login -> Password -> MaybeResult Token
     , deleteAuthor :: Login -> MaybeResult Bool
+    , editAuthor :: Login -> Description -> MaybeResult Bool
     , ifLoginNotExist :: Login -> Result Bool
     , ifLoginExist :: Login -> Result Bool
     , isAdmin :: Token -> Result Bool
-    ,ifAuthorExist::Login -> Result Bool
+    , ifAuthorExist :: Login -> Result Bool
     , saveImage :: FilePath -> Base64String -> MaybeResult Bool
     , deleteFile :: FilePath -> MaybeResult Bool
     }
