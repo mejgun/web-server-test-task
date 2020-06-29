@@ -64,15 +64,18 @@ import qualified Lib.Types.UpdateNews          as UpdateNews
 
 newHandle :: Connection -> Logger.Logger -> DB.Handle
 newHandle conn logger = DB.Handle
-  { DB.createUser          = funcCreateUser conn logger
-  , DB.createUserWithPhoto = funcCreateUserWithPhoto conn logger
-  , DB.getUsers            = funcGetUsers conn logger
+  { DB.createUser          = сreateUser conn logger
+  , DB.createUserWithPhoto = сreateUserWithPhoto conn logger
+  , DB.getUsers            = getUsers conn logger
+  , DB.deleteUser          = deleteUser conn logger
   , DB.ifLoginNotExist     = ifLoginNotExist conn logger
   , DB.ifLoginExist        = ifLoginExist conn logger
-  , DB.saveFile            = saveFile logger
+  , DB.saveImage           = saveImage logger
+  , DB.deleteFile          = deleteFile logger
+  , DB.isAdmin             = isAdmin conn logger
   }
 
-execResult :: GHC.Int.Int64 -> DB.Result Bool
+execResult :: GHC.Int.Int64 -> DB.MaybeResult Bool
 execResult i = case i of
   1 -> return $ Just True
   _ -> return Nothing
@@ -83,7 +86,7 @@ calcOffsetAndLimil page perPage =
       limit  = perPage
   in  [offset, limit]
 
-catchErrors :: Logger.Logger -> DB.Result a -> DB.Result a
+catchErrors :: Logger.Logger -> DB.MaybeResult a -> DB.MaybeResult a
 catchErrors logg func = do
   func
     `catch` (\(SqlError q w t e r) -> do
@@ -100,8 +103,8 @@ rIfDB :: ToRow a => Connection -> Query -> a -> DB.Result Bool
 rIfDB conn qry val = do
   p <- query conn qry val :: IO [Only Bool]
   case p of
-    [Only a] -> return $ Just a
-    _        -> return Nothing
+    [Only a] -> return a
+    _        -> return False
 
 ifLoginExist :: Connection -> Logger.Logger -> DB.Login -> DB.Result Bool
 ifLoginExist conn _ login = ifLogin 1 conn login
@@ -113,12 +116,10 @@ ifLogin :: Int -> Connection -> DB.Login -> DB.Result Bool
 ifLogin cond conn login =
   rIfDB conn "select count(id)=? from users where login=?;" (cond, login)
 
--- isAdmin :: Connection -> UserToken -> IO Bool
--- isAdmin conn token = rIfDB
---   conn
---   (Query "select admin from users where token=? limit 1;")
---   [token]
---   Logic.ErrorNotFound
+isAdmin :: Connection -> Logger.Logger -> DB.Token -> DB.Result Bool
+isAdmin conn _ token =
+  rIfDB conn (Query "select admin from users where token=? limit 1;") [token]
+
 -- isAuthor :: Connection -> UserToken -> IO Bool
 -- isAuthor conn token = rIfDB
 --   conn
@@ -172,15 +173,15 @@ ifLogin cond conn login =
 --   Logic.ErrorNotYourNews
 -- pgArrayToList :: PGArray (Maybe a) -> [a]
 -- pgArrayToList = catMaybes . fromPGArray
-funcCreateUser
+сreateUser
   :: Connection
   -> Logger.Logger
   -> DB.Name
   -> DB.LastName
   -> DB.Login
   -> DB.Password
-  -> DB.Result Bool
-funcCreateUser conn logg name lastname login password =
+  -> DB.MaybeResult Bool
+сreateUser conn logg name lastname login password =
   catchErrors logg
     $   execute
           conn
@@ -188,7 +189,7 @@ funcCreateUser conn logg name lastname login password =
           (name, lastname, login, password)
     >>= execResult
 
-funcCreateUserWithPhoto
+сreateUserWithPhoto
   :: Connection
   -> Logger.Logger
   -> DB.Name
@@ -196,8 +197,8 @@ funcCreateUserWithPhoto
   -> DB.Login
   -> DB.Password
   -> DB.PhotoExt
-  -> DB.Result String
-funcCreateUserWithPhoto conn logg name lastname login password photoExt = do
+  -> DB.MaybeResult DB.PhotoPath
+сreateUserWithPhoto conn logg name lastname login password photoExt = do
   q <- query
     conn
     "insert into users (name,lastname,token,login,password,photo) values(?,?,md5(random()::text),?,md5(?),concat(?,md5(random()::text),?)) on conflict do nothing returning photo;"
@@ -206,35 +207,29 @@ funcCreateUserWithPhoto conn logg name lastname login password photoExt = do
     [Only imgFile] -> return $ Just imgFile
     _              -> return Nothing
 
-funcGetUsers
+getUsers
   :: Connection
   -> Logger.Logger
   -> DB.Page
   -> DB.Count
-  -> DB.Result [GetUsers.User]
-funcGetUsers conn logg page count = catchErrors logg $ do
+  -> DB.MaybeResult [GetUsers.User]
+getUsers conn logg page count = catchErrors logg $ do
   r <- query conn
              "select name,lastname,photo from users offset ? limit ?;"
              (calcOffsetAndLimil page count)
   return $ Just r
 
--- funcDeleteUser
---   :: Connection -> Logger.Logger -> Logic.MyHandler DeleteUser.Request Bool
--- funcDeleteUser conn logg req =
---   isAdmin conn (DeleteUser.token req)
---     >> ifLoginExist conn (DeleteUser.login req)
---     >> do
---          q <-
---            query conn
---                  "delete from users where login=? returning photo;"
---                  [DeleteUser.login req] :: IO [Maybe (Only String)]
---          case q of
---            [Just (Only f)] ->
---              logg Logger.LogDebug ("Removing file " ++ show (f))
---                >> FSUtils.deleteFile logg f
---                >> return (Logic.Success Nothing)
---            [Nothing] -> return $ Logic.Success Nothing
---            _         -> throw Logic.ErrorBadRequest
+deleteUser
+  :: Connection -> Logger.Logger -> DB.Login -> DB.EitherResult DB.PhotoPath
+deleteUser conn _ login = do
+  q <-
+    query conn "delete from users where login=? returning photo;" [login] :: IO
+      [Maybe (Only String)]
+  case q of
+    [Just (Only f)] -> return $ Right $ Just f
+    [Nothing      ] -> return $ Right Nothing
+    _               -> return $ Left False
+
 -- funcLoginUser
 --   :: Connection
 --   -> Logger.Logger
@@ -267,7 +262,7 @@ funcGetUsers conn logg page count = catchErrors logg $ do
 --           "update authors set descr=? where user_id=(select id from users where login=?);"
 --           [EditAuthor.descr u, EditAuthor.login u]
 --     >>= execResult
-deleteFile :: Logger.Logger -> FilePath -> DB.Result Bool
+deleteFile :: Logger.Logger -> FilePath -> DB.MaybeResult Bool
 deleteFile logg file = do
   res <- try $ removeFile file
   case res of
@@ -276,8 +271,8 @@ deleteFile logg file = do
       return Nothing
     _ -> return $ Just True
 
-saveFile :: Logger.Logger -> FilePath -> String -> DB.Result Bool
-saveFile logg file str = do
+saveImage :: Logger.Logger -> FilePath -> String -> DB.MaybeResult Bool
+saveImage logg file str = do
   let dat = decodeBase64 str
   res <- try $ B.writeFile file dat
   case res of

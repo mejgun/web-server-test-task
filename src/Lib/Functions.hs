@@ -13,7 +13,6 @@ import           Blaze.ByteString.Builder       ( Builder
                                                 , fromLazyByteString
                                                 )
 import           Control.Exception
-import           Control.Monad.Except
 import           Data.Aeson                    as A
 import qualified Data.ByteString               as B
                                                 ( ByteString

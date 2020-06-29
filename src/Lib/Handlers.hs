@@ -5,6 +5,7 @@ module Lib.Handlers
   , Result
   , getUsers
   , createUser
+  , deleteUser
   )
 where
 
@@ -14,7 +15,6 @@ import           Control.Exception              ( Exception
 import           Control.Monad                  ( unless
                                                 , when
                                                 )
-import           Control.Monad.Except
 import           Data.Char                      ( toLower )
 import           Data.Maybe                     ( fromJust
                                                 , isJust
@@ -78,11 +78,8 @@ type Result = IO
 
 createUser :: DB.Handle -> CreateUser.Request -> Result String
 createUser dbH req = do
-  l <- DB.ifLoginNotExist dbH (CreateUser.login req)
-  case l of
-    Just True  -> return ()
-    Just False -> throw ErrorLoginAlreadyExist
-    Nothing    -> throw ErrorBadRequest
+  exist <- DB.ifLoginNotExist dbH (CreateUser.login req)
+  unless exist (throw ErrorLoginAlreadyExist)
   if isJust (CreateUser.photo req)
     then do
       let ext = makeExt (CreateUser.photo_type req)
@@ -94,7 +91,7 @@ createUser dbH req = do
                                   ext
       case r of
         Just fileName -> do
-          DB.saveFile dbH fileName $ fromJust (CreateUser.photo req)
+          DB.saveImage dbH fileName $ fromJust (CreateUser.photo req)
           return justOK
         _ -> throw ErrorBadRequest
     else do
@@ -114,7 +111,16 @@ getUsers dbH req = do
     _          -> throw ErrorBadRequest
 
 deleteUser :: DB.Handle -> DeleteUser.Request -> Result String
-deleteUser dbH req = undefined
+deleteUser dbH req = do
+  admin <- DB.isAdmin dbH (DeleteUser.token req)
+  unless admin (throw ErrorNotFound)
+  exist <- DB.ifLoginExist dbH (DeleteUser.login req)
+  unless exist (throw ErrorBadRequest)
+  photo <- DB.deleteUser dbH (DeleteUser.login req)
+  case photo of
+    Right (Just f) -> DB.deleteFile dbH f >> return justOK
+    Left  _        -> throw ErrorBadRequest
+    _              -> return justOK
 
 loginUser :: DB.Handle -> LoginUser.Request -> Result LoginUser.Token
 loginUser dbH req = undefined

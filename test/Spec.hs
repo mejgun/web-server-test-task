@@ -38,45 +38,45 @@ main :: IO ()
 main = hspec $ do
   let dbH = DB.Impl.Testing.newHandle
 
-  describe "create user" $ do
+  describe "Handlers.createUser" $ do
 
-    it "user without photo"
+    it "creates user without photo"
       $              Handlers.createUser
                        dbH
                        CreateUser.Request { CreateUser.photo      = Nothing
                                           , CreateUser.photo_type = Nothing
                                           , CreateUser.name       = "test"
                                           , CreateUser.lastname   = "test"
-                                          , CreateUser.login      = "test"
+                                          , CreateUser.login = "notexistlogin"
                                           , CreateUser.password   = "test"
                                           }
       `shouldReturn` "ok"
 
-    it "user with photo without ext"
+    it "creates user with photo without ext"
       $              Handlers.createUser
                        dbH
                        CreateUser.Request { CreateUser.photo      = Just "1"
                                           , CreateUser.photo_type = Nothing
                                           , CreateUser.name       = "test"
                                           , CreateUser.lastname   = "test"
-                                          , CreateUser.login      = "test"
+                                          , CreateUser.login = "notexistlogin"
                                           , CreateUser.password   = "test"
                                           }
       `shouldReturn` "ok"
 
-    it "user with photo with ext"
+    it "creates user with photo with ext"
       $              Handlers.createUser
                        dbH
                        CreateUser.Request { CreateUser.photo      = Just "1"
                                           , CreateUser.photo_type = Just "2"
                                           , CreateUser.name       = "test"
                                           , CreateUser.lastname   = "test"
-                                          , CreateUser.login      = "test"
+                                          , CreateUser.login = "notexistlogin"
                                           , CreateUser.password   = "test"
                                           }
       `shouldReturn` "ok"
 
-    it "user with empty data (throw exception)"
+    it "throws exception if empty data"
       $             Handlers.createUser
                       dbH
                       CreateUser.Request { CreateUser.photo      = Nothing
@@ -88,10 +88,51 @@ main = hspec $ do
                                          }
       `shouldThrow` anyException
 
-    it "get users"
+    it "throws exception if login exist"
+      $             Handlers.createUser
+                      dbH
+                      CreateUser.Request { CreateUser.photo      = Nothing
+                                         , CreateUser.photo_type = Nothing
+                                         , CreateUser.name       = ""
+                                         , CreateUser.lastname   = ""
+                                         , CreateUser.login      = "existlogin"
+                                         , CreateUser.password   = ""
+                                         }
+      `shouldThrow` anyException
+
+  describe "Handlers.getUsers" $ do
+
+    it "returns users"
       $ Handlers.getUsers dbH GetUsers.Request { GetUsers.page = 1 }
       `shouldReturn` ([] :: [GetUsers.User])
 
-    it "get users wrong page (throw exception)"
+    it "throws exception if page negative"
       $ Handlers.getUsers dbH GetUsers.Request { GetUsers.page = -1 }
+      `shouldThrow` anyException
+
+  describe "Handlers.deleteUser" $ do
+
+    it "deletes user"
+      $              Handlers.deleteUser
+                       dbH
+                       DeleteUser.Request { DeleteUser.token = "admin"
+                                          , DeleteUser.login = "existlogin"
+                                          }
+      `shouldReturn` "ok"
+
+
+    it "throws exception if user not admin"
+      $             Handlers.deleteUser
+                      dbH
+                      DeleteUser.Request { DeleteUser.token = "noadmin"
+                                         , DeleteUser.login = "existlogin"
+                                         }
+      `shouldThrow` anyException
+
+    it "throws exception if login not exist"
+      $             Handlers.deleteUser
+                      dbH
+                      DeleteUser.Request { DeleteUser.token = "admin"
+                                         , DeleteUser.login = "notexistlogin"
+                                         }
       `shouldThrow` anyException

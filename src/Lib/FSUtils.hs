@@ -1,7 +1,6 @@
 module Lib.FSUtils where
 
 import           Control.Exception
-import           Control.Monad.Except
 import           System.Directory               ( createDirectoryIfMissing
                                                 , getPermissions
                                                 , readable

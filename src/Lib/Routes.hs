@@ -16,9 +16,9 @@ runApp
   -> (Response -> IO ResponseReceived)
   -> IO ResponseReceived
 runApp dbH logger request respond = case pathInfo request of
-  ["user"  , "get"   ] -> norm $ Handlers.getUsers
-  ["user"  , "create"] -> norm $ Handlers.createUser
---   ["user"    , "delete"       ] -> adm Users.delete
+  ["user"  , "get"   ] -> norm Handlers.getUsers
+  ["user"  , "create"] -> norm Handlers.createUser
+  ["user"  , "delete"] -> adm Handlers.deleteUser
 --   ["user"    , "login"        ] -> norm Users.logIn
 --   ["author"  , "make"         ] -> adm Authors.make
 --   ["author"  , "edit"         ] -> adm Authors.edit

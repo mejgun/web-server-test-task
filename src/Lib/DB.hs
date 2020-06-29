@@ -1,17 +1,10 @@
-module Lib.DB
-  ( Handle(..)
-  , Result
-  , Name
-  , LastName
-  , Login
-  , Password
-  , PhotoExt
-  , Page
-  , Count
-  )
-where
+module Lib.DB where
 
 import qualified Lib.Types.GetUsers            as GetUsers
+
+type Token = String
+
+type Base64String = String
 
 type Name = String
 
@@ -27,14 +20,23 @@ type Count = Int
 
 type PhotoExt = String
 
-type Result a = IO (Maybe a)
+type PhotoPath = String
+
+type MaybeResult a = IO (Maybe a)
+
+type EitherResult a = IO (Either Bool (Maybe a))
+
+type Result a = IO a
 
 data Handle =
   Handle
-    { createUser :: Name -> LastName -> Login -> Password -> Result Bool
-    , createUserWithPhoto :: Name -> LastName -> Login -> Password -> PhotoExt -> Result String
-    , getUsers :: Page -> Count -> Result [GetUsers.User]
+    { createUser :: Name -> LastName -> Login -> Password -> MaybeResult Bool
+    , createUserWithPhoto :: Name -> LastName -> Login -> Password -> PhotoExt -> MaybeResult PhotoPath
+    , getUsers :: Page -> Count -> MaybeResult [GetUsers.User]
+    , deleteUser :: Login -> EitherResult PhotoPath
     , ifLoginNotExist :: Login -> Result Bool
     , ifLoginExist :: Login -> Result Bool
-    , saveFile :: FilePath -> String -> Result Bool
+    , isAdmin :: Token -> Result Bool
+    , saveImage :: FilePath -> Base64String -> MaybeResult Bool
+    , deleteFile :: FilePath -> MaybeResult Bool
     }

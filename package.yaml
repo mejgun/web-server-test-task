@@ -34,7 +34,6 @@ dependencies:
 - directory
 - text
 - data-default
-- mtl
 - hspec
 
 library:
