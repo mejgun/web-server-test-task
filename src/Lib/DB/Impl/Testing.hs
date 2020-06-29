@@ -25,6 +25,10 @@ newHandle = DB.Handle { DB.createUser          = createUser
                       , DB.isUser              = isUser
                       , DB.isCategoryExist     = isCategoryExist
                       , DB.isTagNotExist       = isTagNotExist
+                      , DB.isTagExist          = isTagExist
+                      , DB.isNewsExist         = isNewsExist
+                      , DB.isNewsPublished     = isNewsPublished
+                      , DB.thisNewsAuthor      = thisNewsAuthor
                       , DB.saveImage           = saveImage
                       , DB.deleteFile          = deleteFile
                       }
@@ -88,6 +92,19 @@ isCategoryExist catID = return $ catID > 0
 isTagNotExist :: DB.TagName -> DB.Result Bool
 isTagNotExist "existtag"    = return False
 isTagNotExist "notexisttag" = return True
+
+isTagExist :: DB.TagID -> DB.Result Bool
+isTagExist tag_id = return $ tag_id > 0
+
+isNewsExist :: DB.NewsID -> DB.Result Bool
+isNewsExist news_id = return $ news_id > 0
+
+isNewsPublished :: DB.NewsID -> DB.Result Bool
+isNewsPublished news_id = return $ news_id > 0
+
+thisNewsAuthor :: DB.NewsID -> DB.Token -> DB.Result Bool
+thisNewsAuthor news_id token =
+  return $ if (news_id > 0) && (token == "authortoken") then True else False
 
 saveImage :: FilePath -> String -> DB.MaybeResult Bool
 saveImage file str = return $ case any null [file, str] of

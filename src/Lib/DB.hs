@@ -28,6 +28,10 @@ type CategoryID = Int
 
 type TagName = String
 
+type TagID = Int
+
+type NewsID = Int
+
 type MaybeResult a = IO (Maybe a)
 
 type EitherResult a = IO (Either Bool (Maybe a))
@@ -51,6 +55,10 @@ data Handle =
     , isAuthorExist :: Login -> Result Bool
     , isTagNotExist :: TagName -> Result Bool
     , isCategoryExist :: CategoryID -> Result Bool
+    , isTagExist :: TagID -> Result Bool
+    , isNewsExist :: NewsID -> Result Bool
+    , isNewsPublished :: NewsID -> Result Bool
+    , thisNewsAuthor :: NewsID -> Token -> Result Bool
     , saveImage :: FilePath -> Base64String -> MaybeResult Bool
     , deleteFile :: FilePath -> MaybeResult Bool
     }

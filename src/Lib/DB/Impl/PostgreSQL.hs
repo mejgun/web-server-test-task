@@ -81,6 +81,10 @@ newHandle conn logger = DB.Handle
   , DB.isUser              = isUser conn logger
   , DB.isCategoryExist     = isCategoryExist conn logger
   , DB.isTagNotExist       = isTagNotExist conn logger
+  , DB.isTagExist          = isTagExist conn logger
+  , DB.isNewsExist         = isNewsExist conn logger
+  , DB.isNewsPublished     = isNewsPublished conn logger
+  , DB.thisNewsAuthor      = thisNewsAuthor conn logger
   }
 
 execResult :: GHC.Int.Int64 -> DB.MaybeResult Bool
@@ -153,30 +157,46 @@ isTagNotExist :: Connection -> Logger.Logger -> DB.TagName -> DB.Result Bool
 isTagNotExist conn _ tag =
   rIfDB conn "select count(id)=0 from tags where name=?;" [tag]
 
--- ifTagExist :: Connection -> Int -> IO Bool
--- ifTagExist conn tag_id = rIfDB conn
---                                "select count(id)=1 from tags where id=?;"
---                                [tag_id]
---                                Logic.ErrorTagNotExist
--- ifNewsExist :: Connection -> Int -> IO Bool
--- ifNewsExist conn news_id = rIfDB conn
---                                  "select count(id)=1 from news where id=?;"
---                                  [news_id]
---                                  Logic.ErrorNewsNotExist
--- ifNewsPublished :: Connection -> Int -> IO Bool
--- ifNewsPublished conn news_id = rIfDB
---   conn
---   "select count(id)=1 from news where id=? and published=true;"
---   [news_id]
---   Logic.ErrorNewsNotExist
--- ifNewsAuthor :: Connection -> Int -> String -> IO Bool
--- ifNewsAuthor conn news_id token = rIfDB
---   conn
---   "select count(id)=1 from news where id=? and author_id=(select id from authors where user_id=(select id from users where token=?));"
---   (news_id, token)
---   Logic.ErrorNotYourNews
--- pgArrayToList :: PGArray (Maybe a) -> [a]
--- pgArrayToList = catMaybes . fromPGArray
+isTagExist :: Connection -> Logger.Logger -> DB.TagID -> DB.Result Bool
+isTagExist conn _ tag_id =
+  rIfDB conn "select count(id)=1 from tags where id=?;" [tag_id]
+
+isNewsExist :: Connection -> Logger.Logger -> DB.NewsID -> DB.Result Bool
+isNewsExist conn _ news_id =
+  rIfDB conn "select count(id)=1 from news where id=?;" [news_id]
+
+isNewsPublished :: Connection -> Logger.Logger -> DB.NewsID -> DB.Result Bool
+isNewsPublished conn _ news_id = rIfDB
+  conn
+  "select count(id)=1 from news where id=? and published=true;"
+  [news_id]
+
+thisNewsAuthor
+  :: Connection -> Logger.Logger -> DB.NewsID -> DB.Token -> DB.Result Bool
+thisNewsAuthor conn _ news_id token = rIfDB
+  conn
+  "select count(id)=1 from news where id=? and author_id=(select id from authors where user_id=(select id from users where token=?));"
+  (news_id, token)
+
+deleteFile :: Logger.Logger -> FilePath -> DB.MaybeResult Bool
+deleteFile logg file = do
+  res <- try $ removeFile file
+  case res of
+    Left e -> do
+      logg Logger.LogQuiet $ "Cannot delete file. " <> show (e :: IOException)
+      return Nothing
+    _ -> return $ Just True
+
+saveImage :: Logger.Logger -> FilePath -> String -> DB.MaybeResult Bool
+saveImage logg file str = do
+  let dat = decodeBase64 str
+  res <- try $ B.writeFile file dat
+  case res of
+    Left e -> do
+      logg Logger.LogQuiet $ "Cannot save file. " <> show (e :: IOException)
+      return Nothing
+    _ -> return $ Just True
+
 сreateUser
   :: Connection
   -> Logger.Logger
@@ -267,22 +287,3 @@ editAuthor conn _ login descr =
       "update authors set descr=? where user_id=(select id from users where login=?);"
       [descr, login]
     >>= execResult
-
-deleteFile :: Logger.Logger -> FilePath -> DB.MaybeResult Bool
-deleteFile logg file = do
-  res <- try $ removeFile file
-  case res of
-    Left e -> do
-      logg Logger.LogQuiet $ "Cannot delete file. " <> show (e :: IOException)
-      return Nothing
-    _ -> return $ Just True
-
-saveImage :: Logger.Logger -> FilePath -> String -> DB.MaybeResult Bool
-saveImage logg file str = do
-  let dat = decodeBase64 str
-  res <- try $ B.writeFile file dat
-  case res of
-    Left e -> do
-      logg Logger.LogQuiet $ "Cannot save file. " <> show (e :: IOException)
-      return Nothing
-    _ -> return $ Just True
