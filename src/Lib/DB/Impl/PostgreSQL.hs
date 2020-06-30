@@ -74,6 +74,7 @@ newHandle conn logger = DB.Handle
   , DB.makeAuthor          = f makeAuthor
   , DB.getAuthors          = f getAuthors
   , DB.createCategory      = f createCategory
+  , DB.deleteCategory      = f deleteCategory
   , DB.isLoginNotExist     = f isLoginNotExist
   , DB.isLoginExist        = f isLoginExist
   , DB.isAuthorExist       = f isAuthorExist
@@ -119,7 +120,7 @@ catchErrorsEither logg func = do
               logg Logger.LogQuiet $ B8.unpack $ B8.intercalate
                 " "
                 [q, B8.pack (show w), e, r, t]
-              return $ Left False
+              return $ Left ()
             )
 
 decodeBase64 :: String -> B.ByteString
@@ -267,7 +268,7 @@ deleteUser conn logg login = catchErrorsEither logg $ do
   case q of
     [Just (Only f)] -> return $ Right $ Just f
     [Nothing      ] -> return $ Right Nothing
-    _               -> return $ Left False
+    _               -> return $ Left ()
 
 loginUser
   :: Connection
@@ -344,4 +345,11 @@ createCategory conn logg name parent =
           conn
           "insert into categories (name,parent) values (?,(select id from categories where id=?)) on conflict do nothing;"
           (name, parent)
+    >>= execResult
+
+deleteCategory
+  :: Connection -> Logger.Logger -> DB.CategoryID -> DB.MaybeResult Bool
+deleteCategory conn logg catID =
+  catchErrorsMaybe logg
+    $   execute conn "delete from categories where id=?;" [catID]
     >>= execResult

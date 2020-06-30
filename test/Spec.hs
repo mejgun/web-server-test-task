@@ -289,3 +289,29 @@ main = hspec $ do
                                              , CreateCategory.parent = Nothing
                                              }
       `shouldThrow` anyException
+
+  describe "Handlers.deleteCategory" $ do
+
+    it "deletes category"
+      $              Handlers.deleteCategory
+                       dbH
+                       DeleteCategory.Request { DeleteCategory.token  = "admin"
+                                              , DeleteCategory.cat_id = 1
+                                              }
+      `shouldReturn` "ok"
+
+    it "throws exception if category not exist"
+      $             Handlers.deleteCategory
+                      dbH
+                      DeleteCategory.Request { DeleteCategory.token  = "admin"
+                                             , DeleteCategory.cat_id = 0
+                                             }
+      `shouldThrow` anyException
+
+    it "throws exception if user not admin"
+      $             Handlers.deleteCategory
+                      dbH
+                      DeleteCategory.Request { DeleteCategory.token = "notadmin"
+                                             , DeleteCategory.cat_id = 1
+                                             }
+      `shouldThrow` anyException

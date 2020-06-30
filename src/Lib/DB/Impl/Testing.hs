@@ -21,6 +21,7 @@ newHandle = DB.Handle { DB.createUser          = createUser
                       , DB.makeAuthor          = makeAuthor
                       , DB.createCategory      = createCategory
                       , DB.loginUser           = loginUser
+                      , DB.deleteCategory      = deleteCategory
                       , DB.isLoginNotExist     = isLoginNotExist
                       , DB.isLoginExist        = isLoginExist
                       , DB.isAuthorExist       = isAuthorExist
@@ -80,6 +81,9 @@ makeAuthor _ _ = return $ Just True
 
 createCategory :: DB.CategoryName -> DB.ParentCategory -> DB.MaybeResult Bool
 createCategory _ _ = return $ Just True
+
+deleteCategory :: DB.CategoryID -> DB.MaybeResult Bool
+deleteCategory _ = return $ Just True
 
 isLoginNotExist :: DB.Login -> DB.Result Bool
 isLoginNotExist login = return $ login == "notexistlogin"

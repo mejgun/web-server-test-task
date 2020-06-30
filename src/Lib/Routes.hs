@@ -26,7 +26,7 @@ runApp dbH logger request respond = case pathInfo request of
   ["author"  , "get"   ] -> adm Handlers.getAuthors
   ["category", "create"] -> adm Handlers.createCategory
 --   ["category", "edit"         ] -> adm Categories.edit
---   ["category", "delete"       ] -> adm Categories.delete
+  ["category", "delete"] -> adm Handlers.deleteCategory
 --   ["category", "get"          ] -> norm Categories.get
 --   ["tag"     , "create"       ] -> adm Tags.create
 --   ["tag"     , "edit"         ] -> adm Tags.edit

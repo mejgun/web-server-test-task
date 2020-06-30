@@ -39,7 +39,7 @@ type NewsID = Int
 
 type MaybeResult a = IO (Maybe a)
 
-type EitherResult a = IO (Either Bool (Maybe a))
+type EitherResult a = IO (Either () (Maybe a))
 
 type Result a = IO a
 
@@ -54,6 +54,7 @@ data Handle =
     , editAuthor :: Login -> Description -> MaybeResult Bool
     , makeAuthor :: Login -> Description -> MaybeResult Bool
     , getAuthors :: Page -> Count -> MaybeResult [GetAuthors.Author]
+    , deleteCategory :: CategoryID -> MaybeResult Bool
     , createCategory :: CategoryName -> ParentCategory -> MaybeResult Bool
     , isLoginNotExist :: Login -> Result Bool
     , isLoginExist :: Login -> Result Bool
