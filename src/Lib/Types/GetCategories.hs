@@ -20,7 +20,7 @@ data Cat =
     , name :: String
     , parent :: Maybe Int
     }
-  deriving (Generic, Show)
+  deriving (Generic, Show, Eq)
 
 instance FromRow Cat
 

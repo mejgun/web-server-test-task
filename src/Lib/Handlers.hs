@@ -225,7 +225,14 @@ editCategory dbH req = do
 
 getCategories
   :: DB.Handle -> GetCategories.Request -> Result [GetCategories.Cat]
-getCategories dbH req = undefined
+getCategories dbH req = do
+  unless (isValidPage (GetCategories.page req)) (throw ErrorBadPage)
+  res <- DB.getCategories dbH
+                          (GetCategories.page req)
+                          Constants.categoriesPerPage
+  case res of
+    Just categories -> return categories
+    _               -> throw ErrorBadRequest
 
 createTag :: DB.Handle -> CreateTag.Request -> Result String
 createTag dbH req = undefined

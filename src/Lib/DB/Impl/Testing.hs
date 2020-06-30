@@ -6,6 +6,7 @@ module Lib.DB.Impl.Testing
 where
 
 import qualified Lib.Types.GetAuthors          as GetAuthors
+import qualified Lib.Types.GetCategories       as GetCategories
 import qualified Lib.Types.GetUsers            as GetUsers
 
 import qualified Lib.DB                        as DB
@@ -23,6 +24,7 @@ newHandle = DB.Handle { DB.createUser          = createUser
                       , DB.loginUser           = loginUser
                       , DB.deleteCategory      = deleteCategory
                       , DB.editCategory        = editCategory
+                      , DB.getCategories       = getCategories
                       , DB.isLoginNotExist     = isLoginNotExist
                       , DB.isLoginExist        = isLoginExist
                       , DB.isAuthorExist       = isAuthorExist
@@ -92,6 +94,9 @@ editCategory
   -> DB.ParentCategory
   -> DB.MaybeResult Bool
 editCategory _ _ _ = return $ Just True
+
+getCategories :: DB.Page -> DB.Count -> DB.MaybeResult [GetCategories.Cat]
+getCategories _ _ = return $ Just []
 
 isLoginNotExist :: DB.Login -> DB.Result Bool
 isLoginNotExist login = return $ login == "notexistlogin"

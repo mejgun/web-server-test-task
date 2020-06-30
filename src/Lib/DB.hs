@@ -1,6 +1,7 @@
 module Lib.DB where
 
 import qualified Lib.Types.GetAuthors          as GetAuthors
+import qualified Lib.Types.GetCategories       as GetCategories
 import qualified Lib.Types.GetUsers            as GetUsers
 
 type Token = String
@@ -57,6 +58,7 @@ data Handle =
     , deleteCategory :: CategoryID -> MaybeResult Bool
     , createCategory :: CategoryName -> ParentCategory -> MaybeResult Bool
     , editCategory :: CategoryID -> CategoryName -> ParentCategory -> MaybeResult Bool
+    , getCategories :: Page -> Count -> MaybeResult [GetCategories.Cat]
     , isLoginNotExist :: Login -> Result Bool
     , isLoginExist :: Login -> Result Bool
     , isAdmin :: Token -> Result Bool

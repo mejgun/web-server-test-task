@@ -76,6 +76,7 @@ newHandle conn logger = DB.Handle
   , DB.createCategory      = f createCategory
   , DB.deleteCategory      = f deleteCategory
   , DB.editCategory        = f editCategory
+  , DB.getCategories       = f getCategories
   , DB.isLoginNotExist     = f isLoginNotExist
   , DB.isLoginExist        = f isLoginExist
   , DB.isAuthorExist       = f isAuthorExist
@@ -368,3 +369,15 @@ editCategory conn logg catID name parent =
                 "update categories set name=?, parent=? where id=?;"
                 (name, parent, catID)
     >>= execResult
+
+getCategories
+  :: Connection
+  -> Logger.Logger
+  -> DB.Page
+  -> DB.Count
+  -> DB.MaybeResult [GetCategories.Cat]
+getCategories conn logg page count = catchErrorsMaybe logg $ do
+  res <- query conn
+               "select id,name,parent from categories offset ? limit ?;"
+               (calcOffsetAndLimil page count)
+  return $ Just res

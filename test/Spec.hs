@@ -347,3 +347,17 @@ main = hspec $ do
                                            , EditCategory.cat_id = 1
                                            }
       `shouldThrow` anyException
+
+  describe "Handlers.getCategories" $ do
+
+    it "returns categories"
+      $              Handlers.getCategories
+                       dbH
+                       GetCategories.Request { GetCategories.page = 1 }
+      `shouldReturn` ([] :: [GetCategories.Cat])
+
+    it "throws exception if page negative"
+      $             Handlers.getCategories
+                      dbH
+                      GetCategories.Request { GetCategories.page = -1 }
+      `shouldThrow` anyException
