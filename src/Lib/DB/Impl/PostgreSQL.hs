@@ -64,28 +64,30 @@ import qualified Lib.Types.UpdateNews          as UpdateNews
 
 newHandle :: Connection -> Logger.Logger -> DB.Handle
 newHandle conn logger = DB.Handle
-  { DB.createUser          = сreateUser conn logger
-  , DB.createUserWithPhoto = сreateUserWithPhoto conn logger
-  , DB.getUsers            = getUsers conn logger
-  , DB.deleteUser          = deleteUser conn logger
-  , DB.loginUser           = loginUser conn logger
-  , DB.deleteAuthor        = deleteAuthor conn logger
-  , DB.editAuthor          = editAuthor conn logger
-  , DB.isLoginNotExist     = isLoginNotExist conn logger
-  , DB.isLoginExist        = isLoginExist conn logger
-  , DB.isAuthorExist       = isAuthorExist conn logger
+  { DB.createUser          = f сreateUser
+  , DB.createUserWithPhoto = f сreateUserWithPhoto
+  , DB.getUsers            = f getUsers
+  , DB.deleteUser          = f deleteUser
+  , DB.loginUser           = f loginUser
+  , DB.deleteAuthor        = f deleteAuthor
+  , DB.editAuthor          = f editAuthor
+  , DB.getAuthors          = f getAuthors
+  , DB.isLoginNotExist     = f isLoginNotExist
+  , DB.isLoginExist        = f isLoginExist
+  , DB.isAuthorExist       = f isAuthorExist
+  , DB.isAdmin             = f isAdmin
+  , DB.isAuthor            = f isAuthor
+  , DB.isUser              = f isUser
+  , DB.isCategoryExist     = f isCategoryExist
+  , DB.isTagNotExist       = f isTagNotExist
+  , DB.isTagExist          = f isTagExist
+  , DB.isNewsExist         = f isNewsExist
+  , DB.isNewsPublished     = f isNewsPublished
+  , DB.thisNewsAuthor      = f thisNewsAuthor
   , DB.saveImage           = saveImage logger
   , DB.deleteFile          = deleteFile logger
-  , DB.isAdmin             = isAdmin conn logger
-  , DB.isAuthor            = isAuthor conn logger
-  , DB.isUser              = isUser conn logger
-  , DB.isCategoryExist     = isCategoryExist conn logger
-  , DB.isTagNotExist       = isTagNotExist conn logger
-  , DB.isTagExist          = isTagExist conn logger
-  , DB.isNewsExist         = isNewsExist conn logger
-  , DB.isNewsPublished     = isNewsPublished conn logger
-  , DB.thisNewsAuthor      = thisNewsAuthor conn logger
   }
+  where f x = x conn logger
 
 execResult :: GHC.Int.Int64 -> DB.MaybeResult Bool
 execResult i = case i of
@@ -98,14 +100,24 @@ calcOffsetAndLimil page perPage =
       limit  = perPage
   in  [offset, limit]
 
-catchErrors :: Logger.Logger -> DB.MaybeResult a -> DB.MaybeResult a
-catchErrors logg func = do
+catchErrorsMaybe :: Logger.Logger -> DB.MaybeResult a -> DB.MaybeResult a
+catchErrorsMaybe logg func = do
   func
     `catch` (\(SqlError q w t e r) -> do
               logg Logger.LogQuiet $ B8.unpack $ B8.intercalate
                 " "
                 [q, B8.pack (show w), e, r, t]
               return Nothing
+            )
+
+catchErrorsEither :: Logger.Logger -> DB.EitherResult a -> DB.EitherResult a
+catchErrorsEither logg func = do
+  func
+    `catch` (\(SqlError q w t e r) -> do
+              logg Logger.LogQuiet $ B8.unpack $ B8.intercalate
+                " "
+                [q, B8.pack (show w), e, r, t]
+              return $ Left False
             )
 
 decodeBase64 :: String -> B.ByteString
@@ -206,7 +218,7 @@ saveImage logg file str = do
   -> DB.Password
   -> DB.MaybeResult Bool
 сreateUser conn logg name lastname login password =
-  catchErrors logg
+  catchErrorsMaybe logg
     $   execute
           conn
           "insert into users (name,lastname,token,login,password) values(?,?,md5(random()::text),?,md5(?)) on conflict do nothing;"
@@ -222,14 +234,15 @@ saveImage logg file str = do
   -> DB.Password
   -> DB.PhotoExt
   -> DB.MaybeResult DB.PhotoPath
-сreateUserWithPhoto conn logg name lastname login password photoExt = do
-  q <- query
-    conn
-    "insert into users (name,lastname,token,login,password,photo) values(?,?,md5(random()::text),?,md5(?),concat(?,md5(random()::text),?)) on conflict do nothing returning photo;"
-    (name, lastname, login, password, Constants.imagesDir, photoExt)
-  case q of
-    [Only imgFile] -> return $ Just imgFile
-    _              -> return Nothing
+сreateUserWithPhoto conn logg name lastname login password photoExt =
+  catchErrorsMaybe logg $ do
+    q <- query
+      conn
+      "insert into users (name,lastname,token,login,password,photo) values(?,?,md5(random()::text),?,md5(?),concat(?,md5(random()::text),?)) on conflict do nothing returning photo;"
+      (name, lastname, login, password, Constants.imagesDir, photoExt)
+    case q of
+      [Only imgFile] -> return $ Just imgFile
+      _              -> return Nothing
 
 getUsers
   :: Connection
@@ -237,7 +250,7 @@ getUsers
   -> DB.Page
   -> DB.Count
   -> DB.MaybeResult [GetUsers.User]
-getUsers conn logg page count = catchErrors logg $ do
+getUsers conn logg page count = catchErrorsMaybe logg $ do
   r <- query conn
              "select name,lastname,photo from users offset ? limit ?;"
              (calcOffsetAndLimil page count)
@@ -245,7 +258,7 @@ getUsers conn logg page count = catchErrors logg $ do
 
 deleteUser
   :: Connection -> Logger.Logger -> DB.Login -> DB.EitherResult DB.PhotoPath
-deleteUser conn _ login = do
+deleteUser conn logg login = catchErrorsEither logg $ do
   q <-
     query conn "delete from users where login=? returning photo;" [login] :: IO
       [Maybe (Only String)]
@@ -260,7 +273,7 @@ loginUser
   -> DB.Login
   -> DB.Password
   -> DB.MaybeResult DB.Token
-loginUser conn _ login password = do
+loginUser conn logg login password = catchErrorsMaybe logg $ do
   t <-
     query conn
           "select token from users where login=? and password=md5(?);"
@@ -268,11 +281,12 @@ loginUser conn _ login password = do
   if null t then return Nothing else return $ Just (head t)
 
 deleteAuthor :: Connection -> Logger.Logger -> DB.Login -> DB.MaybeResult Bool
-deleteAuthor conn _ login =
-  execute
-      conn
-      "delete from authors where user_id=(select id from users where login=?);"
-      [login]
+deleteAuthor conn logg login =
+  catchErrorsMaybe logg
+    $   execute
+          conn
+          "delete from authors where user_id=(select id from users where login=?);"
+          [login]
     >>= execResult
 
 editAuthor
@@ -281,9 +295,23 @@ editAuthor
   -> DB.Login
   -> DB.Description
   -> DB.MaybeResult Bool
-editAuthor conn _ login descr =
-  execute
-      conn
-      "update authors set descr=? where user_id=(select id from users where login=?);"
-      [descr, login]
+editAuthor conn logg login descr =
+  catchErrorsMaybe logg
+    $   execute
+          conn
+          "update authors set descr=? where user_id=(select id from users where login=?);"
+          [descr, login]
     >>= execResult
+
+getAuthors
+  :: Connection
+  -> Logger.Logger
+  -> DB.Page
+  -> DB.Count
+  -> DB.MaybeResult [GetAuthors.Author]
+getAuthors conn logg page count = catchErrorsMaybe logg $ do
+  r <- query
+    conn
+    "select name,lastname,photo,descr from authors as a,users as u where a.user_id=u.id offset ? limit ?;"
+    (calcOffsetAndLimil page count)
+  return $ Just r

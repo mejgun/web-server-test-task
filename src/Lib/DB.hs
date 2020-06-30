@@ -1,5 +1,6 @@
 module Lib.DB where
 
+import qualified Lib.Types.GetAuthors          as GetAuthors
 import qualified Lib.Types.GetUsers            as GetUsers
 
 type Token = String
@@ -47,6 +48,7 @@ data Handle =
     , loginUser :: Login -> Password -> MaybeResult Token
     , deleteAuthor :: Login -> MaybeResult Bool
     , editAuthor :: Login -> Description -> MaybeResult Bool
+    , getAuthors :: Page -> Count -> MaybeResult [GetAuthors.Author]
     , isLoginNotExist :: Login -> Result Bool
     , isLoginExist :: Login -> Result Bool
     , isAdmin :: Token -> Result Bool

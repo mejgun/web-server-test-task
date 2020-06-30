@@ -5,6 +5,7 @@ module Lib.DB.Impl.Testing
   )
 where
 
+import qualified Lib.Types.GetAuthors          as GetAuthors
 import qualified Lib.Types.GetUsers            as GetUsers
 
 import qualified Lib.DB                        as DB
@@ -13,6 +14,7 @@ newHandle :: DB.Handle
 newHandle = DB.Handle { DB.createUser          = createUser
                       , DB.createUserWithPhoto = createUserWithPhoto
                       , DB.getUsers            = getUsers
+                      , DB.getAuthors          = getAuthors
                       , DB.deleteUser          = deleteUser
                       , DB.deleteAuthor        = deleteAuthor
                       , DB.editAuthor          = editAuthor
@@ -53,7 +55,10 @@ createUserWithPhoto name lastname login password ext =
     _    -> Just "photo"
 
 getUsers :: DB.Page -> DB.Count -> DB.MaybeResult [GetUsers.User]
-getUsers page count = return $ Just []
+getUsers _ _ = return $ Just []
+
+getAuthors :: DB.Page -> DB.Count -> DB.MaybeResult [GetAuthors.Author]
+getAuthors _ _ = return $ Just []
 
 deleteUser :: DB.Login -> DB.EitherResult DB.PhotoPath
 deleteUser _ = return $ Right $ Just "file"

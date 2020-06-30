@@ -22,7 +22,7 @@ data Author =
     , photo :: Maybe String
     , descr :: String
     }
-  deriving (Generic, Show)
+  deriving (Generic, Show, Eq)
 
 instance FromRow Author
 

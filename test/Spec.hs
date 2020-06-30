@@ -216,3 +216,27 @@ main = hspec $ do
                                          , EditAuthor.login = "notauthorlogin"
                                          }
       `shouldThrow` anyException
+
+  describe "Handlers.getAuthors" $ do
+
+    it
+      "returns authors"
+      (              Handlers.getAuthors
+          dbH
+          GetAuthors.Request { GetAuthors.token = "admin", GetAuthors.page = 1 }
+      `shouldReturn` ([] :: [GetAuthors.Author])
+      )
+
+    it "throws exception if user not admin"
+      $             Handlers.getAuthors
+                      dbH
+                      GetAuthors.Request { GetAuthors.token = "notadmin"
+                                         , GetAuthors.page  = 1
+                                         }
+      `shouldThrow` anyException
+
+    it "throws exception if page<1"
+      $             Handlers.getAuthors
+                      dbH
+                      GetAuthors.Request { GetAuthors.token = "admin", GetAuthors.page = 0 }
+      `shouldThrow` anyException

@@ -9,6 +9,7 @@ module Lib.Handlers
   , loginUser
   , deleteAuthor
   , editAuthor
+  , getAuthors
   )
 where
 
@@ -151,7 +152,14 @@ editAuthor dbH req = do
   if isJust res then return justOK else throw ErrorBadRequest
 
 getAuthors :: DB.Handle -> GetAuthors.Request -> Result [GetAuthors.Author]
-getAuthors dbH req = undefined
+getAuthors dbH req = do
+  admin <- DB.isAdmin dbH (GetAuthors.token req)
+  unless admin                               (throw ErrorNotFound)
+  unless (isValidPage (GetAuthors.page req)) (throw ErrorBadPage)
+  res <- DB.getAuthors dbH (GetAuthors.page req) Constants.authorsPerPage
+  case res of
+    Just authors -> return authors
+    _            -> throw ErrorBadRequest
 
 makeAuthor :: DB.Handle -> MakeAuthor.Request -> Result String
 makeAuthor dbH req = undefined
