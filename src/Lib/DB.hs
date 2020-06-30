@@ -48,6 +48,7 @@ data Handle =
     , loginUser :: Login -> Password -> MaybeResult Token
     , deleteAuthor :: Login -> MaybeResult Bool
     , editAuthor :: Login -> Description -> MaybeResult Bool
+    , makeAuthor :: Login -> Description -> MaybeResult Bool
     , getAuthors :: Page -> Count -> MaybeResult [GetAuthors.Author]
     , isLoginNotExist :: Login -> Result Bool
     , isLoginExist :: Login -> Result Bool

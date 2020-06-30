@@ -20,7 +20,7 @@ runApp dbH logger request respond = case pathInfo request of
   ["user"  , "create"] -> norm Handlers.createUser
   ["user"  , "delete"] -> adm Handlers.deleteUser
   ["user"  , "login" ] -> norm Handlers.loginUser
---   ["author"  , "make"         ] -> adm Authors.make
+  ["author", "make"  ] -> adm Handlers.makeAuthor
   ["author", "edit"  ] -> adm Handlers.editAuthor
   ["author", "delete"] -> adm Handlers.deleteAuthor
   ["author", "get"   ] -> adm Handlers.getAuthors

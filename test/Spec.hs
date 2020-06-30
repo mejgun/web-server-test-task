@@ -240,3 +240,32 @@ main = hspec $ do
                       dbH
                       GetAuthors.Request { GetAuthors.token = "admin", GetAuthors.page = 0 }
       `shouldThrow` anyException
+
+  describe "Handlers.makeAuthor" $ do
+
+    it "makes author from user"
+      $              Handlers.makeAuthor
+                       dbH
+                       MakeAuthor.Request { MakeAuthor.token = "admin"
+                                          , MakeAuthor.login = "existlogin"
+                                          , MakeAuthor.descr = "descr"
+                                          }
+      `shouldReturn` "ok"
+
+    it "throws exception if user not admin"
+      $             Handlers.makeAuthor
+                      dbH
+                      MakeAuthor.Request { MakeAuthor.token = "notadmin"
+                                         , MakeAuthor.descr = "descr"
+                                         , MakeAuthor.login = "authorlogin"
+                                         }
+      `shouldThrow` anyException
+
+    it "throws exception if user not exist"
+      $             Handlers.makeAuthor
+                      dbH
+                      MakeAuthor.Request { MakeAuthor.token = "admin"
+                                         , MakeAuthor.descr = "descr"
+                                         , MakeAuthor.login = "login"
+                                         }
+      `shouldThrow` anyException

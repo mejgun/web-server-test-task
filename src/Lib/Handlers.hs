@@ -10,6 +10,7 @@ module Lib.Handlers
   , deleteAuthor
   , editAuthor
   , getAuthors
+  , makeAuthor
   )
 where
 
@@ -162,7 +163,13 @@ getAuthors dbH req = do
     _            -> throw ErrorBadRequest
 
 makeAuthor :: DB.Handle -> MakeAuthor.Request -> Result String
-makeAuthor dbH req = undefined
+makeAuthor dbH req = do
+  admin <- DB.isAdmin dbH (MakeAuthor.token req)
+  unless admin (throw ErrorNotFound)
+  exist <- DB.isLoginExist dbH (MakeAuthor.login req)
+  unless exist (throw ErrorLoginNotExist)
+  res <- DB.makeAuthor dbH (MakeAuthor.login req) (MakeAuthor.descr req)
+  if isJust res then return justOK else throw ErrorBadRequest
 
 createCategory :: DB.Handle -> CreateCategory.Request -> Result String
 createCategory dbH req = undefined

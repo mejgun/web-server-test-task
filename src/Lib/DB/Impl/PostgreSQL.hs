@@ -71,6 +71,7 @@ newHandle conn logger = DB.Handle
   , DB.loginUser           = f loginUser
   , DB.deleteAuthor        = f deleteAuthor
   , DB.editAuthor          = f editAuthor
+  , DB.makeAuthor          = f makeAuthor
   , DB.getAuthors          = f getAuthors
   , DB.isLoginNotExist     = f isLoginNotExist
   , DB.isLoginExist        = f isLoginExist
@@ -315,3 +316,17 @@ getAuthors conn logg page count = catchErrorsMaybe logg $ do
     "select name,lastname,photo,descr from authors as a,users as u where a.user_id=u.id offset ? limit ?;"
     (calcOffsetAndLimil page count)
   return $ Just r
+
+makeAuthor
+  :: Connection
+  -> Logger.Logger
+  -> DB.Login
+  -> DB.Description
+  -> DB.MaybeResult Bool
+makeAuthor conn logg login descr =
+  catchErrorsMaybe logg
+    $   execute
+          conn
+          "insert into authors (user_id,descr) values ((select id from users where login=?),?) on conflict (user_id) do update set descr=?;"
+          [login, descr, descr]
+    >>= execResult
