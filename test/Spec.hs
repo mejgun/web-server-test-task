@@ -315,3 +315,35 @@ main = hspec $ do
                                              , DeleteCategory.cat_id = 1
                                              }
       `shouldThrow` anyException
+
+  describe "Handlers.editCategory" $ do
+
+    it "deletes category"
+      $              Handlers.editCategory
+                       dbH
+                       EditCategory.Request { EditCategory.token  = "admin"
+                                            , EditCategory.cat_id = 1
+                                            , EditCategory.name   = "test"
+                                            , EditCategory.parent = Nothing
+                                            }
+      `shouldReturn` "ok"
+
+    it "throws exception if category not exist"
+      $             Handlers.editCategory
+                      dbH
+                      EditCategory.Request { EditCategory.token  = "admin"
+                                           , EditCategory.name   = "test"
+                                           , EditCategory.parent = Nothing
+                                           , EditCategory.cat_id = 0
+                                           }
+      `shouldThrow` anyException
+
+    it "throws exception if user not admin"
+      $             Handlers.editCategory
+                      dbH
+                      EditCategory.Request { EditCategory.token  = "notadmin"
+                                           , EditCategory.name   = "test"
+                                           , EditCategory.parent = Nothing
+                                           , EditCategory.cat_id = 1
+                                           }
+      `shouldThrow` anyException

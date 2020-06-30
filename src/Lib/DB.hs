@@ -56,6 +56,7 @@ data Handle =
     , getAuthors :: Page -> Count -> MaybeResult [GetAuthors.Author]
     , deleteCategory :: CategoryID -> MaybeResult Bool
     , createCategory :: CategoryName -> ParentCategory -> MaybeResult Bool
+    , editCategory :: CategoryID -> CategoryName -> ParentCategory -> MaybeResult Bool
     , isLoginNotExist :: Login -> Result Bool
     , isLoginExist :: Login -> Result Bool
     , isAdmin :: Token -> Result Bool

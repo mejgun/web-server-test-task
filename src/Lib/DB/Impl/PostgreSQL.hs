@@ -75,6 +75,7 @@ newHandle conn logger = DB.Handle
   , DB.getAuthors          = f getAuthors
   , DB.createCategory      = f createCategory
   , DB.deleteCategory      = f deleteCategory
+  , DB.editCategory        = f editCategory
   , DB.isLoginNotExist     = f isLoginNotExist
   , DB.isLoginExist        = f isLoginExist
   , DB.isAuthorExist       = f isAuthorExist
@@ -352,4 +353,18 @@ deleteCategory
 deleteCategory conn logg catID =
   catchErrorsMaybe logg
     $   execute conn "delete from categories where id=?;" [catID]
+    >>= execResult
+
+editCategory
+  :: Connection
+  -> Logger.Logger
+  -> DB.CategoryID
+  -> DB.CategoryName
+  -> DB.ParentCategory
+  -> DB.MaybeResult Bool
+editCategory conn logg catID name parent =
+  catchErrorsMaybe logg
+    $   execute conn
+                "update categories set name=?, parent=? where id=?;"
+                (name, parent, catID)
     >>= execResult

@@ -212,7 +212,16 @@ deleteCategory dbH req = do
   if isJust res then return justOK else throw ErrorBadRequest
 
 editCategory :: DB.Handle -> EditCategory.Request -> Result String
-editCategory dbH req = undefined
+editCategory dbH req = do
+  admin <- DB.isAdmin dbH (EditCategory.token req)
+  unless admin (throw ErrorNotFound)
+  exist <- DB.isCategoryExist dbH (EditCategory.cat_id req)
+  unless exist (throw ErrorCategoryNotExist)
+  res <- DB.editCategory dbH
+                         (EditCategory.cat_id req)
+                         (EditCategory.name req)
+                         (EditCategory.parent req)
+  if isJust res then return justOK else throw ErrorBadRequest
 
 getCategories
   :: DB.Handle -> GetCategories.Request -> Result [GetCategories.Cat]
