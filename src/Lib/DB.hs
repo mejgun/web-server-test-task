@@ -27,6 +27,10 @@ type Description = String
 
 type CategoryID = Int
 
+type CategoryName = String
+
+type ParentCategory = Maybe Int
+
 type TagName = String
 
 type TagID = Int
@@ -50,6 +54,7 @@ data Handle =
     , editAuthor :: Login -> Description -> MaybeResult Bool
     , makeAuthor :: Login -> Description -> MaybeResult Bool
     , getAuthors :: Page -> Count -> MaybeResult [GetAuthors.Author]
+    , createCategory :: CategoryName -> ParentCategory -> MaybeResult Bool
     , isLoginNotExist :: Login -> Result Bool
     , isLoginExist :: Login -> Result Bool
     , isAdmin :: Token -> Result Bool

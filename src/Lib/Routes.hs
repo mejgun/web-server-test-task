@@ -16,15 +16,15 @@ runApp
   -> (Response -> IO ResponseReceived)
   -> IO ResponseReceived
 runApp dbH logger request respond = case pathInfo request of
-  ["user"  , "get"   ] -> norm Handlers.getUsers
-  ["user"  , "create"] -> norm Handlers.createUser
-  ["user"  , "delete"] -> adm Handlers.deleteUser
-  ["user"  , "login" ] -> norm Handlers.loginUser
-  ["author", "make"  ] -> adm Handlers.makeAuthor
-  ["author", "edit"  ] -> adm Handlers.editAuthor
-  ["author", "delete"] -> adm Handlers.deleteAuthor
-  ["author", "get"   ] -> adm Handlers.getAuthors
---   ["category", "create"       ] -> adm Categories.create
+  ["user"    , "get"   ] -> norm Handlers.getUsers
+  ["user"    , "create"] -> norm Handlers.createUser
+  ["user"    , "delete"] -> adm Handlers.deleteUser
+  ["user"    , "login" ] -> norm Handlers.loginUser
+  ["author"  , "make"  ] -> adm Handlers.makeAuthor
+  ["author"  , "edit"  ] -> adm Handlers.editAuthor
+  ["author"  , "delete"] -> adm Handlers.deleteAuthor
+  ["author"  , "get"   ] -> adm Handlers.getAuthors
+  ["category", "create"] -> adm Handlers.createCategory
 --   ["category", "edit"         ] -> adm Categories.edit
 --   ["category", "delete"       ] -> adm Categories.delete
 --   ["category", "get"          ] -> norm Categories.get
@@ -46,8 +46,8 @@ runApp dbH logger request respond = case pathInfo request of
 --   ["news"    , "delete"       ] -> norm News.delete
 --   ["news"    , "get"          ] -> norm News.get
 --   ["news"    , "getdrafts"    ] -> norm News.getDrafts
-  ["images", img     ] -> returnFile img respond
-  _                    -> return404 respond
+  ["images"  , img     ] -> returnFile img respond
+  _                      -> return404 respond
  where
   norm x = normalHandler (x dbH) request respond
   adm x = adminHandler (x dbH) request respond

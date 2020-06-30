@@ -11,6 +11,28 @@ module Lib.Handlers
   , editAuthor
   , getAuthors
   , makeAuthor
+  , createCategory
+  , deleteCategory
+  , editCategory
+  , getCategories
+  , createTag
+  , deleteTag
+  , editTag
+  , getTags
+  , addNewsComment
+  , addNewsPhoto
+  , addNewsTag
+  , createNews
+  , deleteNews
+  , deleteNewsComment
+  , deleteNewsPhoto
+  , deleteNewsTag
+  , getDrafts
+  , getNews
+  , getNewsComments
+  , publishNews
+  , setNewsMainPhoto
+  , updateNews
   )
 where
 
@@ -172,7 +194,13 @@ makeAuthor dbH req = do
   if isJust res then return justOK else throw ErrorBadRequest
 
 createCategory :: DB.Handle -> CreateCategory.Request -> Result String
-createCategory dbH req = undefined
+createCategory dbH req = do
+  admin <- DB.isAdmin dbH (CreateCategory.token req)
+  unless admin (throw ErrorNotFound)
+  res <- DB.createCategory dbH
+                           (CreateCategory.name req)
+                           (CreateCategory.parent req)
+  if isJust res then return justOK else throw ErrorBadRequest
 
 deleteCategory :: DB.Handle -> DeleteCategory.Request -> Result String
 deleteCategory dbH req = undefined

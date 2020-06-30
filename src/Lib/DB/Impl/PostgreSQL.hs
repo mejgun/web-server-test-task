@@ -73,6 +73,7 @@ newHandle conn logger = DB.Handle
   , DB.editAuthor          = f editAuthor
   , DB.makeAuthor          = f makeAuthor
   , DB.getAuthors          = f getAuthors
+  , DB.createCategory      = f createCategory
   , DB.isLoginNotExist     = f isLoginNotExist
   , DB.isLoginExist        = f isLoginExist
   , DB.isAuthorExist       = f isAuthorExist
@@ -329,4 +330,18 @@ makeAuthor conn logg login descr =
           conn
           "insert into authors (user_id,descr) values ((select id from users where login=?),?) on conflict (user_id) do update set descr=?;"
           [login, descr, descr]
+    >>= execResult
+
+createCategory
+  :: Connection
+  -> Logger.Logger
+  -> DB.CategoryName
+  -> DB.ParentCategory
+  -> DB.MaybeResult Bool
+createCategory conn logg name parent =
+  catchErrorsMaybe logg
+    $   execute
+          conn
+          "insert into categories (name,parent) values (?,(select id from categories where id=?)) on conflict do nothing;"
+          (name, parent)
     >>= execResult

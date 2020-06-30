@@ -269,3 +269,23 @@ main = hspec $ do
                                          , MakeAuthor.login = "login"
                                          }
       `shouldThrow` anyException
+
+  describe "Handlers.createCategory" $ do
+
+    it "creates category"
+      $              Handlers.createCategory
+                       dbH
+                       CreateCategory.Request { CreateCategory.token  = "admin"
+                                              , CreateCategory.name   = "name"
+                                              , CreateCategory.parent = Nothing
+                                              }
+      `shouldReturn` "ok"
+
+    it "throws exception if user not admin"
+      $             Handlers.createCategory
+                      dbH
+                      CreateCategory.Request { CreateCategory.token = "notadmin"
+                                             , CreateCategory.name = "name"
+                                             , CreateCategory.parent = Nothing
+                                             }
+      `shouldThrow` anyException
