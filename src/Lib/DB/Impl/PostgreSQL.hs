@@ -84,6 +84,7 @@ newHandle conn logger = DB.Handle
   , DB.addNewsComment      = f addNewsComment
   , DB.addNewsPhoto        = f addNewsPhoto
   , DB.addNewsTag          = f addNewsTag
+  , DB.createNews          = f createNews
   , DB.isLoginNotExist     = f isLoginNotExist
   , DB.isLoginExist        = f isLoginExist
   , DB.isAuthorExist       = f isAuthorExist
@@ -467,3 +468,20 @@ addNewsTag conn logg news_id tag_id token =
           "insert into news_tags (tag_id,news_id) values (?,(select id from news where id=? and author_id=(select id from authors where user_id=(select id from users where token=?)))) on conflict (tag_id,news_id) do update set tag_id=?;"
           (tag_id, news_id, token, tag_id)
     >>= execResult
+
+createNews
+  :: Connection
+  -> Logger.Logger
+  -> DB.NewsName
+  -> DB.Token
+  -> DB.CategoryID
+  -> DB.NewsText
+  -> DB.MaybeResult CreateNews.NewsId
+createNews conn logg name token cat_id text = catchErrorsMaybe logg $ do
+  q <- query
+    conn
+    "insert into news (name,date,author_id,category_id,text) values (?,now(),(select id from authors where user_id=(select id from users where token=?)),?,?) returning id;"
+    (name, token, cat_id, text)
+  case q of
+    [n] -> return $ Just n
+    _   -> return Nothing

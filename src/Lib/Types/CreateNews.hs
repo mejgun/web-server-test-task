@@ -21,7 +21,7 @@ data NewsId =
   NewsId
     { news_id :: Int
     }
-  deriving (Generic, Show)
+  deriving (Generic, Show, Eq)
 
 instance FromRow NewsId
 

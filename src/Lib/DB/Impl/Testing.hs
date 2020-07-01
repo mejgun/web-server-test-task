@@ -5,6 +5,7 @@ module Lib.DB.Impl.Testing
   )
 where
 
+import qualified Lib.Types.CreateNews          as CreateNews
 import qualified Lib.Types.GetAuthors          as GetAuthors
 import qualified Lib.Types.GetCategories       as GetCategories
 import qualified Lib.Types.GetTags             as GetTags
@@ -33,6 +34,7 @@ newHandle = DB.Handle { DB.createUser          = createUser
                       , DB.addNewsComment      = addNewsComment
                       , DB.addNewsPhoto        = addNewsPhoto
                       , DB.addNewsTag          = addNewsTag
+                      , DB.createNews          = createNews
                       , DB.isLoginNotExist     = isLoginNotExist
                       , DB.isLoginExist        = isLoginExist
                       , DB.isAuthorExist       = isAuthorExist
@@ -124,6 +126,14 @@ addNewsPhoto _ _ _ = return $ Just "photopath"
 
 addNewsTag :: DB.NewsID -> DB.TagID -> DB.Token -> DB.MaybeResult ()
 addNewsTag _ _ _ = return $ Just ()
+
+createNews
+  :: DB.NewsName
+  -> DB.Token
+  -> DB.CategoryID
+  -> DB.NewsText
+  -> DB.MaybeResult CreateNews.NewsId
+createNews _ _ _ _ = return $ Just CreateNews.NewsId { CreateNews.news_id = 1 }
 
 isLoginNotExist :: DB.Login -> DB.Result Bool
 isLoginNotExist login = return $ login == "notexistlogin"

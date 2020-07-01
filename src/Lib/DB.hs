@@ -1,5 +1,6 @@
 module Lib.DB where
 
+import qualified Lib.Types.CreateNews          as CreateNews
 import qualified Lib.Types.GetAuthors          as GetAuthors
 import qualified Lib.Types.GetCategories       as GetCategories
 import qualified Lib.Types.GetTags             as GetTags
@@ -39,6 +40,10 @@ type TagID = Int
 
 type NewsID = Int
 
+type NewsName = String
+
+type NewsText = String
+
 type CommentText = String
 
 type MaybeResult a = IO (Maybe a)
@@ -69,6 +74,7 @@ data Handle =
     , addNewsComment :: NewsID -> CommentText -> Token -> MaybeResult ()
     , addNewsPhoto :: NewsID -> Token -> PhotoExt -> MaybeResult PhotoPath
     , addNewsTag :: NewsID -> TagID -> Token -> MaybeResult ()
+    , createNews :: NewsName -> Token -> CategoryID -> NewsText -> MaybeResult CreateNews.NewsId
     , isLoginNotExist :: Login -> Result Bool
     , isLoginExist :: Login -> Result Bool
     , isAdmin :: Token -> Result Bool

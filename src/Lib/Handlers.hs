@@ -331,7 +331,19 @@ addNewsTag dbH req = do
     _       -> throw ErrorBadRequest
 
 createNews :: DB.Handle -> CreateNews.Request -> Result CreateNews.NewsId
-createNews dbH req = undefined
+createNews dbH req = do
+  author <- DB.isAuthor dbH (CreateNews.token req)
+  unless author (throw ErrorNotAuthor)
+  exist <- DB.isCategoryExist dbH (CreateNews.cat_id req)
+  unless exist (throw ErrorCategoryNotExist)
+  res <- DB.createNews dbH
+                       (CreateNews.name req)
+                       (CreateNews.token req)
+                       (CreateNews.cat_id req)
+                       (CreateNews.text req)
+  case res of
+    Just news -> return news
+    _         -> throw ErrorBadRequest
 
 deleteNews :: DB.Handle -> DeleteNews.Request -> Result String
 deleteNews dbH req = undefined

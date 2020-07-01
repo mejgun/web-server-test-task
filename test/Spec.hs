@@ -569,3 +569,35 @@ main = hspec $ do
                                          , AddNewsTag.news_id = 1
                                          }
       `shouldThrow` anyException
+
+  describe "Handlers.createNews" $ do
+
+    it "creates news (draft)"
+      $              Handlers.createNews
+                       dbH
+                       CreateNews.Request { CreateNews.cat_id = 1
+                                          , CreateNews.token  = "author"
+                                          , CreateNews.name   = "name"
+                                          , CreateNews.text   = "text"
+                                          }
+      `shouldReturn` CreateNews.NewsId { CreateNews.news_id = 1 }
+
+    it "throws exception if user not author"
+      $             Handlers.createNews
+                      dbH
+                      CreateNews.Request { CreateNews.cat_id = 1
+                                         , CreateNews.token  = "notauthor"
+                                         , CreateNews.name   = "name"
+                                         , CreateNews.text   = "text"
+                                         }
+      `shouldThrow` anyException
+
+    it "throws exception if category not exist"
+      $             Handlers.createNews
+                      dbH
+                      CreateNews.Request { CreateNews.cat_id = 0
+                                         , CreateNews.token  = "author"
+                                         , CreateNews.name   = "name"
+                                         , CreateNews.text   = "text"
+                                         }
+      `shouldThrow` anyException
