@@ -387,3 +387,25 @@ main = hspec $ do
                                         , CreateTag.name  = "test"
                                         }
       `shouldThrow` anyException
+
+  describe "Handlers.deleteTag" $ do
+
+    it "deletes tag"
+      $              Handlers.deleteTag
+                       dbH
+                       DeleteTag.Request { DeleteTag.token = "admin", DeleteTag.tag_id = 1 }
+      `shouldReturn` "ok"
+
+    it "throws exception if tag_id not exist"
+      $             Handlers.deleteTag
+                      dbH
+                      DeleteTag.Request { DeleteTag.token = "admin", DeleteTag.tag_id = 0 }
+      `shouldThrow` anyException
+
+    it "throws exception if user not admin"
+      $             Handlers.deleteTag
+                      dbH
+                      DeleteTag.Request { DeleteTag.token  = "notadmin"
+                                        , DeleteTag.tag_id = 1
+                                        }
+      `shouldThrow` anyException

@@ -78,6 +78,7 @@ newHandle conn logger = DB.Handle
   , DB.editCategory        = f editCategory
   , DB.getCategories       = f getCategories
   , DB.createTag           = f createTag
+  , DB.deleteTag           = f deleteTag
   , DB.isLoginNotExist     = f isLoginNotExist
   , DB.isLoginExist        = f isLoginExist
   , DB.isAuthorExist       = f isAuthorExist
@@ -389,4 +390,10 @@ createTag conn logg name =
     $   execute conn
                 "insert into tags (name) values(?) on conflict do nothing;"
                 [name]
+    >>= execResult
+
+deleteTag :: Connection -> Logger.Logger -> DB.TagID -> DB.MaybeResult Bool
+deleteTag conn logg tag_id =
+  catchErrorsMaybe logg
+    $   execute conn "delete from tags where id=?;" [tag_id]
     >>= execResult

@@ -60,6 +60,7 @@ data Handle =
     , editCategory :: CategoryID -> CategoryName -> ParentCategory -> MaybeResult Bool
     , getCategories :: Page -> Count -> MaybeResult [GetCategories.Cat]
     , createTag :: TagName -> MaybeResult Bool
+    , deleteTag :: TagID -> MaybeResult Bool
     , isLoginNotExist :: Login -> Result Bool
     , isLoginExist :: Login -> Result Bool
     , isAdmin :: Token -> Result Bool

@@ -238,15 +238,23 @@ createTag :: DB.Handle -> CreateTag.Request -> Result String
 createTag dbH req = do
   admin <- DB.isAdmin dbH (CreateTag.token req)
   unless admin (throw ErrorNotFound)
-  exist <- DB.isTagNotExist dbH (CreateTag.name req)
-  unless exist (throw ErrorTagAlreadyExist)
+  notexist <- DB.isTagNotExist dbH (CreateTag.name req)
+  unless notexist (throw ErrorTagAlreadyExist)
   res <- DB.createTag dbH (CreateTag.name req)
   case res of
     Just True -> return justOK
     _         -> throw ErrorBadRequest
 
 deleteTag :: DB.Handle -> DeleteTag.Request -> Result String
-deleteTag dbH req = undefined
+deleteTag dbH req = do
+  admin <- DB.isAdmin dbH (DeleteTag.token req)
+  unless admin (throw ErrorNotFound)
+  exist <- DB.isTagExist dbH (DeleteTag.tag_id req)
+  unless exist (throw ErrorTagNotExist)
+  res <- DB.deleteTag dbH (DeleteTag.tag_id req)
+  case res of
+    Just True -> return justOK
+    _         -> throw ErrorBadRequest
 
 editTag :: DB.Handle -> EditTag.Request -> Result String
 editTag dbH req = undefined
