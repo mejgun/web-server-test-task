@@ -480,3 +480,45 @@ main = hspec $ do
                                              , AddNewsComment.news_id = 1
                                              }
       `shouldThrow` anyException
+
+  describe "Handlers.addNewsPhoto" $ do
+
+    it "adds photo to news"
+      $              Handlers.addNewsPhoto
+                       dbH
+                       AddNewsPhoto.Request { AddNewsPhoto.photo      = "1"
+                                            , AddNewsPhoto.photo_type = Just "png"
+                                            , AddNewsPhoto.token      = "author"
+                                            , AddNewsPhoto.news_id    = 1
+                                            }
+      `shouldReturn` justOK
+
+    it "throws exception if user not author"
+      $             Handlers.addNewsPhoto
+                      dbH
+                      AddNewsPhoto.Request { AddNewsPhoto.photo      = "1"
+                                           , AddNewsPhoto.photo_type = Nothing
+                                           , AddNewsPhoto.token = "notauthor"
+                                           , AddNewsPhoto.news_id    = 1
+                                           }
+      `shouldThrow` anyException
+
+    it "throws exception if news not exist"
+      $             Handlers.addNewsPhoto
+                      dbH
+                      AddNewsPhoto.Request { AddNewsPhoto.photo      = "1"
+                                           , AddNewsPhoto.photo_type = Just "2"
+                                           , AddNewsPhoto.token = "authortoken"
+                                           , AddNewsPhoto.news_id    = 0
+                                           }
+      `shouldThrow` anyException
+
+    it "throws exception if not this author's news"
+      $             Handlers.addNewsPhoto
+                      dbH
+                      AddNewsPhoto.Request { AddNewsPhoto.photo      = "a"
+                                           , AddNewsPhoto.photo_type = Nothing
+                                           , AddNewsPhoto.token      = "author2"
+                                           , AddNewsPhoto.news_id    = 1
+                                           }
+      `shouldThrow` anyException

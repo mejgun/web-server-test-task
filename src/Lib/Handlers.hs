@@ -290,7 +290,26 @@ addNewsComment dbH req = do
     _       -> throw ErrorBadRequest
 
 addNewsPhoto :: DB.Handle -> AddNewsPhoto.Request -> Result String
-addNewsPhoto dbH req = undefined
+addNewsPhoto dbH req = do
+  author <- DB.isAuthor dbH (AddNewsPhoto.token req)
+  unless author (throw ErrorNotAuthor)
+  exist <- DB.isNewsExist dbH (AddNewsPhoto.news_id req)
+  unless exist (throw ErrorNewsNotExist)
+  newsAuthor <- DB.thisNewsAuthor dbH
+                                  (AddNewsPhoto.news_id req)
+                                  (AddNewsPhoto.token req)
+  unless newsAuthor (throw ErrorNotYourNews)
+  let ext = makeExt (AddNewsPhoto.photo_type req)
+  res <- DB.addNewsPhoto dbH
+                         (AddNewsPhoto.news_id req)
+                         (AddNewsPhoto.token req)
+                         ext
+  case res of
+    Just imgFile -> do
+      DB.saveImage dbH imgFile (AddNewsPhoto.photo req)
+      return justOK
+    _ -> throw ErrorBadRequest
+
 
 addNewsTag :: DB.Handle -> AddNewsTag.Request -> Result String
 addNewsTag dbH req = undefined

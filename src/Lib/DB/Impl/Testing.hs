@@ -31,6 +31,7 @@ newHandle = DB.Handle { DB.createUser          = createUser
                       , DB.editTag             = editTag
                       , DB.getTags             = getTags
                       , DB.addNewsComment      = addNewsComment
+                      , DB.addNewsPhoto        = addNewsPhoto
                       , DB.isLoginNotExist     = isLoginNotExist
                       , DB.isLoginExist        = isLoginExist
                       , DB.isAuthorExist       = isAuthorExist
@@ -116,6 +117,10 @@ getTags _ _ = return $ Just []
 addNewsComment :: DB.NewsID -> DB.CommentText -> DB.Token -> DB.MaybeResult ()
 addNewsComment _ _ _ = return $ Just ()
 
+addNewsPhoto
+  :: DB.NewsID -> DB.Token -> DB.PhotoExt -> DB.MaybeResult DB.PhotoPath
+addNewsPhoto _ _ _ = return $ Just "photopath"
+
 isLoginNotExist :: DB.Login -> DB.Result Bool
 isLoginNotExist login = return $ login == "notexistlogin"
 
@@ -129,7 +134,7 @@ isAdmin :: DB.Token -> DB.Result Bool
 isAdmin login = return $ login == "admin"
 
 isAuthor :: DB.Token -> DB.Result Bool
-isAuthor login = return $ login == "author"
+isAuthor login = return $ login == "author" || login == "author2"
 
 isUser :: DB.Token -> DB.Result Bool
 isUser login = return $ login == "user"
@@ -152,9 +157,9 @@ isNewsPublished news_id = return $ news_id > 0
 
 thisNewsAuthor :: DB.NewsID -> DB.Token -> DB.Result Bool
 thisNewsAuthor news_id token =
-  return $ if (news_id > 0) && (token == "authortoken") then True else False
+  return $ if (news_id > 0) && (token == "author") then True else False
 
-saveImage :: FilePath -> String -> DB.Result Bool
+saveImage :: FilePath -> DB.Base64String -> DB.Result Bool
 saveImage file str = return $ case any null [file, str] of
   True -> False
   _    -> True

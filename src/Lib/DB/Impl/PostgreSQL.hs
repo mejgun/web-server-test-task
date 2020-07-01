@@ -82,6 +82,7 @@ newHandle conn logger = DB.Handle
   , DB.editTag             = f editTag
   , DB.getTags             = f getTags
   , DB.addNewsComment      = f addNewsComment
+  , DB.addNewsPhoto        = f addNewsPhoto
   , DB.isLoginNotExist     = f isLoginNotExist
   , DB.isLoginExist        = f isLoginExist
   , DB.isAuthorExist       = f isAuthorExist
@@ -209,7 +210,7 @@ deleteFile logg file = do
       return False
     _ -> return True
 
-saveImage :: Logger.Logger -> FilePath -> String -> DB.Result Bool
+saveImage :: Logger.Logger -> FilePath -> DB.Base64String -> DB.Result Bool
 saveImage logg file str = do
   let dat = decodeBase64 str
   res <- try $ B.writeFile file dat
@@ -434,3 +435,20 @@ addNewsComment conn logg news_id text token =
           "insert into news_comments (news_id,text,user_id) values ((select id from news where id=? and published=true),?,(select id from users where token=?)) on conflict do nothing;"
           (news_id, text, token)
     >>= execResult
+
+addNewsPhoto
+  :: Connection
+  -> Logger.Logger
+  -> DB.NewsID
+  -> DB.Token
+  -> DB.PhotoExt
+  -> DB.MaybeResult DB.PhotoPath
+addNewsPhoto conn logg news_id token ext = catchErrorsMaybe logg $ do
+  q <- query
+    conn
+    "insert into news_photos (news_id,photo) values ((select id from news where id=? and author_id=(select id from authors where user_id=(select id from users where token=?))),concat(?,md5(random()::text),?)) returning photo;"
+    (news_id, token, Constants.imagesDir, ext)
+  return $ case q of
+    [Only imgFile] -> Just imgFile
+    _              -> Nothing
+
