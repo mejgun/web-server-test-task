@@ -67,7 +67,8 @@ data Handle =
     , editTag :: TagID -> TagName -> MaybeResult ()
     , getTags :: Page -> Count -> MaybeResult [GetTags.Tag]
     , addNewsComment :: NewsID -> CommentText -> Token -> MaybeResult ()
-    , addNewsPhoto::NewsID  ->Token  -> PhotoExt  ->MaybeResult PhotoPath
+    , addNewsPhoto :: NewsID -> Token -> PhotoExt -> MaybeResult PhotoPath
+    , addNewsTag :: NewsID -> TagID -> Token -> MaybeResult ()
     , isLoginNotExist :: Login -> Result Bool
     , isLoginExist :: Login -> Result Bool
     , isAdmin :: Token -> Result Bool

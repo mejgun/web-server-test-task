@@ -310,9 +310,25 @@ addNewsPhoto dbH req = do
       return justOK
     _ -> throw ErrorBadRequest
 
-
 addNewsTag :: DB.Handle -> AddNewsTag.Request -> Result String
-addNewsTag dbH req = undefined
+addNewsTag dbH req = do
+  author <- DB.isAuthor dbH (AddNewsTag.token req)
+  unless author (throw ErrorNotAuthor)
+  newsexist <- DB.isNewsExist dbH (AddNewsTag.news_id req)
+  unless newsexist (throw ErrorNewsNotExist)
+  newsAuthor <- DB.thisNewsAuthor dbH
+                                  (AddNewsTag.news_id req)
+                                  (AddNewsTag.token req)
+  unless newsAuthor (throw ErrorNotYourNews)
+  tagexist <- DB.isTagExist dbH (AddNewsTag.tag_id req)
+  unless tagexist (throw ErrorTagNotExist)
+  res <- DB.addNewsTag dbH
+                       (AddNewsTag.news_id req)
+                       (AddNewsTag.tag_id req)
+                       (AddNewsTag.token req)
+  case res of
+    Just () -> return justOK
+    _       -> throw ErrorBadRequest
 
 createNews :: DB.Handle -> CreateNews.Request -> Result CreateNews.NewsId
 createNews dbH req = undefined

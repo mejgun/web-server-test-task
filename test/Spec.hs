@@ -522,3 +522,50 @@ main = hspec $ do
                                            , AddNewsPhoto.news_id    = 1
                                            }
       `shouldThrow` anyException
+
+  describe "Handlers.addNewsTag" $ do
+
+    it "adds tag to news"
+      $              Handlers.addNewsTag
+                       dbH
+                       AddNewsTag.Request { AddNewsTag.tag_id  = 1
+                                          , AddNewsTag.token   = "author"
+                                          , AddNewsTag.news_id = 1
+                                          }
+      `shouldReturn` justOK
+
+    it "throws exception if user not author"
+      $             Handlers.addNewsTag
+                      dbH
+                      AddNewsTag.Request { AddNewsTag.tag_id  = 1
+                                         , AddNewsTag.token   = "notauthor"
+                                         , AddNewsTag.news_id = 1
+                                         }
+      `shouldThrow` anyException
+
+    it "throws exception if news not exist"
+      $             Handlers.addNewsTag
+                      dbH
+                      AddNewsTag.Request { AddNewsTag.tag_id  = 1
+                                         , AddNewsTag.token   = "authortoken"
+                                         , AddNewsTag.news_id = 0
+                                         }
+      `shouldThrow` anyException
+
+    it "throws exception if not this author's news"
+      $             Handlers.addNewsTag
+                      dbH
+                      AddNewsTag.Request { AddNewsTag.tag_id  = 1
+                                         , AddNewsTag.token   = "author2"
+                                         , AddNewsTag.news_id = 1
+                                         }
+      `shouldThrow` anyException
+
+    it "throws exception if tag not exist"
+      $             Handlers.addNewsTag
+                      dbH
+                      AddNewsTag.Request { AddNewsTag.tag_id  = 0
+                                         , AddNewsTag.token   = "author"
+                                         , AddNewsTag.news_id = 1
+                                         }
+      `shouldThrow` anyException
