@@ -276,7 +276,18 @@ getTags dbH req = do
     _         -> throw ErrorBadRequest
 
 addNewsComment :: DB.Handle -> AddNewsComment.Request -> Result String
-addNewsComment dbH req = undefined
+addNewsComment dbH req = do
+  published <- DB.isNewsPublished dbH (AddNewsComment.news_id req)
+  unless published (throw ErrorNewsNotExist)
+  user <- DB.isUser dbH (AddNewsComment.token req)
+  unless user (throw ErrorNotUser)
+  res <- DB.addNewsComment dbH
+                           (AddNewsComment.news_id req)
+                           (AddNewsComment.text req)
+                           (AddNewsComment.token req)
+  case res of
+    Just () -> return justOK
+    _       -> throw ErrorBadRequest
 
 addNewsPhoto :: DB.Handle -> AddNewsPhoto.Request -> Result String
 addNewsPhoto dbH req = undefined

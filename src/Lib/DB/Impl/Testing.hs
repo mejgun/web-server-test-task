@@ -30,6 +30,7 @@ newHandle = DB.Handle { DB.createUser          = createUser
                       , DB.deleteTag           = deleteTag
                       , DB.editTag             = editTag
                       , DB.getTags             = getTags
+                      , DB.addNewsComment      = addNewsComment
                       , DB.isLoginNotExist     = isLoginNotExist
                       , DB.isLoginExist        = isLoginExist
                       , DB.isAuthorExist       = isAuthorExist
@@ -111,6 +112,9 @@ editTag _ _ = return $ Just ()
 
 getTags :: DB.Page -> DB.Count -> DB.MaybeResult [GetTags.Tag]
 getTags _ _ = return $ Just []
+
+addNewsComment :: DB.NewsID -> DB.CommentText -> DB.Token -> DB.MaybeResult ()
+addNewsComment _ _ _ = return $ Just ()
 
 isLoginNotExist :: DB.Login -> DB.Result Bool
 isLoginNotExist login = return $ login == "notexistlogin"

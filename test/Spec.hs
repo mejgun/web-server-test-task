@@ -34,6 +34,9 @@ import qualified Lib.Types.PublishNews         as PublishNews
 import qualified Lib.Types.SetNewsMainPhoto    as SetNewsMainPhoto
 import qualified Lib.Types.UpdateNews          as UpdateNews
 
+justOK :: String
+justOK = "ok"
+
 main :: IO ()
 main = hspec $ do
   let dbH = DB.Impl.Testing.newHandle
@@ -50,7 +53,7 @@ main = hspec $ do
                                           , CreateUser.login = "notexistlogin"
                                           , CreateUser.password   = "test"
                                           }
-      `shouldReturn` "ok"
+      `shouldReturn` justOK
 
     it "creates user with photo without ext"
       $              Handlers.createUser
@@ -62,7 +65,7 @@ main = hspec $ do
                                           , CreateUser.login = "notexistlogin"
                                           , CreateUser.password   = "test"
                                           }
-      `shouldReturn` "ok"
+      `shouldReturn` justOK
 
     it "creates user with photo with ext"
       $              Handlers.createUser
@@ -74,7 +77,7 @@ main = hspec $ do
                                           , CreateUser.login = "notexistlogin"
                                           , CreateUser.password   = "test"
                                           }
-      `shouldReturn` "ok"
+      `shouldReturn` justOK
 
     it "throws exception if empty data"
       $             Handlers.createUser
@@ -118,7 +121,7 @@ main = hspec $ do
                        DeleteUser.Request { DeleteUser.token = "admin"
                                           , DeleteUser.login = "existlogin"
                                           }
-      `shouldReturn` "ok"
+      `shouldReturn` justOK
 
     it "throws exception if user not admin"
       $             Handlers.deleteUser
@@ -170,7 +173,7 @@ main = hspec $ do
                        DeleteAuthor.Request { DeleteAuthor.token = "admin"
                                             , DeleteAuthor.login = "authorlogin"
                                             }
-      `shouldReturn` "ok"
+      `shouldReturn` justOK
 
     it "throws exception if user not admin"
       $             Handlers.deleteAuthor
@@ -197,7 +200,7 @@ main = hspec $ do
                                           , EditAuthor.login = "authorlogin"
                                           , EditAuthor.descr = "descr"
                                           }
-      `shouldReturn` "ok"
+      `shouldReturn` justOK
 
     it "throws exception if user not admin"
       $             Handlers.editAuthor
@@ -250,7 +253,7 @@ main = hspec $ do
                                           , MakeAuthor.login = "existlogin"
                                           , MakeAuthor.descr = "descr"
                                           }
-      `shouldReturn` "ok"
+      `shouldReturn` justOK
 
     it "throws exception if user not admin"
       $             Handlers.makeAuthor
@@ -279,7 +282,7 @@ main = hspec $ do
                                               , CreateCategory.name   = "name"
                                               , CreateCategory.parent = Nothing
                                               }
-      `shouldReturn` "ok"
+      `shouldReturn` justOK
 
     it "throws exception if user not admin"
       $             Handlers.createCategory
@@ -298,7 +301,7 @@ main = hspec $ do
                        DeleteCategory.Request { DeleteCategory.token  = "admin"
                                               , DeleteCategory.cat_id = 1
                                               }
-      `shouldReturn` "ok"
+      `shouldReturn` justOK
 
     it "throws exception if category not exist"
       $             Handlers.deleteCategory
@@ -326,7 +329,7 @@ main = hspec $ do
                                             , EditCategory.name   = "test"
                                             , EditCategory.parent = Nothing
                                             }
-      `shouldReturn` "ok"
+      `shouldReturn` justOK
 
     it "throws exception if category not exist"
       $             Handlers.editCategory
@@ -370,7 +373,7 @@ main = hspec $ do
                        CreateTag.Request { CreateTag.token = "admin"
                                          , CreateTag.name  = "test"
                                          }
-      `shouldReturn` "ok"
+      `shouldReturn` justOK
 
     it "throws exception if tag name already exist"
       $             Handlers.createTag
@@ -394,7 +397,7 @@ main = hspec $ do
       $              Handlers.deleteTag
                        dbH
                        DeleteTag.Request { DeleteTag.token = "admin", DeleteTag.tag_id = 1 }
-      `shouldReturn` "ok"
+      `shouldReturn` justOK
 
     it "throws exception if tag_id not exist"
       $             Handlers.deleteTag
@@ -419,7 +422,7 @@ main = hspec $ do
                                        , EditTag.tag_id = 1
                                        , EditTag.name   = "test"
                                        }
-      `shouldReturn` "ok"
+      `shouldReturn` justOK
 
     it "throws exception if tag not exist"
       $             Handlers.editTag
@@ -447,4 +450,33 @@ main = hspec $ do
 
     it "throws exception if page<1"
       $             Handlers.getTags dbH GetTags.Request { GetTags.page = -1 }
+      `shouldThrow` anyException
+
+  describe "Handlers.addNewsComment" $ do
+
+    it "adds comment to published news"
+      $              Handlers.addNewsComment
+                       dbH
+                       AddNewsComment.Request { AddNewsComment.token   = "user"
+                                              , AddNewsComment.news_id = 1
+                                              , AddNewsComment.text    = "test"
+                                              }
+      `shouldReturn` justOK
+
+    it "throws exception if news not published"
+      $             Handlers.addNewsComment
+                      dbH
+                      AddNewsComment.Request { AddNewsComment.token   = "user"
+                                             , AddNewsComment.text    = "test"
+                                             , AddNewsComment.news_id = 0
+                                             }
+      `shouldThrow` anyException
+
+    it "throws exception if user not user (not logged)"
+      $             Handlers.addNewsComment
+                      dbH
+                      AddNewsComment.Request { AddNewsComment.token = "notuser"
+                                             , AddNewsComment.text = "test"
+                                             , AddNewsComment.news_id = 1
+                                             }
       `shouldThrow` anyException

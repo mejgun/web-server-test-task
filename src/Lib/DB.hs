@@ -39,6 +39,8 @@ type TagID = Int
 
 type NewsID = Int
 
+type CommentText = String
+
 type MaybeResult a = IO (Maybe a)
 
 type EitherResult a = IO (Either () (Maybe a))
@@ -64,6 +66,7 @@ data Handle =
     , deleteTag :: TagID -> MaybeResult ()
     , editTag :: TagID -> TagName -> MaybeResult ()
     , getTags :: Page -> Count -> MaybeResult [GetTags.Tag]
+    , addNewsComment :: NewsID -> CommentText -> Token -> MaybeResult ()
     , isLoginNotExist :: Login -> Result Bool
     , isLoginExist :: Login -> Result Bool
     , isAdmin :: Token -> Result Bool

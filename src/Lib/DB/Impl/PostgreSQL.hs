@@ -81,6 +81,7 @@ newHandle conn logger = DB.Handle
   , DB.deleteTag           = f deleteTag
   , DB.editTag             = f editTag
   , DB.getTags             = f getTags
+  , DB.addNewsComment      = f addNewsComment
   , DB.isLoginNotExist     = f isLoginNotExist
   , DB.isLoginExist        = f isLoginExist
   , DB.isAuthorExist       = f isAuthorExist
@@ -418,3 +419,18 @@ getTags conn logg page count = catchErrorsMaybe logg $ do
              "select id,name from tags offset ? limit ?;"
              (calcOffsetAndLimil page count)
   return $ Just r
+
+addNewsComment
+  :: Connection
+  -> Logger.Logger
+  -> DB.NewsID
+  -> DB.CommentText
+  -> DB.Token
+  -> DB.MaybeResult ()
+addNewsComment conn logg news_id text token =
+  catchErrorsMaybe logg
+    $   execute
+          conn
+          "insert into news_comments (news_id,text,user_id) values ((select id from news where id=? and published=true),?,(select id from users where token=?)) on conflict do nothing;"
+          (news_id, text, token)
+    >>= execResult
