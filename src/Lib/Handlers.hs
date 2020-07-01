@@ -105,8 +105,8 @@ type Result = IO
 
 createUser :: DB.Handle -> CreateUser.Request -> Result String
 createUser dbH req = do
-  exist <- DB.isLoginNotExist dbH (CreateUser.login req)
-  unless exist (throw ErrorLoginAlreadyExist)
+  notexist <- DB.isLoginNotExist dbH (CreateUser.login req)
+  unless notexist (throw ErrorLoginAlreadyExist)
   if isJust (CreateUser.photo req)
     then do
       let ext = makeExt (CreateUser.photo_type req)
@@ -242,8 +242,8 @@ createTag dbH req = do
   unless notexist (throw ErrorTagAlreadyExist)
   res <- DB.createTag dbH (CreateTag.name req)
   case res of
-    Just True -> return justOK
-    _         -> throw ErrorBadRequest
+    Just () -> return justOK
+    _       -> throw ErrorBadRequest
 
 deleteTag :: DB.Handle -> DeleteTag.Request -> Result String
 deleteTag dbH req = do
@@ -253,14 +253,27 @@ deleteTag dbH req = do
   unless exist (throw ErrorTagNotExist)
   res <- DB.deleteTag dbH (DeleteTag.tag_id req)
   case res of
-    Just True -> return justOK
-    _         -> throw ErrorBadRequest
+    Just () -> return justOK
+    _       -> throw ErrorBadRequest
 
 editTag :: DB.Handle -> EditTag.Request -> Result String
-editTag dbH req = undefined
+editTag dbH req = do
+  admin <- DB.isAdmin dbH (EditTag.token req)
+  unless admin (throw ErrorNotFound)
+  exist <- DB.isTagExist dbH (EditTag.tag_id req)
+  unless exist (throw ErrorTagNotExist)
+  res <- DB.editTag dbH (EditTag.tag_id req) (EditTag.name req)
+  case res of
+    Just () -> return justOK
+    _       -> throw ErrorBadRequest
 
 getTags :: DB.Handle -> GetTags.Request -> Result [GetTags.Tag]
-getTags dbH req = undefined
+getTags dbH req = do
+  unless (isValidPage (GetTags.page req)) (throw ErrorBadPage)
+  res <- DB.getTags dbH (GetTags.page req) Constants.tagsPerPage
+  case res of
+    Just tags -> return tags
+    _         -> throw ErrorBadRequest
 
 addNewsComment :: DB.Handle -> AddNewsComment.Request -> Result String
 addNewsComment dbH req = undefined

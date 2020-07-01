@@ -2,6 +2,7 @@ module Lib.DB where
 
 import qualified Lib.Types.GetAuthors          as GetAuthors
 import qualified Lib.Types.GetCategories       as GetCategories
+import qualified Lib.Types.GetTags             as GetTags
 import qualified Lib.Types.GetUsers            as GetUsers
 
 type Token = String
@@ -46,21 +47,23 @@ type Result a = IO a
 
 data Handle =
   Handle
-    { createUser :: Name -> LastName -> Login -> Password -> MaybeResult Bool
+    { createUser :: Name -> LastName -> Login -> Password -> MaybeResult ()
     , createUserWithPhoto :: Name -> LastName -> Login -> Password -> PhotoExt -> MaybeResult PhotoPath
     , getUsers :: Page -> Count -> MaybeResult [GetUsers.User]
     , deleteUser :: Login -> EitherResult PhotoPath
     , loginUser :: Login -> Password -> MaybeResult Token
-    , deleteAuthor :: Login -> MaybeResult Bool
-    , editAuthor :: Login -> Description -> MaybeResult Bool
-    , makeAuthor :: Login -> Description -> MaybeResult Bool
+    , deleteAuthor :: Login -> MaybeResult ()
+    , editAuthor :: Login -> Description -> MaybeResult ()
+    , makeAuthor :: Login -> Description -> MaybeResult ()
     , getAuthors :: Page -> Count -> MaybeResult [GetAuthors.Author]
-    , deleteCategory :: CategoryID -> MaybeResult Bool
-    , createCategory :: CategoryName -> ParentCategory -> MaybeResult Bool
-    , editCategory :: CategoryID -> CategoryName -> ParentCategory -> MaybeResult Bool
+    , deleteCategory :: CategoryID -> MaybeResult ()
+    , createCategory :: CategoryName -> ParentCategory -> MaybeResult ()
+    , editCategory :: CategoryID -> CategoryName -> ParentCategory -> MaybeResult ()
     , getCategories :: Page -> Count -> MaybeResult [GetCategories.Cat]
-    , createTag :: TagName -> MaybeResult Bool
-    , deleteTag :: TagID -> MaybeResult Bool
+    , createTag :: TagName -> MaybeResult ()
+    , deleteTag :: TagID -> MaybeResult ()
+    , editTag :: TagID -> TagName -> MaybeResult ()
+    , getTags :: Page -> Count -> MaybeResult [GetTags.Tag]
     , isLoginNotExist :: Login -> Result Bool
     , isLoginExist :: Login -> Result Bool
     , isAdmin :: Token -> Result Bool
@@ -73,6 +76,6 @@ data Handle =
     , isNewsExist :: NewsID -> Result Bool
     , isNewsPublished :: NewsID -> Result Bool
     , thisNewsAuthor :: NewsID -> Token -> Result Bool
-    , saveImage :: FilePath -> Base64String -> MaybeResult Bool
-    , deleteFile :: FilePath -> MaybeResult Bool
+    , saveImage :: FilePath -> Base64String -> Result Bool
+    , deleteFile :: FilePath -> Result Bool
     }

@@ -7,6 +7,7 @@ where
 
 import qualified Lib.Types.GetAuthors          as GetAuthors
 import qualified Lib.Types.GetCategories       as GetCategories
+import qualified Lib.Types.GetTags             as GetTags
 import qualified Lib.Types.GetUsers            as GetUsers
 
 import qualified Lib.DB                        as DB
@@ -27,6 +28,8 @@ newHandle = DB.Handle { DB.createUser          = createUser
                       , DB.getCategories       = getCategories
                       , DB.createTag           = createTag
                       , DB.deleteTag           = deleteTag
+                      , DB.editTag             = editTag
+                      , DB.getTags             = getTags
                       , DB.isLoginNotExist     = isLoginNotExist
                       , DB.isLoginExist        = isLoginExist
                       , DB.isAuthorExist       = isAuthorExist
@@ -44,11 +47,11 @@ newHandle = DB.Handle { DB.createUser          = createUser
                       }
 
 createUser
-  :: DB.Name -> DB.LastName -> DB.Login -> DB.Password -> DB.MaybeResult Bool
+  :: DB.Name -> DB.LastName -> DB.Login -> DB.Password -> DB.MaybeResult ()
 createUser name lastname login password =
   return $ case any null [name, lastname, login, password] of
     True -> Nothing
-    _    -> Just True
+    _    -> Just ()
 
 createUserWithPhoto
   :: DB.Name
@@ -75,36 +78,39 @@ loginUser :: DB.Login -> DB.Password -> DB.MaybeResult DB.Token
 loginUser "login" "password" = return $ Just "token"
 loginUser _       _          = return Nothing
 
-deleteAuthor :: DB.Login -> DB.MaybeResult Bool
-deleteAuthor _ = return $ Just True
+deleteAuthor :: DB.Login -> DB.MaybeResult ()
+deleteAuthor _ = return $ Just ()
 
-editAuthor :: DB.Login -> DB.Description -> DB.MaybeResult Bool
-editAuthor _ _ = return $ Just True
+editAuthor :: DB.Login -> DB.Description -> DB.MaybeResult ()
+editAuthor _ _ = return $ Just ()
 
-makeAuthor :: DB.Login -> DB.Description -> DB.MaybeResult Bool
-makeAuthor _ _ = return $ Just True
+makeAuthor :: DB.Login -> DB.Description -> DB.MaybeResult ()
+makeAuthor _ _ = return $ Just ()
 
-createCategory :: DB.CategoryName -> DB.ParentCategory -> DB.MaybeResult Bool
-createCategory _ _ = return $ Just True
+createCategory :: DB.CategoryName -> DB.ParentCategory -> DB.MaybeResult ()
+createCategory _ _ = return $ Just ()
 
-deleteCategory :: DB.CategoryID -> DB.MaybeResult Bool
-deleteCategory _ = return $ Just True
+deleteCategory :: DB.CategoryID -> DB.MaybeResult ()
+deleteCategory _ = return $ Just ()
 
 editCategory
-  :: DB.CategoryID
-  -> DB.CategoryName
-  -> DB.ParentCategory
-  -> DB.MaybeResult Bool
-editCategory _ _ _ = return $ Just True
+  :: DB.CategoryID -> DB.CategoryName -> DB.ParentCategory -> DB.MaybeResult ()
+editCategory _ _ _ = return $ Just ()
 
 getCategories :: DB.Page -> DB.Count -> DB.MaybeResult [GetCategories.Cat]
 getCategories _ _ = return $ Just []
 
-createTag :: DB.TagName -> DB.MaybeResult Bool
-createTag _ = return $ Just True
+createTag :: DB.TagName -> DB.MaybeResult ()
+createTag _ = return $ Just ()
 
-deleteTag :: DB.TagID -> DB.MaybeResult Bool
-deleteTag _ = return $ Just True
+deleteTag :: DB.TagID -> DB.MaybeResult ()
+deleteTag _ = return $ Just ()
+
+editTag :: DB.TagID -> DB.TagName -> DB.MaybeResult ()
+editTag _ _ = return $ Just ()
+
+getTags :: DB.Page -> DB.Count -> DB.MaybeResult [GetTags.Tag]
+getTags _ _ = return $ Just []
 
 isLoginNotExist :: DB.Login -> DB.Result Bool
 isLoginNotExist login = return $ login == "notexistlogin"
@@ -144,12 +150,12 @@ thisNewsAuthor :: DB.NewsID -> DB.Token -> DB.Result Bool
 thisNewsAuthor news_id token =
   return $ if (news_id > 0) && (token == "authortoken") then True else False
 
-saveImage :: FilePath -> String -> DB.MaybeResult Bool
+saveImage :: FilePath -> String -> DB.Result Bool
 saveImage file str = return $ case any null [file, str] of
-  True -> Nothing
-  _    -> Just True
+  True -> False
+  _    -> True
 
-deleteFile :: FilePath -> DB.MaybeResult Bool
+deleteFile :: FilePath -> DB.Result Bool
 deleteFile file = return $ case null file of
-  True -> Nothing
-  _    -> Just True
+  True -> False
+  _    -> True

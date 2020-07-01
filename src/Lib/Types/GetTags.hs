@@ -19,7 +19,7 @@ data Tag =
     { id :: Int
     , name :: String
     }
-  deriving (Generic, Show)
+  deriving (Generic, Show, Eq)
 
 instance FromRow Tag
 

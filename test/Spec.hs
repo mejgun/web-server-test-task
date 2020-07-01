@@ -409,3 +409,42 @@ main = hspec $ do
                                         , DeleteTag.tag_id = 1
                                         }
       `shouldThrow` anyException
+
+  describe "Handlers.editTag" $ do
+
+    it "edits tag"
+      $              Handlers.editTag
+                       dbH
+                       EditTag.Request { EditTag.token  = "admin"
+                                       , EditTag.tag_id = 1
+                                       , EditTag.name   = "test"
+                                       }
+      `shouldReturn` "ok"
+
+    it "throws exception if tag not exist"
+      $             Handlers.editTag
+                      dbH
+                      EditTag.Request { EditTag.token  = "admin"
+                                      , EditTag.name   = "test"
+                                      , EditTag.tag_id = 0
+                                      }
+      `shouldThrow` anyException
+
+    it "throws exception if user not admin"
+      $             Handlers.editTag
+                      dbH
+                      EditTag.Request { EditTag.token  = "notadmin"
+                                      , EditTag.name   = "test"
+                                      , EditTag.tag_id = 1
+                                      }
+      `shouldThrow` anyException
+
+  describe "Handlers.getTags" $ do
+
+    it "returns tags"
+      $              Handlers.getTags dbH GetTags.Request { GetTags.page = 1 }
+      `shouldReturn` ([] :: [GetTags.Tag])
+
+    it "throws exception if page<1"
+      $             Handlers.getTags dbH GetTags.Request { GetTags.page = -1 }
+      `shouldThrow` anyException

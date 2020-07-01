@@ -79,6 +79,8 @@ newHandle conn logger = DB.Handle
   , DB.getCategories       = f getCategories
   , DB.createTag           = f createTag
   , DB.deleteTag           = f deleteTag
+  , DB.editTag             = f editTag
+  , DB.getTags             = f getTags
   , DB.isLoginNotExist     = f isLoginNotExist
   , DB.isLoginExist        = f isLoginExist
   , DB.isAuthorExist       = f isAuthorExist
@@ -96,9 +98,9 @@ newHandle conn logger = DB.Handle
   }
   where f x = x conn logger
 
-execResult :: GHC.Int.Int64 -> DB.MaybeResult Bool
+execResult :: GHC.Int.Int64 -> DB.MaybeResult ()
 execResult i = case i of
-  1 -> return $ Just True
+  1 -> return $ Just ()
   _ -> return Nothing
 
 calcOffsetAndLimil :: Int -> Int -> [Int]
@@ -197,24 +199,24 @@ thisNewsAuthor conn _ news_id token = rIfDB
   "select count(id)=1 from news where id=? and author_id=(select id from authors where user_id=(select id from users where token=?));"
   (news_id, token)
 
-deleteFile :: Logger.Logger -> FilePath -> DB.MaybeResult Bool
+deleteFile :: Logger.Logger -> FilePath -> DB.Result Bool
 deleteFile logg file = do
   res <- try $ removeFile file
   case res of
     Left e -> do
       logg Logger.LogQuiet $ "Cannot delete file. " <> show (e :: IOException)
-      return Nothing
-    _ -> return $ Just True
+      return False
+    _ -> return True
 
-saveImage :: Logger.Logger -> FilePath -> String -> DB.MaybeResult Bool
+saveImage :: Logger.Logger -> FilePath -> String -> DB.Result Bool
 saveImage logg file str = do
   let dat = decodeBase64 str
   res <- try $ B.writeFile file dat
   case res of
     Left e -> do
       logg Logger.LogQuiet $ "Cannot save file. " <> show (e :: IOException)
-      return Nothing
-    _ -> return $ Just True
+      return False
+    _ -> return True
 
 сreateUser
   :: Connection
@@ -223,7 +225,7 @@ saveImage logg file str = do
   -> DB.LastName
   -> DB.Login
   -> DB.Password
-  -> DB.MaybeResult Bool
+  -> DB.MaybeResult ()
 сreateUser conn logg name lastname login password =
   catchErrorsMaybe logg
     $   execute
@@ -287,7 +289,7 @@ loginUser conn logg login password = catchErrorsMaybe logg $ do
           [login, password] :: IO [DB.Token]
   if null t then return Nothing else return $ Just (head t)
 
-deleteAuthor :: Connection -> Logger.Logger -> DB.Login -> DB.MaybeResult Bool
+deleteAuthor :: Connection -> Logger.Logger -> DB.Login -> DB.MaybeResult ()
 deleteAuthor conn logg login =
   catchErrorsMaybe logg
     $   execute
@@ -301,7 +303,7 @@ editAuthor
   -> Logger.Logger
   -> DB.Login
   -> DB.Description
-  -> DB.MaybeResult Bool
+  -> DB.MaybeResult ()
 editAuthor conn logg login descr =
   catchErrorsMaybe logg
     $   execute
@@ -328,7 +330,7 @@ makeAuthor
   -> Logger.Logger
   -> DB.Login
   -> DB.Description
-  -> DB.MaybeResult Bool
+  -> DB.MaybeResult ()
 makeAuthor conn logg login descr =
   catchErrorsMaybe logg
     $   execute
@@ -342,7 +344,7 @@ createCategory
   -> Logger.Logger
   -> DB.CategoryName
   -> DB.ParentCategory
-  -> DB.MaybeResult Bool
+  -> DB.MaybeResult ()
 createCategory conn logg name parent =
   catchErrorsMaybe logg
     $   execute
@@ -352,7 +354,7 @@ createCategory conn logg name parent =
     >>= execResult
 
 deleteCategory
-  :: Connection -> Logger.Logger -> DB.CategoryID -> DB.MaybeResult Bool
+  :: Connection -> Logger.Logger -> DB.CategoryID -> DB.MaybeResult ()
 deleteCategory conn logg catID =
   catchErrorsMaybe logg
     $   execute conn "delete from categories where id=?;" [catID]
@@ -364,7 +366,7 @@ editCategory
   -> DB.CategoryID
   -> DB.CategoryName
   -> DB.ParentCategory
-  -> DB.MaybeResult Bool
+  -> DB.MaybeResult ()
 editCategory conn logg catID name parent =
   catchErrorsMaybe logg
     $   execute conn
@@ -384,7 +386,7 @@ getCategories conn logg page count = catchErrorsMaybe logg $ do
                (calcOffsetAndLimil page count)
   return $ Just res
 
-createTag :: Connection -> Logger.Logger -> DB.TagName -> DB.MaybeResult Bool
+createTag :: Connection -> Logger.Logger -> DB.TagName -> DB.MaybeResult ()
 createTag conn logg name =
   catchErrorsMaybe logg
     $   execute conn
@@ -392,8 +394,27 @@ createTag conn logg name =
                 [name]
     >>= execResult
 
-deleteTag :: Connection -> Logger.Logger -> DB.TagID -> DB.MaybeResult Bool
+deleteTag :: Connection -> Logger.Logger -> DB.TagID -> DB.MaybeResult ()
 deleteTag conn logg tag_id =
   catchErrorsMaybe logg
     $   execute conn "delete from tags where id=?;" [tag_id]
     >>= execResult
+
+editTag
+  :: Connection -> Logger.Logger -> DB.TagID -> DB.TagName -> DB.MaybeResult ()
+editTag conn logg tag_id name =
+  catchErrorsMaybe logg
+    $   execute conn "update tags set name=? where id=?;" (name, tag_id)
+    >>= execResult
+
+getTags
+  :: Connection
+  -> Logger.Logger
+  -> DB.Page
+  -> DB.Count
+  -> DB.MaybeResult [GetTags.Tag]
+getTags conn logg page count = catchErrorsMaybe logg $ do
+  r <- query conn
+             "select id,name from tags offset ? limit ?;"
+             (calcOffsetAndLimil page count)
+  return $ Just r
