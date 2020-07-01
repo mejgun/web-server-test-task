@@ -77,6 +77,7 @@ newHandle conn logger = DB.Handle
   , DB.deleteCategory      = f deleteCategory
   , DB.editCategory        = f editCategory
   , DB.getCategories       = f getCategories
+  , DB.createTag           = f createTag
   , DB.isLoginNotExist     = f isLoginNotExist
   , DB.isLoginExist        = f isLoginExist
   , DB.isAuthorExist       = f isAuthorExist
@@ -381,3 +382,11 @@ getCategories conn logg page count = catchErrorsMaybe logg $ do
                "select id,name,parent from categories offset ? limit ?;"
                (calcOffsetAndLimil page count)
   return $ Just res
+
+createTag :: Connection -> Logger.Logger -> DB.TagName -> DB.MaybeResult Bool
+createTag conn logg name =
+  catchErrorsMaybe logg
+    $   execute conn
+                "insert into tags (name) values(?) on conflict do nothing;"
+                [name]
+    >>= execResult

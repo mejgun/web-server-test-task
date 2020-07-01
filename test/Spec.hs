@@ -361,3 +361,29 @@ main = hspec $ do
                       dbH
                       GetCategories.Request { GetCategories.page = -1 }
       `shouldThrow` anyException
+
+  describe "Handlers.createTag" $ do
+
+    it "creates tag"
+      $              Handlers.createTag
+                       dbH
+                       CreateTag.Request { CreateTag.token = "admin"
+                                         , CreateTag.name  = "test"
+                                         }
+      `shouldReturn` "ok"
+
+    it "throws exception if tag name already exist"
+      $             Handlers.createTag
+                      dbH
+                      CreateTag.Request { CreateTag.token = "admin"
+                                        , CreateTag.name  = "existtag"
+                                        }
+      `shouldThrow` anyException
+
+    it "throws exception if user not admin"
+      $             Handlers.createTag
+                      dbH
+                      CreateTag.Request { CreateTag.token = "notadmin"
+                                        , CreateTag.name  = "test"
+                                        }
+      `shouldThrow` anyException

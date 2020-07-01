@@ -25,6 +25,7 @@ newHandle = DB.Handle { DB.createUser          = createUser
                       , DB.deleteCategory      = deleteCategory
                       , DB.editCategory        = editCategory
                       , DB.getCategories       = getCategories
+                      , DB.createTag           = createTag
                       , DB.isLoginNotExist     = isLoginNotExist
                       , DB.isLoginExist        = isLoginExist
                       , DB.isAuthorExist       = isAuthorExist
@@ -98,6 +99,9 @@ editCategory _ _ _ = return $ Just True
 getCategories :: DB.Page -> DB.Count -> DB.MaybeResult [GetCategories.Cat]
 getCategories _ _ = return $ Just []
 
+createTag :: DB.TagName -> DB.MaybeResult Bool
+createTag _ = return $ Just True
+
 isLoginNotExist :: DB.Login -> DB.Result Bool
 isLoginNotExist login = return $ login == "notexistlogin"
 
@@ -120,8 +124,8 @@ isCategoryExist :: DB.CategoryID -> DB.Result Bool
 isCategoryExist catID = return $ catID > 0
 
 isTagNotExist :: DB.TagName -> DB.Result Bool
-isTagNotExist "existtag"    = return False
-isTagNotExist "notexisttag" = return True
+isTagNotExist "existtag" = return False
+isTagNotExist _          = return True
 
 isTagExist :: DB.TagID -> DB.Result Bool
 isTagExist tag_id = return $ tag_id > 0

@@ -235,7 +235,15 @@ getCategories dbH req = do
     _               -> throw ErrorBadRequest
 
 createTag :: DB.Handle -> CreateTag.Request -> Result String
-createTag dbH req = undefined
+createTag dbH req = do
+  admin <- DB.isAdmin dbH (CreateTag.token req)
+  unless admin (throw ErrorNotFound)
+  exist <- DB.isTagNotExist dbH (CreateTag.name req)
+  unless exist (throw ErrorTagAlreadyExist)
+  res <- DB.createTag dbH (CreateTag.name req)
+  case res of
+    Just True -> return justOK
+    _         -> throw ErrorBadRequest
 
 deleteTag :: DB.Handle -> DeleteTag.Request -> Result String
 deleteTag dbH req = undefined
