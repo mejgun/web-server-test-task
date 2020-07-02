@@ -4,6 +4,7 @@ import qualified Lib.Types.CreateNews          as CreateNews
 import qualified Lib.Types.GetAuthors          as GetAuthors
 import qualified Lib.Types.GetCategories       as GetCategories
 import qualified Lib.Types.GetDrafts           as GetDrafts
+import qualified Lib.Types.GetNews             as GetNews
 import qualified Lib.Types.GetNewsComments     as GetNewsComments
 import qualified Lib.Types.GetTags             as GetTags
 import qualified Lib.Types.GetUsers            as GetUsers
@@ -54,6 +55,28 @@ type CommentID = Int
 
 type PublishNews = Bool
 
+type FilterCreatedAt = Maybe String
+
+type FilterCreatedBefore = Maybe String
+
+type FilterCreatedAfter = Maybe String
+
+type FilterAuthorContains = Maybe String
+
+type FilterNameContains = Maybe String
+
+type FilterTextContains = Maybe String
+
+type FilterAnythingContains = Maybe String
+
+type FilterCategoryID = Maybe Int
+
+type FilterTagsAll = Maybe [Int]
+
+type FilterTagsAny = Maybe [Int]
+
+type FilterSortBy = Maybe String
+
 type MaybeResult a = IO (Maybe a)
 
 type EitherResult a = IO (Either () (Maybe a))
@@ -75,6 +98,7 @@ data Handle =
     , createCategory :: CategoryName -> ParentCategory -> MaybeResult ()
     , editCategory :: CategoryID -> CategoryName -> ParentCategory -> MaybeResult ()
     , getCategories :: Page -> Count -> MaybeResult [GetCategories.Cat]
+    , getCategoriesAll :: Result [GetCategories.Cat]
     , createTag :: TagName -> MaybeResult ()
     , deleteTag :: TagID -> MaybeResult ()
     , editTag :: TagID -> TagName -> MaybeResult ()
@@ -93,6 +117,7 @@ data Handle =
     , updateNews :: NewsName -> Token -> CategoryID -> NewsText -> NewsID -> MaybeResult ()
     , getNewsComments :: NewsID -> Page -> Count -> MaybeResult [GetNewsComments.Comment]
     , getDrafts :: Page -> Count -> Token -> MaybeResult [GetDrafts.Draft]
+    , getNews :: FilterCreatedAt -> FilterCreatedBefore -> FilterCreatedAfter -> FilterAuthorContains -> FilterNameContains -> FilterTextContains -> FilterAnythingContains -> FilterCategoryID -> FilterTagsAll -> FilterTagsAny -> FilterSortBy -> Page -> Count -> MaybeResult [GetNews.News]
     , isLoginNotExist :: Login -> Result Bool
     , isLoginExist :: Login -> Result Bool
     , isAdmin :: Token -> Result Bool

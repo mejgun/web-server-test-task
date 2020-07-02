@@ -9,6 +9,7 @@ import qualified Lib.Types.CreateNews          as CreateNews
 import qualified Lib.Types.GetAuthors          as GetAuthors
 import qualified Lib.Types.GetCategories       as GetCategories
 import qualified Lib.Types.GetDrafts           as GetDrafts
+import qualified Lib.Types.GetNews             as GetNews
 import qualified Lib.Types.GetNewsComments     as GetNewsComments
 import qualified Lib.Types.GetTags             as GetTags
 import qualified Lib.Types.GetUsers            as GetUsers
@@ -29,6 +30,7 @@ newHandle = DB.Handle { DB.createUser          = createUser
                       , DB.deleteCategory      = deleteCategory
                       , DB.editCategory        = editCategory
                       , DB.getCategories       = getCategories
+                      , DB.getCategoriesAll    = getCategoriesAll
                       , DB.createTag           = createTag
                       , DB.deleteTag           = deleteTag
                       , DB.editTag             = editTag
@@ -47,6 +49,7 @@ newHandle = DB.Handle { DB.createUser          = createUser
                       , DB.updateNews          = updateNews
                       , DB.getNewsComments     = getNewsComments
                       , DB.getDrafts           = getDrafts
+                      , DB.getNews             = getNews
                       , DB.isLoginNotExist     = isLoginNotExist
                       , DB.isLoginExist        = isLoginExist
                       , DB.isAuthorExist       = isAuthorExist
@@ -116,6 +119,9 @@ editCategory _ _ _ = return $ Just ()
 
 getCategories :: DB.Page -> DB.Count -> DB.MaybeResult [GetCategories.Cat]
 getCategories _ _ = return $ Just []
+
+getCategoriesAll :: DB.Result [GetCategories.Cat]
+getCategoriesAll = return []
 
 createTag :: DB.TagName -> DB.MaybeResult ()
 createTag _ = return $ Just ()
@@ -188,6 +194,23 @@ getNewsComments _ _ _ = return $ Just []
 
 getDrafts :: DB.Page -> DB.Count -> DB.Token -> DB.MaybeResult [GetDrafts.Draft]
 getDrafts _ _ _ = return $ Just []
+
+getNews
+  :: DB.FilterCreatedAt
+  -> DB.FilterCreatedBefore
+  -> DB.FilterCreatedAfter
+  -> DB.FilterAuthorContains
+  -> DB.FilterNameContains
+  -> DB.FilterTextContains
+  -> DB.FilterAnythingContains
+  -> DB.FilterCategoryID
+  -> DB.FilterTagsAll
+  -> DB.FilterTagsAny
+  -> DB.FilterSortBy
+  -> DB.Page
+  -> DB.Count
+  -> DB.MaybeResult [GetNews.News]
+getNews _ _ _ _ _ _ _ _ _ _ _ _ _ = return $ Just []
 
 isLoginNotExist :: DB.Login -> DB.Result Bool
 isLoginNotExist login = return $ login == "notexistlogin"

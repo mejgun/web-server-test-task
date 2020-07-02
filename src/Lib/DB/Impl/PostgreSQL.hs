@@ -18,7 +18,9 @@ import qualified Data.ByteString               as B
 import           Data.ByteString.Base64         ( decodeLenient )
 import qualified Data.ByteString.Char8         as B8
 import           Data.ByteString.UTF8           ( fromString )
+import           Data.List                      ( sort )
 import           Data.Maybe                     ( catMaybes )
+import qualified Data.Text                     as T
 import           Database.PostgreSQL.Simple
 import           Database.PostgreSQL.Simple.Types
                                                 ( PGArray(..)
@@ -77,6 +79,7 @@ newHandle conn logger = DB.Handle
   , DB.deleteCategory      = f deleteCategory
   , DB.editCategory        = f editCategory
   , DB.getCategories       = f getCategories
+  , DB.getCategoriesAll    = f getCategoriesAll
   , DB.createTag           = f createTag
   , DB.deleteTag           = f deleteTag
   , DB.editTag             = f editTag
@@ -95,6 +98,7 @@ newHandle conn logger = DB.Handle
   , DB.updateNews          = f updateNews
   , DB.getNewsComments     = f getNewsComments
   , DB.getDrafts           = f getDrafts
+  , DB.getNews             = f getNews
   , DB.isLoginNotExist     = f isLoginNotExist
   , DB.isLoginExist        = f isLoginExist
   , DB.isAuthorExist       = f isAuthorExist
@@ -400,6 +404,11 @@ getCategories conn logg page count = catchErrorsMaybe logg $ do
                (calcOffsetAndLimil page count)
   return $ Just res
 
+getCategoriesAll :: Connection -> Logger.Logger -> DB.Result [GetCategories.Cat]
+getCategoriesAll conn logg = do
+  res <- query_ conn "select id,name,parent from categories;"
+  return res
+
 createTag :: Connection -> Logger.Logger -> DB.TagName -> DB.MaybeResult ()
 createTag conn logg name =
   catchErrorsMaybe logg
@@ -648,3 +657,48 @@ getDrafts conn logg page count token = catchErrorsMaybe logg $ do
     "select n.id,n.date::text,n.name,n.text,n.main_photo,array_agg(np.id),array_agg(np.photo),array_agg(nt.tag_id),array_agg(t.name),n.category_id,c.name from news as n left join news_photos as np on n.id=np.news_id left join news_tags as nt on nt.news_id=n.id left join tags as t on t.id=nt.tag_id left join categories as c on c.id=n.category_id left join authors as a on n.author_id=a.id left join users as u on a.user_id=u.id where u.token=? and n.published=false group by n.id, c.name offset ? limit ?;"
     (token, offset, limit)
   return $ Just r
+
+getNews
+  :: Connection
+  -> Logger.Logger
+  -> DB.FilterCreatedAt
+  -> DB.FilterCreatedBefore
+  -> DB.FilterCreatedAfter
+  -> DB.FilterAuthorContains
+  -> DB.FilterNameContains
+  -> DB.FilterTextContains
+  -> DB.FilterAnythingContains
+  -> DB.FilterCategoryID
+  -> DB.FilterTagsAll
+  -> DB.FilterTagsAny
+  -> DB.FilterSortBy
+  -> DB.Page
+  -> DB.Count
+  -> DB.MaybeResult [GetNews.News]
+getNews conn logg created_at created_before created_after author_contains name_contains text_contains anything_contains cat_id t_all t_any sort_by page count
+  = catchErrorsMaybe logg $ do
+    let [offset, limit] = calcOffsetAndLimil page count
+    news <- query
+      conn
+      "select * from getNews(?,?,?,?,?,?,?,?,?,?,?,?,?);"
+      ( created_at
+      , created_before
+      , created_after
+      , author_contains
+      , name_contains
+      , text_contains
+      , anything_contains
+      , cat_id
+      , intListToPGarray <$> t_all
+      , intListToPGarray <$> t_any
+      , sort_by
+      , offset
+      , limit
+      )
+    return $ Just news
+ where
+  intListToPGarray :: [Int] -> String
+  intListToPGarray l = T.unpack t2
+   where
+    t1 = T.intercalate "," $ map (T.pack . show) $ sort l
+    t2 = T.concat ["{", t1, "}"]

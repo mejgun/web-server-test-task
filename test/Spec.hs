@@ -927,3 +927,43 @@ main = hspec $ do
                                         , GetDrafts.token = "notauthor"
                                         }
       `shouldThrow` anyException
+
+  describe "Handlers.getNews" $ do
+
+    it
+      "returns news"
+      (              Handlers.getNews
+          dbH
+          GetNews.Request { GetNews.page              = 1
+                          , GetNews.created_at        = Nothing
+                          , GetNews.created_before    = Nothing
+                          , GetNews.created_after     = Nothing
+                          , GetNews.author_contains   = Nothing
+                          , GetNews.name_contains     = Nothing
+                          , GetNews.text_contains     = Nothing
+                          , GetNews.anything_contains = Nothing
+                          , GetNews.cat_id            = Nothing
+                          , GetNews.tags_all          = Nothing
+                          , GetNews.tags_any          = Nothing
+                          , GetNews.sort_by           = Nothing
+                          }
+      `shouldReturn` ([] :: [GetNews.News])
+      )
+
+    it "throws exception if page<1"
+      $             Handlers.getNews
+                      dbH
+                      GetNews.Request { GetNews.page              = 0
+                                      , GetNews.created_at        = Nothing
+                                      , GetNews.created_before    = Nothing
+                                      , GetNews.created_after     = Nothing
+                                      , GetNews.author_contains   = Nothing
+                                      , GetNews.name_contains     = Nothing
+                                      , GetNews.text_contains     = Nothing
+                                      , GetNews.anything_contains = Nothing
+                                      , GetNews.cat_id            = Nothing
+                                      , GetNews.tags_all          = Nothing
+                                      , GetNews.tags_any          = Nothing
+                                      , GetNews.sort_by           = Nothing
+                                      }
+      `shouldThrow` anyException

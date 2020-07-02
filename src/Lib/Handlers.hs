@@ -425,7 +425,40 @@ getDrafts dbH req = do
     _           -> throw ErrorBadRequest
 
 getNews :: DB.Handle -> GetNews.Request -> Result [GetNews.News]
-getNews dbH req = undefined
+getNews dbH req = do
+  unless (isValidPage (GetNews.page req)) (throw ErrorBadPage)
+  maybenews <- DB.getNews dbH
+                          (GetNews.created_at req)
+                          (GetNews.created_before req)
+                          (GetNews.created_after req)
+                          (GetNews.author_contains req)
+                          (GetNews.name_contains req)
+                          (GetNews.text_contains req)
+                          (GetNews.anything_contains req)
+                          (GetNews.cat_id req)
+                          (GetNews.tags_all req)
+                          (GetNews.tags_any req)
+                          (GetNews.sort_by req)
+                          (GetNews.page req)
+                          (Constants.newsPerPage)
+  let news = maybe (throw ErrorBadRequest) id maybenews
+  cats <- DB.getCategoriesAll dbH
+  return $ map (buildAnswer cats) news
+ where
+  buildAnswer :: [GetCategories.Cat] -> GetNews.News -> GetNews.News
+  buildAnswer cats t = t
+    { GetNews.news_category = buildCategories cats $ GetNews.news_category_id t
+    }
+  buildCategories :: [GetCategories.Cat] -> Int -> GetNews.Category
+  buildCategories cats c =
+    let tempc = head $ filter (\i -> GetCategories.id i == c) cats
+    in
+      GetNews.Category
+        { GetNews.category_id     = GetCategories.id tempc
+        , GetNews.category_name   = GetCategories.name tempc
+        , GetNews.category_parent = buildCategories cats
+                                      <$> GetCategories.parent tempc
+        }
 
 getNewsComments
   :: DB.Handle -> GetNewsComments.Request -> Result [GetNewsComments.Comment]
