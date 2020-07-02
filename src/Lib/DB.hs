@@ -46,6 +46,8 @@ type NewsText = String
 
 type CommentText = String
 
+type CommentID = Int
+
 type MaybeResult a = IO (Maybe a)
 
 type EitherResult a = IO (Either () (Maybe a))
@@ -76,6 +78,7 @@ data Handle =
     , addNewsTag :: NewsID -> TagID -> Token -> MaybeResult ()
     , createNews :: NewsName -> Token -> CategoryID -> NewsText -> MaybeResult CreateNews.NewsId
     , deleteNews :: NewsID -> Token -> MaybeResult [PhotoPath]
+    , deleteNewsComment :: CommentID -> MaybeResult ()
     , isLoginNotExist :: Login -> Result Bool
     , isLoginExist :: Login -> Result Bool
     , isAdmin :: Token -> Result Bool

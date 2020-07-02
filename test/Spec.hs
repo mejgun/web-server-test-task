@@ -635,3 +635,21 @@ main = hspec $ do
                                          , DeleteNews.news_id = 1
                                          }
       `shouldThrow` anyException
+
+  describe "Handlers.deleteNewsComment" $ do
+
+    it "deletes comment"
+      $              Handlers.deleteNewsComment
+                       dbH
+                       DeleteNewsComment.Request { DeleteNewsComment.token = "admin"
+                                                 , DeleteNewsComment.comment_id = 1
+                                                 }
+      `shouldReturn` justOK
+
+    it "throws exception if user not admin"
+      $             Handlers.deleteNewsComment
+                      dbH
+                      DeleteNewsComment.Request { DeleteNewsComment.token = "notadmin"
+                                                , DeleteNewsComment.comment_id = 1
+                                                }
+      `shouldThrow` anyException

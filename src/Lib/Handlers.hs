@@ -365,7 +365,13 @@ deleteNews dbH req = do
     _ -> throw ErrorBadRequest
 
 deleteNewsComment :: DB.Handle -> DeleteNewsComment.Request -> Result String
-deleteNewsComment dbH req = undefined
+deleteNewsComment dbH req = do
+  admin <- DB.isAdmin dbH (DeleteNewsComment.token req)
+  unless admin (throw ErrorNotFound)
+  res <- DB.deleteNewsComment dbH (DeleteNewsComment.comment_id req)
+  case res of
+    Just () -> return justOK
+    _       -> throw ErrorBadRequest
 
 deleteNewsPhoto :: DB.Handle -> DeleteNewsPhoto.Request -> Result String
 deleteNewsPhoto dbH req = undefined
