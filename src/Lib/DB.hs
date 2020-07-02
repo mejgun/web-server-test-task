@@ -75,6 +75,7 @@ data Handle =
     , addNewsPhoto :: NewsID -> Token -> PhotoExt -> MaybeResult PhotoPath
     , addNewsTag :: NewsID -> TagID -> Token -> MaybeResult ()
     , createNews :: NewsName -> Token -> CategoryID -> NewsText -> MaybeResult CreateNews.NewsId
+    , deleteNews :: NewsID -> Token -> MaybeResult [PhotoPath]
     , isLoginNotExist :: Login -> Result Bool
     , isLoginExist :: Login -> Result Bool
     , isAdmin :: Token -> Result Bool

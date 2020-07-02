@@ -35,6 +35,7 @@ newHandle = DB.Handle { DB.createUser          = createUser
                       , DB.addNewsPhoto        = addNewsPhoto
                       , DB.addNewsTag          = addNewsTag
                       , DB.createNews          = createNews
+                      , DB.deleteNews          = deleteNews
                       , DB.isLoginNotExist     = isLoginNotExist
                       , DB.isLoginExist        = isLoginExist
                       , DB.isAuthorExist       = isAuthorExist
@@ -134,6 +135,9 @@ createNews
   -> DB.NewsText
   -> DB.MaybeResult CreateNews.NewsId
 createNews _ _ _ _ = return $ Just CreateNews.NewsId { CreateNews.news_id = 1 }
+
+deleteNews :: DB.NewsID -> DB.Token -> DB.MaybeResult [DB.PhotoPath]
+deleteNews _ _ = return $ Just []
 
 isLoginNotExist :: DB.Login -> DB.Result Bool
 isLoginNotExist login = return $ login == "notexistlogin"

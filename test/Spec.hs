@@ -601,3 +601,37 @@ main = hspec $ do
                                          , CreateNews.text   = "text"
                                          }
       `shouldThrow` anyException
+
+  describe "Handlers.deleteNews" $ do
+
+    it "deletes news"
+      $              Handlers.deleteNews
+                       dbH
+                       DeleteNews.Request { DeleteNews.token   = "author"
+                                          , DeleteNews.news_id = 1
+                                          }
+      `shouldReturn` justOK
+
+    it "throws exception if user not author"
+      $             Handlers.deleteNews
+                      dbH
+                      DeleteNews.Request { DeleteNews.token   = "notauthor"
+                                         , DeleteNews.news_id = 1
+                                         }
+      `shouldThrow` anyException
+
+    it "throws exception if news not exist"
+      $             Handlers.deleteNews
+                      dbH
+                      DeleteNews.Request { DeleteNews.token   = "authortoken"
+                                         , DeleteNews.news_id = 0
+                                         }
+      `shouldThrow` anyException
+
+    it "throws exception if not this author's news"
+      $             Handlers.deleteNews
+                      dbH
+                      DeleteNews.Request { DeleteNews.token   = "author2"
+                                         , DeleteNews.news_id = 1
+                                         }
+      `shouldThrow` anyException

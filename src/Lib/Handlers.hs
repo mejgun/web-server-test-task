@@ -346,7 +346,23 @@ createNews dbH req = do
     _         -> throw ErrorBadRequest
 
 deleteNews :: DB.Handle -> DeleteNews.Request -> Result String
-deleteNews dbH req = undefined
+deleteNews dbH req = do
+  author <- DB.isAuthor dbH (DeleteNews.token req)
+  unless author (throw ErrorNotAuthor)
+  exist <- DB.isNewsExist dbH (DeleteNews.news_id req)
+  unless exist (throw ErrorNewsNotExist)
+  newsAuthor <- DB.thisNewsAuthor dbH
+                                  (DeleteNews.news_id req)
+                                  (DeleteNews.token req)
+  unless newsAuthor (throw ErrorNotYourNews)
+  maybephotos <- DB.deleteNews dbH
+                               (DeleteNews.news_id req)
+                               (DeleteNews.token req)
+  case maybephotos of
+    Just photos -> do
+      mapM_ (DB.deleteFile dbH) photos
+      return justOK
+    _ -> throw ErrorBadRequest
 
 deleteNewsComment :: DB.Handle -> DeleteNewsComment.Request -> Result String
 deleteNewsComment dbH req = undefined

@@ -85,6 +85,7 @@ newHandle conn logger = DB.Handle
   , DB.addNewsPhoto        = f addNewsPhoto
   , DB.addNewsTag          = f addNewsTag
   , DB.createNews          = f createNews
+  , DB.deleteNews          = f deleteNews
   , DB.isLoginNotExist     = f isLoginNotExist
   , DB.isLoginExist        = f isLoginExist
   , DB.isAuthorExist       = f isAuthorExist
@@ -485,3 +486,26 @@ createNews conn logg name token cat_id text = catchErrorsMaybe logg $ do
   case q of
     [n] -> return $ Just n
     _   -> return Nothing
+
+deleteNews
+  :: Connection
+  -> Logger.Logger
+  -> DB.NewsID
+  -> DB.Token
+  -> DB.MaybeResult [DB.PhotoPath]
+deleteNews conn logg news_id token = catchErrorsMaybe logg $ do
+  pf <-
+    query
+      conn
+      "delete from news_photos where news_id=(select id from news where id=? and author_id=(select id from authors where user_id=(select id from users where token=?))) returning photo;"
+      (news_id, token) :: IO [Only String]
+  let photos = map fromOnly pf
+  mf <-
+    query
+      conn
+      "delete from news where id=? and author_id=(select id from authors where user_id=(select id from users where token=?)) returning main_photo;"
+      (news_id, token) :: IO [Maybe (Only String)]
+  case mf of
+    [Just (Only f)] -> return $ Just $ photos <> [f]
+    [Nothing      ] -> return $ Just photos
+    _               -> return Nothing
