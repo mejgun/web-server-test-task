@@ -440,7 +440,31 @@ publishNews dbH req = do
     _       -> throw ErrorBadRequest
 
 setNewsMainPhoto :: DB.Handle -> SetNewsMainPhoto.Request -> Result String
-setNewsMainPhoto dbH req = undefined
+setNewsMainPhoto dbH req = do
+  author <- DB.isAuthor dbH (SetNewsMainPhoto.token req)
+  unless author (throw ErrorNotAuthor)
+  newsexist <- DB.isNewsExist dbH (SetNewsMainPhoto.news_id req)
+  unless newsexist (throw ErrorNewsNotExist)
+  newsAuthor <- DB.thisNewsAuthor dbH
+                                  (SetNewsMainPhoto.news_id req)
+                                  (SetNewsMainPhoto.token req)
+  unless newsAuthor (throw ErrorNotYourNews)
+  oldphoto <- DB.getNewsMainPhoto dbH
+                                  (SetNewsMainPhoto.news_id req)
+                                  (SetNewsMainPhoto.token req)
+  case oldphoto of
+    Right (Just photo) -> DB.deleteFile dbH photo >> return ()
+    Left  ()           -> throw ErrorInternal
+    Right Nothing      -> return ()
+  let ext = makeExt (SetNewsMainPhoto.photo_type req)
+  res <- DB.setNewsMainPhoto dbH
+                             (SetNewsMainPhoto.news_id req)
+                             (SetNewsMainPhoto.token req)
+                             ext
+  case res of
+    Just photo ->
+      DB.saveImage dbH photo (SetNewsMainPhoto.photo req) >> return justOK
+    _ -> throw ErrorBadRequest
 
 updateNews :: DB.Handle -> UpdateNews.Request -> Result String
 updateNews dbH req = undefined

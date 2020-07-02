@@ -90,6 +90,8 @@ newHandle conn logger = DB.Handle
   , DB.deleteNewsPhoto     = f deleteNewsPhoto
   , DB.deleteNewsTag       = f deleteNewsTag
   , DB.publishNews         = f publishNews
+  , DB.getNewsMainPhoto    = f getNewsMainPhoto
+  , DB.setNewsMainPhoto    = f setNewsMainPhoto
   , DB.isLoginNotExist     = f isLoginNotExist
   , DB.isLoginExist        = f isLoginExist
   , DB.isAuthorExist       = f isAuthorExist
@@ -565,3 +567,35 @@ publishNews conn logg publish news_id token = catchErrorsMaybe logg $ do
       "update news set published=? where id=? and author_id=(select id from authors where user_id=(select id from users where token=?));"
       (publish, news_id, token)
     >>= execResult
+
+getNewsMainPhoto
+  :: Connection
+  -> Logger.Logger
+  -> DB.NewsID
+  -> DB.Token
+  -> DB.EitherResult DB.PhotoPath
+getNewsMainPhoto conn logg news_id token = catchErrorsEither logg $ do
+  p <- query
+    conn
+    "select main_photo from news where id=? and author_id=(select id from authors where user_id=(select id from users where token=?));"
+    (news_id, token)
+  return $ case p of
+    [Just (Only f)] -> Right $ Just f
+    [Nothing      ] -> Right Nothing
+    _               -> Left ()
+
+setNewsMainPhoto
+  :: Connection
+  -> Logger.Logger
+  -> DB.NewsID
+  -> DB.Token
+  -> DB.PhotoExt
+  -> DB.MaybeResult DB.PhotoPath
+setNewsMainPhoto conn logg news_id token ext = catchErrorsMaybe logg $ do
+  q <- query
+    conn
+    "update news set main_photo=concat(?,md5(random()::text),?) where id=? and author_id=(select id from authors where user_id=(select id from users where token=?)) returning main_photo;"
+    (Constants.imagesDir, ext, news_id, token)
+  return $ case q of
+    [Just (Only imgFile)] -> Just imgFile
+    _                     -> Nothing

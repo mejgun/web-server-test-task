@@ -776,3 +776,45 @@ main = hspec $ do
                                           , PublishNews.news_id = 1
                                           }
       `shouldThrow` anyException
+
+  describe "Handlers.setNewsMainPhoto" $ do
+
+    it "set news main photo"
+      $              Handlers.setNewsMainPhoto
+                       dbH
+                       SetNewsMainPhoto.Request { SetNewsMainPhoto.photo = "photo"
+                                                , SetNewsMainPhoto.photo_type = Nothing
+                                                , SetNewsMainPhoto.token = "author"
+                                                , SetNewsMainPhoto.news_id = 1
+                                                }
+      `shouldReturn` justOK
+
+    it "throws exception if user not author"
+      $             Handlers.setNewsMainPhoto
+                      dbH
+                      SetNewsMainPhoto.Request { SetNewsMainPhoto.photo = "photo"
+                                               , SetNewsMainPhoto.photo_type = Nothing
+                                               , SetNewsMainPhoto.token = "notauthor"
+                                               , SetNewsMainPhoto.news_id = 1
+                                               }
+      `shouldThrow` anyException
+
+    it "throws exception if news not exist"
+      $             Handlers.setNewsMainPhoto
+                      dbH
+                      SetNewsMainPhoto.Request { SetNewsMainPhoto.photo = "photo"
+                                               , SetNewsMainPhoto.photo_type = Nothing
+                                               , SetNewsMainPhoto.token = "authortoken"
+                                               , SetNewsMainPhoto.news_id = 0
+                                               }
+      `shouldThrow` anyException
+
+    it "throws exception if not this author's news"
+      $             Handlers.setNewsMainPhoto
+                      dbH
+                      SetNewsMainPhoto.Request { SetNewsMainPhoto.photo = "photo"
+                                               , SetNewsMainPhoto.photo_type = Nothing
+                                               , SetNewsMainPhoto.token = "author2"
+                                               , SetNewsMainPhoto.news_id = 1
+                                               }
+      `shouldThrow` anyException

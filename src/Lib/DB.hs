@@ -85,6 +85,8 @@ data Handle =
     , deleteNewsComment :: CommentID -> MaybeResult ()
     , deleteNewsPhoto :: PhotoID -> NewsID -> Token -> MaybeResult PhotoPath
     , deleteNewsTag :: TagID -> NewsID -> Token -> MaybeResult ()
+    , getNewsMainPhoto :: NewsID -> Token -> EitherResult PhotoPath
+    , setNewsMainPhoto :: NewsID -> Token -> PhotoExt -> MaybeResult PhotoPath
     , publishNews :: PublishNews -> NewsID -> Token -> MaybeResult ()
     , isLoginNotExist :: Login -> Result Bool
     , isLoginExist :: Login -> Result Bool
