@@ -22,7 +22,7 @@ data Comment =
     , user_lastname :: String
     , comment :: String
     }
-  deriving (Generic, Show)
+  deriving (Generic, Show, Eq)
 
 instance FromRow Comment
 

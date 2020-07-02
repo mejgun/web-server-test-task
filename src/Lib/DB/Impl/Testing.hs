@@ -8,6 +8,7 @@ where
 import qualified Lib.Types.CreateNews          as CreateNews
 import qualified Lib.Types.GetAuthors          as GetAuthors
 import qualified Lib.Types.GetCategories       as GetCategories
+import qualified Lib.Types.GetNewsComments     as GetNewsComments
 import qualified Lib.Types.GetTags             as GetTags
 import qualified Lib.Types.GetUsers            as GetUsers
 
@@ -43,6 +44,7 @@ newHandle = DB.Handle { DB.createUser          = createUser
                       , DB.getNewsMainPhoto    = getNewsMainPhoto
                       , DB.setNewsMainPhoto    = setNewsMainPhoto
                       , DB.updateNews          = updateNews
+                      , DB.getNewsComments     = getNewsComments
                       , DB.isLoginNotExist     = isLoginNotExist
                       , DB.isLoginExist        = isLoginExist
                       , DB.isAuthorExist       = isAuthorExist
@@ -174,6 +176,13 @@ updateNews
   -> DB.NewsID
   -> DB.MaybeResult ()
 updateNews _ _ _ _ _ = return $ Just ()
+
+getNewsComments
+  :: DB.NewsID
+  -> DB.Page
+  -> DB.Count
+  -> DB.MaybeResult [GetNewsComments.Comment]
+getNewsComments _ _ _ = return $ Just []
 
 isLoginNotExist :: DB.Login -> DB.Result Bool
 isLoginNotExist login = return $ login == "notexistlogin"

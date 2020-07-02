@@ -48,7 +48,7 @@ data Category =
     , category_name :: String
     , category_parent :: Maybe Category
     }
-  deriving (Generic, Show)
+  deriving (Generic, Show, Eq)
 
 instance A.ToJSON Category
 
@@ -67,7 +67,7 @@ data News =
     , news_tags :: [String]
     , news_photo_count :: Int
     }
-  deriving (Generic, Show)
+  deriving (Generic, Show, Eq)
 
 instance A.ToJSON News
 

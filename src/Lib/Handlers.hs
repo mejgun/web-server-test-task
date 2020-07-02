@@ -419,7 +419,17 @@ getNews dbH req = undefined
 
 getNewsComments
   :: DB.Handle -> GetNewsComments.Request -> Result [GetNewsComments.Comment]
-getNewsComments dbH req = undefined
+getNewsComments dbH req = do
+  unless (isValidPage (GetNewsComments.page req)) (throw ErrorBadPage)
+  published <- DB.isNewsPublished dbH (GetNewsComments.news_id req)
+  unless published (throw ErrorNewsNotExist)
+  res <- DB.getNewsComments dbH
+                            (GetNewsComments.news_id req)
+                            (GetNewsComments.page req)
+                            (Constants.commentsPerPage)
+  case res of
+    Just res -> return res
+    _        -> throw ErrorBadRequest
 
 publishNews :: DB.Handle -> PublishNews.Request -> Result String
 publishNews dbH req = do

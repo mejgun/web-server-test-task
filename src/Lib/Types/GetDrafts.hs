@@ -35,7 +35,7 @@ data Draft =
     , draft_category_id :: Int
     , draft_category_name :: String
     }
-  deriving (Generic, Show)
+  deriving (Generic, Show, Eq)
 
 instance A.ToJSON Draft
 
@@ -64,7 +64,7 @@ data Photo =
     { photo_id :: Int
     , photo_url :: String
     }
-  deriving (Generic, Show)
+  deriving (Generic, Show, Eq)
 
 instance A.ToJSON Photo
 
@@ -73,7 +73,7 @@ data Tag =
     { tag_id :: Int
     , tag_name :: String
     }
-  deriving (Generic, Show)
+  deriving (Generic, Show, Eq)
 
 instance A.ToJSON Tag
 

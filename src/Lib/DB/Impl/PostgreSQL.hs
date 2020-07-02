@@ -93,6 +93,7 @@ newHandle conn logger = DB.Handle
   , DB.getNewsMainPhoto    = f getNewsMainPhoto
   , DB.setNewsMainPhoto    = f setNewsMainPhoto
   , DB.updateNews          = f updateNews
+  , DB.getNewsComments     = f getNewsComments
   , DB.isLoginNotExist     = f isLoginNotExist
   , DB.isLoginExist        = f isLoginExist
   , DB.isAuthorExist       = f isAuthorExist
@@ -617,3 +618,17 @@ updateNews conn logg name token cat_id text news_id =
           "update news set name=?, category_id=?, text=? where id=? and author_id=(select id from authors where user_id=(select id from users where token=?));"
           (name, cat_id, text, news_id, token)
     >>= execResult
+
+getNewsComments
+  :: Connection
+  -> Logger.Logger
+  -> DB.NewsID
+  -> DB.Page
+  -> DB.Count
+  -> DB.MaybeResult [GetNewsComments.Comment]
+getNewsComments conn logg news_id page count = catchErrorsMaybe logg $ do
+  r <- query
+    conn
+    "select c.id,u.name,u.lastname,c.text from news_comments as c, users as u, news as n where c.user_id=u.id and news_id=? and n.id=c.news_id and n.published=true offset ? limit ?;"
+    ([news_id] <> (calcOffsetAndLimil page count))
+  return $ Just r

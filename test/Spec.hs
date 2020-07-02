@@ -875,3 +875,31 @@ main = hspec $ do
                                          , UpdateNews.name    = "name"
                                          }
       `shouldThrow` anyException
+
+  describe "Handlers.getNewsComments" $ do
+
+    it
+      "returns news comments"
+      (              Handlers.getNewsComments
+          dbH
+          GetNewsComments.Request { GetNewsComments.page    = 1
+                                  , GetNewsComments.news_id = 1
+                                  }
+      `shouldReturn` ([] :: [GetNewsComments.Comment])
+      )
+
+    it "throws exception if page<1"
+      $             Handlers.getNewsComments
+                      dbH
+                      GetNewsComments.Request { GetNewsComments.page    = 0
+                                              , GetNewsComments.news_id = 1
+                                              }
+      `shouldThrow` anyException
+
+    it "throws exception if news not published"
+      $             Handlers.getNewsComments
+                      dbH
+                      GetNewsComments.Request { GetNewsComments.page    = 1
+                                              , GetNewsComments.news_id = 0
+                                              }
+      `shouldThrow` anyException
