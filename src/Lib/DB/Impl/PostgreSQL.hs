@@ -88,6 +88,7 @@ newHandle conn logger = DB.Handle
   , DB.deleteNews          = f deleteNews
   , DB.deleteNewsComment   = f deleteNewsComment
   , DB.deleteNewsPhoto     = f deleteNewsPhoto
+  , DB.deleteNewsTag       = f deleteNewsTag
   , DB.isLoginNotExist     = f isLoginNotExist
   , DB.isLoginExist        = f isLoginExist
   , DB.isAuthorExist       = f isAuthorExist
@@ -534,3 +535,18 @@ deleteNewsPhoto conn logg photo_id news_id token = catchErrorsMaybe logg $ do
   return $ case p of
     [Just (Only f)] -> Just f
     _               -> Nothing
+
+deleteNewsTag
+  :: Connection
+  -> Logger.Logger
+  -> DB.TagID
+  -> DB.NewsID
+  -> DB.Token
+  -> DB.MaybeResult ()
+deleteNewsTag conn logg tag_id news_id token =
+  catchErrorsMaybe logg
+    $   execute
+          conn
+          "delete from news_tags where tag_id=? and news_id=(select id from news where id=? and author_id=(select id from authors where user_id=(select id from users where token=?)));"
+          (tag_id, news_id, token)
+    >>= execResult

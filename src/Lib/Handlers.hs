@@ -392,7 +392,24 @@ deleteNewsPhoto dbH req = do
     _          -> throw ErrorBadRequest
 
 deleteNewsTag :: DB.Handle -> DeleteNewsTag.Request -> Result String
-deleteNewsTag dbH req = undefined
+deleteNewsTag dbH req = do
+  author <- DB.isAuthor dbH (DeleteNewsTag.token req)
+  unless author (throw ErrorNotAuthor)
+  newsexist <- DB.isNewsExist dbH (DeleteNewsTag.news_id req)
+  unless newsexist (throw ErrorNewsNotExist)
+  newsAuthor <- DB.thisNewsAuthor dbH
+                                  (DeleteNewsTag.news_id req)
+                                  (DeleteNewsTag.token req)
+  unless newsAuthor (throw ErrorNotYourNews)
+  tagexist <- DB.isTagExist dbH (DeleteNewsTag.tag_id req)
+  unless tagexist (throw ErrorTagNotExist)
+  res <- DB.deleteNewsTag dbH
+                          (DeleteNewsTag.tag_id req)
+                          (DeleteNewsTag.news_id req)
+                          (DeleteNewsTag.token req)
+  case res of
+    Just () -> return justOK
+    _       -> throw ErrorBadRequest
 
 getDrafts :: DB.Handle -> GetDrafts.Request -> Result [GetDrafts.Draft]
 getDrafts dbH req = undefined

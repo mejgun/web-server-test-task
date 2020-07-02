@@ -691,3 +691,50 @@ main = hspec $ do
                                               , DeleteNewsPhoto.photo_id = 1
                                               }
       `shouldThrow` anyException
+
+  describe "Handlers.deleteNewsTag" $ do
+
+    it "deletes tag from news"
+      $              Handlers.deleteNewsTag
+                       dbH
+                       DeleteNewsTag.Request { DeleteNewsTag.tag_id  = 1
+                                             , DeleteNewsTag.token   = "author"
+                                             , DeleteNewsTag.news_id = 1
+                                             }
+      `shouldReturn` justOK
+
+    it "throws exception if user not author"
+      $             Handlers.deleteNewsTag
+                      dbH
+                      DeleteNewsTag.Request { DeleteNewsTag.tag_id = 1
+                                            , DeleteNewsTag.token = "notauthor"
+                                            , DeleteNewsTag.news_id = 1
+                                            }
+      `shouldThrow` anyException
+
+    it "throws exception if news not exist"
+      $             Handlers.deleteNewsTag
+                      dbH
+                      DeleteNewsTag.Request { DeleteNewsTag.tag_id = 1
+                                            , DeleteNewsTag.token = "authortoken"
+                                            , DeleteNewsTag.news_id = 0
+                                            }
+      `shouldThrow` anyException
+
+    it "throws exception if not this author's news"
+      $             Handlers.deleteNewsTag
+                      dbH
+                      DeleteNewsTag.Request { DeleteNewsTag.tag_id  = 1
+                                            , DeleteNewsTag.token   = "author2"
+                                            , DeleteNewsTag.news_id = 1
+                                            }
+      `shouldThrow` anyException
+
+    it "throws exception if tag not exist"
+      $             Handlers.deleteNewsTag
+                      dbH
+                      DeleteNewsTag.Request { DeleteNewsTag.tag_id  = 0
+                                            , DeleteNewsTag.token   = "author"
+                                            , DeleteNewsTag.news_id = 1
+                                            }
+      `shouldThrow` anyException
