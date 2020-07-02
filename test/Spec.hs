@@ -741,7 +741,7 @@ main = hspec $ do
 
   describe "Handlers.publishNews" $ do
 
-    it "publish news"
+    it "publishes news"
       $              Handlers.publishNews
                        dbH
                        PublishNews.Request { PublishNews.publish = True
@@ -779,7 +779,7 @@ main = hspec $ do
 
   describe "Handlers.setNewsMainPhoto" $ do
 
-    it "set news main photo"
+    it "sets news' main photo"
       $              Handlers.setNewsMainPhoto
                        dbH
                        SetNewsMainPhoto.Request { SetNewsMainPhoto.photo = "photo"
@@ -817,4 +817,61 @@ main = hspec $ do
                                                , SetNewsMainPhoto.token = "author2"
                                                , SetNewsMainPhoto.news_id = 1
                                                }
+      `shouldThrow` anyException
+
+  describe "Handlers.updateNews" $ do
+
+    it "updates news"
+      $              Handlers.updateNews
+                       dbH
+                       UpdateNews.Request { UpdateNews.text    = "text"
+                                          , UpdateNews.cat_id  = 1
+                                          , UpdateNews.token   = "author"
+                                          , UpdateNews.news_id = 1
+                                          , UpdateNews.name    = "name"
+                                          }
+      `shouldReturn` justOK
+
+    it "throws exception if user not author"
+      $             Handlers.updateNews
+                      dbH
+                      UpdateNews.Request { UpdateNews.text    = "text"
+                                         , UpdateNews.cat_id  = 1
+                                         , UpdateNews.token   = "notauthor"
+                                         , UpdateNews.news_id = 1
+                                         , UpdateNews.name    = "name"
+                                         }
+      `shouldThrow` anyException
+
+    it "throws exception if news not exist"
+      $             Handlers.updateNews
+                      dbH
+                      UpdateNews.Request { UpdateNews.text    = "text"
+                                         , UpdateNews.cat_id  = 1
+                                         , UpdateNews.token   = "authortoken"
+                                         , UpdateNews.news_id = 0
+                                         , UpdateNews.name    = "name"
+                                         }
+      `shouldThrow` anyException
+
+    it "throws exception if not this author's news"
+      $             Handlers.updateNews
+                      dbH
+                      UpdateNews.Request { UpdateNews.text    = "text"
+                                         , UpdateNews.cat_id  = 1
+                                         , UpdateNews.token   = "author2"
+                                         , UpdateNews.news_id = 1
+                                         , UpdateNews.name    = "name"
+                                         }
+      `shouldThrow` anyException
+
+    it "throws exception if category not exist"
+      $             Handlers.updateNews
+                      dbH
+                      UpdateNews.Request { UpdateNews.text    = "text"
+                                         , UpdateNews.cat_id  = 0
+                                         , UpdateNews.token   = "author"
+                                         , UpdateNews.news_id = 1
+                                         , UpdateNews.name    = "name"
+                                         }
       `shouldThrow` anyException

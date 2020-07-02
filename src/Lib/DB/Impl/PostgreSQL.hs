@@ -92,6 +92,7 @@ newHandle conn logger = DB.Handle
   , DB.publishNews         = f publishNews
   , DB.getNewsMainPhoto    = f getNewsMainPhoto
   , DB.setNewsMainPhoto    = f setNewsMainPhoto
+  , DB.updateNews          = f updateNews
   , DB.isLoginNotExist     = f isLoginNotExist
   , DB.isLoginExist        = f isLoginExist
   , DB.isAuthorExist       = f isAuthorExist
@@ -599,3 +600,20 @@ setNewsMainPhoto conn logg news_id token ext = catchErrorsMaybe logg $ do
   return $ case q of
     [Just (Only imgFile)] -> Just imgFile
     _                     -> Nothing
+
+updateNews
+  :: Connection
+  -> Logger.Logger
+  -> DB.NewsName
+  -> DB.Token
+  -> DB.CategoryID
+  -> DB.NewsText
+  -> DB.NewsID
+  -> DB.MaybeResult ()
+updateNews conn logg name token cat_id text news_id =
+  catchErrorsMaybe logg
+    $   execute
+          conn
+          "update news set name=?, category_id=?, text=? where id=? and author_id=(select id from authors where user_id=(select id from users where token=?));"
+          (name, cat_id, text, news_id, token)
+    >>= execResult

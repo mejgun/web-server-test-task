@@ -88,6 +88,7 @@ data Handle =
     , getNewsMainPhoto :: NewsID -> Token -> EitherResult PhotoPath
     , setNewsMainPhoto :: NewsID -> Token -> PhotoExt -> MaybeResult PhotoPath
     , publishNews :: PublishNews -> NewsID -> Token -> MaybeResult ()
+    , updateNews :: NewsName -> Token -> CategoryID -> NewsText -> NewsID -> MaybeResult ()
     , isLoginNotExist :: Login -> Result Bool
     , isLoginExist :: Login -> Result Bool
     , isAdmin :: Token -> Result Bool

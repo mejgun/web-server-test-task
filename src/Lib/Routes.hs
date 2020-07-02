@@ -33,7 +33,7 @@ runApp dbH logger request respond = case pathInfo request of
   ["tag"     , "delete"       ] -> adm Handlers.deleteTag
   ["tag"     , "get"          ] -> norm Handlers.getTags
   ["news"    , "create"       ] -> norm Handlers.createNews
---   ["news"    , "update"       ] -> norm News.update
+  ["news"    , "update"       ] -> norm Handlers.updateNews
   ["news"    , "publish"      ] -> norm Handlers.publishNews
   ["news"    , "setmainphoto" ] -> norm Handlers.setNewsMainPhoto
   ["news"    , "addphoto"     ] -> norm Handlers.addNewsPhoto

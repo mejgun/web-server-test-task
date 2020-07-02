@@ -467,7 +467,26 @@ setNewsMainPhoto dbH req = do
     _ -> throw ErrorBadRequest
 
 updateNews :: DB.Handle -> UpdateNews.Request -> Result String
-updateNews dbH req = undefined
+updateNews dbH req = do
+  author <- DB.isAuthor dbH (UpdateNews.token req)
+  unless author (throw ErrorNotAuthor)
+  newsexist <- DB.isNewsExist dbH (UpdateNews.news_id req)
+  unless newsexist (throw ErrorNewsNotExist)
+  newsAuthor <- DB.thisNewsAuthor dbH
+                                  (UpdateNews.news_id req)
+                                  (UpdateNews.token req)
+  unless newsAuthor (throw ErrorNotYourNews)
+  catexist <- DB.isCategoryExist dbH (UpdateNews.cat_id req)
+  unless catexist (throw ErrorCategoryNotExist)
+  res <- DB.updateNews dbH
+                       (UpdateNews.name req)
+                       (UpdateNews.token req)
+                       (UpdateNews.cat_id req)
+                       (UpdateNews.text req)
+                       (UpdateNews.news_id req)
+  case res of
+    Just () -> return justOK
+    _       -> throw ErrorBadRequest
 
 isValidPage :: Int -> Bool
 isValidPage = (> 0)
