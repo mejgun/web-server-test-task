@@ -3,6 +3,7 @@ module Lib.DB where
 import qualified Lib.Types.CreateNews          as CreateNews
 import qualified Lib.Types.GetAuthors          as GetAuthors
 import qualified Lib.Types.GetCategories       as GetCategories
+import qualified Lib.Types.GetDrafts           as GetDrafts
 import qualified Lib.Types.GetNewsComments     as GetNewsComments
 import qualified Lib.Types.GetTags             as GetTags
 import qualified Lib.Types.GetUsers            as GetUsers
@@ -91,6 +92,7 @@ data Handle =
     , publishNews :: PublishNews -> NewsID -> Token -> MaybeResult ()
     , updateNews :: NewsName -> Token -> CategoryID -> NewsText -> NewsID -> MaybeResult ()
     , getNewsComments :: NewsID -> Page -> Count -> MaybeResult [GetNewsComments.Comment]
+    , getDrafts :: Page -> Count -> Token -> MaybeResult [GetDrafts.Draft]
     , isLoginNotExist :: Login -> Result Bool
     , isLoginExist :: Login -> Result Bool
     , isAdmin :: Token -> Result Bool

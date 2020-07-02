@@ -412,7 +412,17 @@ deleteNewsTag dbH req = do
     _       -> throw ErrorBadRequest
 
 getDrafts :: DB.Handle -> GetDrafts.Request -> Result [GetDrafts.Draft]
-getDrafts dbH req = undefined
+getDrafts dbH req = do
+  unless (isValidPage (GetDrafts.page req)) (throw ErrorBadPage)
+  author <- DB.isAuthor dbH (GetDrafts.token req)
+  unless author (throw ErrorNotAuthor)
+  res <- DB.getDrafts dbH
+                      (GetDrafts.page req)
+                      (Constants.newsPerPage)
+                      (GetDrafts.token req)
+  case res of
+    Just drafts -> return drafts
+    _           -> throw ErrorBadRequest
 
 getNews :: DB.Handle -> GetNews.Request -> Result [GetNews.News]
 getNews dbH req = undefined

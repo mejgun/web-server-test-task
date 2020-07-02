@@ -903,3 +903,27 @@ main = hspec $ do
                                               , GetNewsComments.news_id = 0
                                               }
       `shouldThrow` anyException
+
+  describe "Handlers.getDrafts" $ do
+
+    it
+      "returns authors drafts"
+      (              Handlers.getDrafts
+          dbH
+          GetDrafts.Request { GetDrafts.page = 1, GetDrafts.token = "author" }
+      `shouldReturn` ([] :: [GetDrafts.Draft])
+      )
+
+    it "throws exception if page<1"
+      $             Handlers.getDrafts
+                      dbH
+                      GetDrafts.Request { GetDrafts.page = 0, GetDrafts.token = "author" }
+      `shouldThrow` anyException
+
+    it "throws exception if user not author"
+      $             Handlers.getDrafts
+                      dbH
+                      GetDrafts.Request { GetDrafts.page  = 1
+                                        , GetDrafts.token = "notauthor"
+                                        }
+      `shouldThrow` anyException

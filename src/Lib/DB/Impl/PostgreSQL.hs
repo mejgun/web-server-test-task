@@ -94,6 +94,7 @@ newHandle conn logger = DB.Handle
   , DB.setNewsMainPhoto    = f setNewsMainPhoto
   , DB.updateNews          = f updateNews
   , DB.getNewsComments     = f getNewsComments
+  , DB.getDrafts           = f getDrafts
   , DB.isLoginNotExist     = f isLoginNotExist
   , DB.isLoginExist        = f isLoginExist
   , DB.isAuthorExist       = f isAuthorExist
@@ -631,4 +632,19 @@ getNewsComments conn logg news_id page count = catchErrorsMaybe logg $ do
     conn
     "select c.id,u.name,u.lastname,c.text from news_comments as c, users as u, news as n where c.user_id=u.id and news_id=? and n.id=c.news_id and n.published=true offset ? limit ?;"
     ([news_id] <> (calcOffsetAndLimil page count))
+  return $ Just r
+
+getDrafts
+  :: Connection
+  -> Logger.Logger
+  -> DB.Page
+  -> DB.Count
+  -> DB.Token
+  -> DB.MaybeResult [GetDrafts.Draft]
+getDrafts conn logg page count token = catchErrorsMaybe logg $ do
+  let [offset, limit] = calcOffsetAndLimil page count
+  r <- query
+    conn
+    "select n.id,n.date::text,n.name,n.text,n.main_photo,array_agg(np.id),array_agg(np.photo),array_agg(nt.tag_id),array_agg(t.name),n.category_id,c.name from news as n left join news_photos as np on n.id=np.news_id left join news_tags as nt on nt.news_id=n.id left join tags as t on t.id=nt.tag_id left join categories as c on c.id=n.category_id left join authors as a on n.author_id=a.id left join users as u on a.user_id=u.id where u.token=? and n.published=false group by n.id, c.name offset ? limit ?;"
+    (token, offset, limit)
   return $ Just r

@@ -45,7 +45,7 @@ runApp dbH logger request respond = case pathInfo request of
   ["news"    , "getcomments"  ] -> norm Handlers.getNewsComments
   ["news"    , "delete"       ] -> norm Handlers.deleteNews
 --   ["news"    , "get"          ] -> norm News.get
---   ["news"    , "getdrafts"    ] -> norm News.getDrafts
+  ["news"    , "getdrafts"    ] -> norm Handlers.getDrafts
   ["images"  , img            ] -> returnFile img respond
   _                             -> return404 respond
  where
