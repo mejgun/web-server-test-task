@@ -653,3 +653,41 @@ main = hspec $ do
                                                 , DeleteNewsComment.comment_id = 1
                                                 }
       `shouldThrow` anyException
+
+  describe "Handlers.deleteNewsPhoto" $ do
+
+    it "deletes news photo"
+      $              Handlers.deleteNewsPhoto
+                       dbH
+                       DeleteNewsPhoto.Request { DeleteNewsPhoto.token = "author"
+                                               , DeleteNewsPhoto.news_id = 1
+                                               , DeleteNewsPhoto.photo_id = 1
+                                               }
+      `shouldReturn` justOK
+
+    it "throws exception if user not author"
+      $             Handlers.deleteNewsPhoto
+                      dbH
+                      DeleteNewsPhoto.Request { DeleteNewsPhoto.token = "notauthor"
+                                              , DeleteNewsPhoto.news_id = 1
+                                              , DeleteNewsPhoto.photo_id = 1
+                                              }
+      `shouldThrow` anyException
+
+    it "throws exception if news not exist"
+      $             Handlers.deleteNewsPhoto
+                      dbH
+                      DeleteNewsPhoto.Request { DeleteNewsPhoto.token = "authortoken"
+                                              , DeleteNewsPhoto.news_id = 0
+                                              , DeleteNewsPhoto.photo_id = 0
+                                              }
+      `shouldThrow` anyException
+
+    it "throws exception if not this author's news"
+      $             Handlers.deleteNewsPhoto
+                      dbH
+                      DeleteNewsPhoto.Request { DeleteNewsPhoto.token = "author2"
+                                              , DeleteNewsPhoto.news_id = 1
+                                              , DeleteNewsPhoto.photo_id = 1
+                                              }
+      `shouldThrow` anyException

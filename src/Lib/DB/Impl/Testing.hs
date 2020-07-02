@@ -37,6 +37,7 @@ newHandle = DB.Handle { DB.createUser          = createUser
                       , DB.createNews          = createNews
                       , DB.deleteNews          = deleteNews
                       , DB.deleteNewsComment   = deleteNewsComment
+                      , DB.deleteNewsPhoto     = deleteNewsPhoto
                       , DB.isLoginNotExist     = isLoginNotExist
                       , DB.isLoginExist        = isLoginExist
                       , DB.isAuthorExist       = isAuthorExist
@@ -142,6 +143,10 @@ deleteNews _ _ = return $ Just []
 
 deleteNewsComment :: DB.CommentID -> DB.MaybeResult ()
 deleteNewsComment _ = return $ Just ()
+
+deleteNewsPhoto
+  :: DB.PhotoID -> DB.NewsID -> DB.Token -> DB.MaybeResult DB.PhotoPath
+deleteNewsPhoto _ _ _ = return $ Just "photo"
 
 isLoginNotExist :: DB.Login -> DB.Result Bool
 isLoginNotExist login = return $ login == "notexistlogin"

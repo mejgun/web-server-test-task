@@ -26,6 +26,8 @@ type PhotoExt = String
 
 type PhotoPath = String
 
+type PhotoID = Int
+
 type Description = String
 
 type CategoryID = Int
@@ -79,6 +81,7 @@ data Handle =
     , createNews :: NewsName -> Token -> CategoryID -> NewsText -> MaybeResult CreateNews.NewsId
     , deleteNews :: NewsID -> Token -> MaybeResult [PhotoPath]
     , deleteNewsComment :: CommentID -> MaybeResult ()
+    , deleteNewsPhoto :: PhotoID -> NewsID -> Token -> MaybeResult PhotoPath
     , isLoginNotExist :: Login -> Result Bool
     , isLoginExist :: Login -> Result Bool
     , isAdmin :: Token -> Result Bool

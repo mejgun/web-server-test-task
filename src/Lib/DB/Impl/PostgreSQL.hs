@@ -87,6 +87,7 @@ newHandle conn logger = DB.Handle
   , DB.createNews          = f createNews
   , DB.deleteNews          = f deleteNews
   , DB.deleteNewsComment   = f deleteNewsComment
+  , DB.deleteNewsPhoto     = f deleteNewsPhoto
   , DB.isLoginNotExist     = f isLoginNotExist
   , DB.isLoginExist        = f isLoginExist
   , DB.isAuthorExist       = f isAuthorExist
@@ -484,9 +485,9 @@ createNews conn logg name token cat_id text = catchErrorsMaybe logg $ do
     conn
     "insert into news (name,date,author_id,category_id,text) values (?,now(),(select id from authors where user_id=(select id from users where token=?)),?,?) returning id;"
     (name, token, cat_id, text)
-  case q of
-    [n] -> return $ Just n
-    _   -> return Nothing
+  return $ case q of
+    [n] -> Just n
+    _   -> Nothing
 
 deleteNews
   :: Connection
@@ -506,10 +507,10 @@ deleteNews conn logg news_id token = catchErrorsMaybe logg $ do
       conn
       "delete from news where id=? and author_id=(select id from authors where user_id=(select id from users where token=?)) returning main_photo;"
       (news_id, token) :: IO [Maybe (Only String)]
-  case mf of
-    [Just (Only f)] -> return $ Just $ photos <> [f]
-    [Nothing      ] -> return $ Just photos
-    _               -> return Nothing
+  return $ case mf of
+    [Just (Only f)] -> Just $ photos <> [f]
+    [Nothing      ] -> Just photos
+    _               -> Nothing
 
 deleteNewsComment
   :: Connection -> Logger.Logger -> DB.CommentID -> DB.MaybeResult ()
@@ -517,3 +518,19 @@ deleteNewsComment conn logg comment_id =
   catchErrorsMaybe logg
     $   execute conn "delete from news_comments where id=?;" [comment_id]
     >>= execResult
+
+deleteNewsPhoto
+  :: Connection
+  -> Logger.Logger
+  -> DB.PhotoID
+  -> DB.NewsID
+  -> DB.Token
+  -> DB.MaybeResult DB.PhotoPath
+deleteNewsPhoto conn logg photo_id news_id token = catchErrorsMaybe logg $ do
+  p <- query
+    conn
+    "delete from news_photos where id=? and news_id=(select id from news where id=? and author_id=(select id from authors where user_id=(select id from users where token=?))) returning photo;"
+    (photo_id, news_id, token)
+  return $ case p of
+    [Just (Only f)] -> Just f
+    _               -> Nothing
