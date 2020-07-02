@@ -89,6 +89,7 @@ newHandle conn logger = DB.Handle
   , DB.deleteNewsComment   = f deleteNewsComment
   , DB.deleteNewsPhoto     = f deleteNewsPhoto
   , DB.deleteNewsTag       = f deleteNewsTag
+  , DB.publishNews         = f publishNews
   , DB.isLoginNotExist     = f isLoginNotExist
   , DB.isLoginExist        = f isLoginExist
   , DB.isAuthorExist       = f isAuthorExist
@@ -549,4 +550,18 @@ deleteNewsTag conn logg tag_id news_id token =
           conn
           "delete from news_tags where tag_id=? and news_id=(select id from news where id=? and author_id=(select id from authors where user_id=(select id from users where token=?)));"
           (tag_id, news_id, token)
+    >>= execResult
+
+publishNews
+  :: Connection
+  -> Logger.Logger
+  -> DB.PublishNews
+  -> DB.NewsID
+  -> DB.Token
+  -> DB.MaybeResult ()
+publishNews conn logg publish news_id token = catchErrorsMaybe logg $ do
+  execute
+      conn
+      "update news set published=? where id=? and author_id=(select id from authors where user_id=(select id from users where token=?));"
+      (publish, news_id, token)
     >>= execResult

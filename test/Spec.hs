@@ -738,3 +738,41 @@ main = hspec $ do
                                             , DeleteNewsTag.news_id = 1
                                             }
       `shouldThrow` anyException
+
+  describe "Handlers.publishNews" $ do
+
+    it "publish news"
+      $              Handlers.publishNews
+                       dbH
+                       PublishNews.Request { PublishNews.publish = True
+                                           , PublishNews.token   = "author"
+                                           , PublishNews.news_id = 1
+                                           }
+      `shouldReturn` justOK
+
+    it "throws exception if user not author"
+      $             Handlers.publishNews
+                      dbH
+                      PublishNews.Request { PublishNews.publish = True
+                                          , PublishNews.token   = "notauthor"
+                                          , PublishNews.news_id = 1
+                                          }
+      `shouldThrow` anyException
+
+    it "throws exception if news not exist"
+      $             Handlers.publishNews
+                      dbH
+                      PublishNews.Request { PublishNews.publish = True
+                                          , PublishNews.token   = "authortoken"
+                                          , PublishNews.news_id = 0
+                                          }
+      `shouldThrow` anyException
+
+    it "throws exception if not this author's news"
+      $             Handlers.publishNews
+                      dbH
+                      PublishNews.Request { PublishNews.publish = True
+                                          , PublishNews.token   = "author2"
+                                          , PublishNews.news_id = 1
+                                          }
+      `shouldThrow` anyException

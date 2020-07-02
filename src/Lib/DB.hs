@@ -50,6 +50,8 @@ type CommentText = String
 
 type CommentID = Int
 
+type PublishNews = Bool
+
 type MaybeResult a = IO (Maybe a)
 
 type EitherResult a = IO (Either () (Maybe a))
@@ -83,6 +85,7 @@ data Handle =
     , deleteNewsComment :: CommentID -> MaybeResult ()
     , deleteNewsPhoto :: PhotoID -> NewsID -> Token -> MaybeResult PhotoPath
     , deleteNewsTag :: TagID -> NewsID -> Token -> MaybeResult ()
+    , publishNews :: PublishNews -> NewsID -> Token -> MaybeResult ()
     , isLoginNotExist :: Login -> Result Bool
     , isLoginExist :: Login -> Result Bool
     , isAdmin :: Token -> Result Bool

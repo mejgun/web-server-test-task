@@ -39,6 +39,7 @@ newHandle = DB.Handle { DB.createUser          = createUser
                       , DB.deleteNewsComment   = deleteNewsComment
                       , DB.deleteNewsPhoto     = deleteNewsPhoto
                       , DB.deleteNewsTag       = deleteNewsTag
+                      , DB.publishNews         = publishNews
                       , DB.isLoginNotExist     = isLoginNotExist
                       , DB.isLoginExist        = isLoginExist
                       , DB.isAuthorExist       = isAuthorExist
@@ -151,6 +152,9 @@ deleteNewsPhoto _ _ _ = return $ Just "photo"
 
 deleteNewsTag :: DB.TagID -> DB.NewsID -> DB.Token -> DB.MaybeResult ()
 deleteNewsTag _ _ _ = return $ Just ()
+
+publishNews :: DB.PublishNews -> DB.NewsID -> DB.Token -> DB.MaybeResult ()
+publishNews _ _ _ = return $ Just ()
 
 isLoginNotExist :: DB.Login -> DB.Result Bool
 isLoginNotExist login = return $ login == "notexistlogin"

@@ -422,7 +422,22 @@ getNewsComments
 getNewsComments dbH req = undefined
 
 publishNews :: DB.Handle -> PublishNews.Request -> Result String
-publishNews dbH req = undefined
+publishNews dbH req = do
+  author <- DB.isAuthor dbH (PublishNews.token req)
+  unless author (throw ErrorNotAuthor)
+  newsexist <- DB.isNewsExist dbH (PublishNews.news_id req)
+  unless newsexist (throw ErrorNewsNotExist)
+  newsAuthor <- DB.thisNewsAuthor dbH
+                                  (PublishNews.news_id req)
+                                  (PublishNews.token req)
+  unless newsAuthor (throw ErrorNotYourNews)
+  res <- DB.publishNews dbH
+                        (PublishNews.publish req)
+                        (PublishNews.news_id req)
+                        (PublishNews.token req)
+  case res of
+    Just () -> return justOK
+    _       -> throw ErrorBadRequest
 
 setNewsMainPhoto :: DB.Handle -> SetNewsMainPhoto.Request -> Result String
 setNewsMainPhoto dbH req = undefined
