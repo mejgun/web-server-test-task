@@ -17,7 +17,6 @@ import           System.IO                      ( Handle
 
 import qualified Lib.Config                    as Config
 import qualified Lib.Constants                 as Constants
-import qualified Lib.DB                        as DB
 import qualified Lib.DB.Impl.PostgreSQL        as DB.Impl.PostgreSQL
 import           Lib.FSUtils                    ( createImagesDir )
 import qualified Lib.Logger                    as Logger

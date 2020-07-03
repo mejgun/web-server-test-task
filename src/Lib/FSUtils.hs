@@ -6,7 +6,6 @@ import           System.Directory               ( createDirectoryIfMissing
                                                 , readable
                                                 , writable
                                                 )
-import           System.Directory               ( removeFile )
 
 import qualified Lib.Constants                 as Constants
 import qualified Lib.Logger                    as Logger

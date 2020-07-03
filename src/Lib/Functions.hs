@@ -15,18 +15,10 @@ import           Blaze.ByteString.Builder       ( Builder
 import           Control.Exception
 import           Data.Aeson                    as A
 import qualified Data.ByteString               as B
-                                                ( ByteString
-                                                , writeFile
-                                                )
+                                                ( ByteString )
 import qualified Data.ByteString.Char8         as B8
 import qualified Data.Text                     as T
 import           Data.Text.Encoding             ( encodeUtf8 )
-import           Database.PostgreSQL.Simple
-import           Database.PostgreSQL.Simple.Types
-                                                ( PGArray(..)
-                                                , Query(..)
-                                                )
-import qualified GHC.Int                        ( Int64 )
 import           Network.HTTP.Types             ( HeaderName
                                                 , status200
                                                 , status400
@@ -38,7 +30,6 @@ import           System.Directory               ( doesFileExist )
 
 import           Lib.Constants
 import qualified Lib.Handlers                  as Handlers
-import qualified Lib.Logger                    as Logger
 
 rIfJsonBody
   :: (FromJSON a, ToJSON b, Show b)

@@ -3,15 +3,15 @@
 module Lib.Types.GetNews where
 
 import qualified Data.Aeson                    as A
-import           Data.Maybe                     ( catMaybes )
 import           Database.PostgreSQL.Simple
 import           Database.PostgreSQL.Simple.FromRow
                                                 ( field
                                                 , fromRow
                                                 )
-import           Database.PostgreSQL.Simple.Types
-                                                ( PGArray(..) )
 import           GHC.Generics
+
+import           Lib.DB.Impl.PostgreSQL.Functions
+                                                ( pgArrayToList )
 
 data Request =
   Request
@@ -31,16 +31,6 @@ data Request =
   deriving (Generic, Show)
 
 instance A.FromJSON Request
-
-data TempCat =
-  TempCat
-    { c_id :: Int
-    , c_name :: String
-    , c_parent :: Maybe Int
-    }
-  deriving (Generic, Show)
-
-instance FromRow TempCat
 
 data Category =
   Category
@@ -86,6 +76,3 @@ instance FromRow News where
       <*> fmap pgArrayToList field
       <*> fmap pgArrayToList field
       <*> field
-
-pgArrayToList :: PGArray (Maybe a) -> [a]
-pgArrayToList = catMaybes . fromPGArray

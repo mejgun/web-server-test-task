@@ -3,7 +3,6 @@
 module Lib.Types.DeleteNews where
 
 import qualified Data.Aeson                    as A
-import           Database.PostgreSQL.Simple
 import           GHC.Generics
 
 data Request =

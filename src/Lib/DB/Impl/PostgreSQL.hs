@@ -7,8 +7,6 @@ where
 
 import           Control.Exception              ( IOException
                                                 , catch
-                                                , handle
-                                                , throw
                                                 , try
                                                 )
 import qualified Data.ByteString               as B
@@ -19,13 +17,10 @@ import           Data.ByteString.Base64         ( decodeLenient )
 import qualified Data.ByteString.Char8         as B8
 import           Data.ByteString.UTF8           ( fromString )
 import           Data.List                      ( sort )
-import           Data.Maybe                     ( catMaybes )
 import qualified Data.Text                     as T
 import           Database.PostgreSQL.Simple
 import           Database.PostgreSQL.Simple.Types
-                                                ( PGArray(..)
-                                                , Query(..)
-                                                )
+                                                ( Query(..) )
 import qualified GHC.Int                        ( Int64 )
 import           System.Directory               ( removeFile )
 
@@ -33,24 +28,7 @@ import qualified Lib.Constants                 as Constants
 import qualified Lib.DB                        as DB
 import qualified Lib.Logger                    as Logger
 
-import qualified Lib.Types.AddNewsComment      as AddNewsComment
-import qualified Lib.Types.AddNewsPhoto        as AddNewsPhoto
-import qualified Lib.Types.AddNewsTag          as AddNewsTag
-import qualified Lib.Types.CreateCategory      as CreateCategory
 import qualified Lib.Types.CreateNews          as CreateNews
-import qualified Lib.Types.CreateTag           as CreateTag
-import qualified Lib.Types.CreateUser          as CreateUser
-import qualified Lib.Types.DeleteAuthor        as DeleteAuthor
-import qualified Lib.Types.DeleteCategory      as DeleteCategory
-import qualified Lib.Types.DeleteNews          as DeleteNews
-import qualified Lib.Types.DeleteNewsComment   as DeleteNewsComment
-import qualified Lib.Types.DeleteNewsPhoto     as DeleteNewsPhoto
-import qualified Lib.Types.DeleteNewsTag       as DeleteNewsTag
-import qualified Lib.Types.DeleteTag           as DeleteTag
-import qualified Lib.Types.DeleteUser          as DeleteUser
-import qualified Lib.Types.EditAuthor          as EditAuthor
-import qualified Lib.Types.EditCategory        as EditCategory
-import qualified Lib.Types.EditTag             as EditTag
 import qualified Lib.Types.GetAuthors          as GetAuthors
 import qualified Lib.Types.GetCategories       as GetCategories
 import qualified Lib.Types.GetDrafts           as GetDrafts
@@ -58,11 +36,6 @@ import qualified Lib.Types.GetNews             as GetNews
 import qualified Lib.Types.GetNewsComments     as GetNewsComments
 import qualified Lib.Types.GetTags             as GetTags
 import qualified Lib.Types.GetUsers            as GetUsers
-import qualified Lib.Types.LoginUser           as LoginUser
-import qualified Lib.Types.MakeAuthor          as MakeAuthor
-import qualified Lib.Types.PublishNews         as PublishNews
-import qualified Lib.Types.SetNewsMainPhoto    as SetNewsMainPhoto
-import qualified Lib.Types.UpdateNews          as UpdateNews
 
 newHandle :: Connection -> Logger.Logger -> DB.Handle
 newHandle conn logger = DB.Handle
@@ -405,7 +378,7 @@ getCategories conn logg page count = catchErrorsMaybe logg $ do
   return $ Just res
 
 getCategoriesAll :: Connection -> Logger.Logger -> DB.Result [GetCategories.Cat]
-getCategoriesAll conn logg = do
+getCategoriesAll conn _ = do
   res <- query_ conn "select id,name,parent from categories;"
   return res
 

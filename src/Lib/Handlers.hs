@@ -39,9 +39,7 @@ where
 import           Control.Exception              ( Exception
                                                 , throw
                                                 )
-import           Control.Monad                  ( unless
-                                                , when
-                                                )
+import           Control.Monad                  ( unless )
 import           Data.Char                      ( toLower )
 import           Data.Maybe                     ( fromJust
                                                 , isJust
@@ -80,7 +78,6 @@ import qualified Lib.Types.UpdateNews          as UpdateNews
 
 import qualified Lib.Constants                 as Constants
 import qualified Lib.DB                        as DB
-import qualified Lib.Logger                    as Logger
 
 data ResultResponseError
   = ErrorNotFound
@@ -117,9 +114,9 @@ createUser dbH req = do
                                   (CreateUser.password req)
                                   ext
       case r of
-        Just fileName -> do
-          DB.saveImage dbH fileName $ fromJust (CreateUser.photo req)
-          return justOK
+        Just fileName ->
+          saveImage dbH fileName (fromJust (CreateUser.photo req))
+            >> return justOK
         _ -> throw ErrorBadRequest
     else do
       r <- DB.createUser dbH
@@ -131,7 +128,7 @@ createUser dbH req = do
 
 getUsers :: DB.Handle -> GetUsers.Request -> Result [GetUsers.User]
 getUsers dbH req = do
-  unless (isValidPage (GetUsers.page req)) (throw ErrorBadPage)
+  checkIfValidPage (GetUsers.page req)
   r <- DB.getUsers dbH (GetUsers.page req) Constants.usersPerPage
   case r of
     Just users -> return users
@@ -139,13 +136,11 @@ getUsers dbH req = do
 
 deleteUser :: DB.Handle -> DeleteUser.Request -> Result String
 deleteUser dbH req = do
-  admin <- DB.isAdmin dbH (DeleteUser.token req)
-  unless admin (throw ErrorNotFound)
-  exist <- DB.isLoginExist dbH (DeleteUser.login req)
-  unless exist (throw ErrorBadRequest)
+  checkIfAdmin dbH (DeleteUser.token req)
+  checkIfLoginExist dbH (DeleteUser.login req)
   photo <- DB.deleteUser dbH (DeleteUser.login req)
   case photo of
-    Right (Just f) -> DB.deleteFile dbH f >> return justOK
+    Right (Just f) -> deleteFile dbH f >> return justOK
     Left  _        -> throw ErrorBadRequest
     _              -> return justOK
 
@@ -158,27 +153,22 @@ loginUser dbH req = do
 
 deleteAuthor :: DB.Handle -> DeleteAuthor.Request -> Result String
 deleteAuthor dbH req = do
-  admin <- DB.isAdmin dbH (DeleteAuthor.token req)
-  unless admin (throw ErrorNotFound)
-  exist <- DB.isAuthorExist dbH (DeleteAuthor.login req)
-  unless exist (throw ErrorAuthorNotExist)
+  checkIfAdmin dbH (DeleteAuthor.token req)
+  checkIfAuthorExist dbH (DeleteAuthor.login req)
   res <- DB.deleteAuthor dbH (DeleteAuthor.login req)
   if isJust res then return justOK else throw ErrorBadRequest
 
 editAuthor :: DB.Handle -> EditAuthor.Request -> Result String
 editAuthor dbH req = do
-  admin <- DB.isAdmin dbH (EditAuthor.token req)
-  unless admin (throw ErrorNotFound)
-  exist <- DB.isAuthorExist dbH (EditAuthor.login req)
-  unless exist (throw ErrorAuthorNotExist)
+  checkIfAdmin dbH (EditAuthor.token req)
+  checkIfAuthorExist dbH (EditAuthor.login req)
   res <- DB.editAuthor dbH (EditAuthor.login req) (EditAuthor.descr req)
   if isJust res then return justOK else throw ErrorBadRequest
 
 getAuthors :: DB.Handle -> GetAuthors.Request -> Result [GetAuthors.Author]
 getAuthors dbH req = do
-  admin <- DB.isAdmin dbH (GetAuthors.token req)
-  unless admin                               (throw ErrorNotFound)
-  unless (isValidPage (GetAuthors.page req)) (throw ErrorBadPage)
+  checkIfAdmin dbH (GetAuthors.token req)
+  checkIfValidPage (GetAuthors.page req)
   res <- DB.getAuthors dbH (GetAuthors.page req) Constants.authorsPerPage
   case res of
     Just authors -> return authors
@@ -186,17 +176,14 @@ getAuthors dbH req = do
 
 makeAuthor :: DB.Handle -> MakeAuthor.Request -> Result String
 makeAuthor dbH req = do
-  admin <- DB.isAdmin dbH (MakeAuthor.token req)
-  unless admin (throw ErrorNotFound)
-  exist <- DB.isLoginExist dbH (MakeAuthor.login req)
-  unless exist (throw ErrorLoginNotExist)
+  checkIfAdmin dbH (MakeAuthor.token req)
+  checkIfLoginExist dbH (MakeAuthor.login req)
   res <- DB.makeAuthor dbH (MakeAuthor.login req) (MakeAuthor.descr req)
   if isJust res then return justOK else throw ErrorBadRequest
 
 createCategory :: DB.Handle -> CreateCategory.Request -> Result String
 createCategory dbH req = do
-  admin <- DB.isAdmin dbH (CreateCategory.token req)
-  unless admin (throw ErrorNotFound)
+  checkIfAdmin dbH (CreateCategory.token req)
   res <- DB.createCategory dbH
                            (CreateCategory.name req)
                            (CreateCategory.parent req)
@@ -204,19 +191,15 @@ createCategory dbH req = do
 
 deleteCategory :: DB.Handle -> DeleteCategory.Request -> Result String
 deleteCategory dbH req = do
-  admin <- DB.isAdmin dbH (DeleteCategory.token req)
-  unless admin (throw ErrorNotFound)
-  exist <- DB.isCategoryExist dbH (DeleteCategory.cat_id req)
-  unless exist (throw ErrorCategoryNotExist)
+  checkIfAdmin dbH (DeleteCategory.token req)
+  checkIfCategoryExist dbH (DeleteCategory.cat_id req)
   res <- DB.deleteCategory dbH (DeleteCategory.cat_id req)
   if isJust res then return justOK else throw ErrorBadRequest
 
 editCategory :: DB.Handle -> EditCategory.Request -> Result String
 editCategory dbH req = do
-  admin <- DB.isAdmin dbH (EditCategory.token req)
-  unless admin (throw ErrorNotFound)
-  exist <- DB.isCategoryExist dbH (EditCategory.cat_id req)
-  unless exist (throw ErrorCategoryNotExist)
+  checkIfAdmin dbH (EditCategory.token req)
+  checkIfCategoryExist dbH (EditCategory.cat_id req)
   res <- DB.editCategory dbH
                          (EditCategory.cat_id req)
                          (EditCategory.name req)
@@ -226,7 +209,7 @@ editCategory dbH req = do
 getCategories
   :: DB.Handle -> GetCategories.Request -> Result [GetCategories.Cat]
 getCategories dbH req = do
-  unless (isValidPage (GetCategories.page req)) (throw ErrorBadPage)
+  checkIfValidPage (GetCategories.page req)
   res <- DB.getCategories dbH
                           (GetCategories.page req)
                           Constants.categoriesPerPage
@@ -236,8 +219,7 @@ getCategories dbH req = do
 
 createTag :: DB.Handle -> CreateTag.Request -> Result String
 createTag dbH req = do
-  admin <- DB.isAdmin dbH (CreateTag.token req)
-  unless admin (throw ErrorNotFound)
+  checkIfAdmin dbH (CreateTag.token req)
   notexist <- DB.isTagNotExist dbH (CreateTag.name req)
   unless notexist (throw ErrorTagAlreadyExist)
   res <- DB.createTag dbH (CreateTag.name req)
@@ -247,10 +229,8 @@ createTag dbH req = do
 
 deleteTag :: DB.Handle -> DeleteTag.Request -> Result String
 deleteTag dbH req = do
-  admin <- DB.isAdmin dbH (DeleteTag.token req)
-  unless admin (throw ErrorNotFound)
-  exist <- DB.isTagExist dbH (DeleteTag.tag_id req)
-  unless exist (throw ErrorTagNotExist)
+  checkIfAdmin dbH (DeleteTag.token req)
+  checkIfTagExist dbH (DeleteTag.tag_id req)
   res <- DB.deleteTag dbH (DeleteTag.tag_id req)
   case res of
     Just () -> return justOK
@@ -258,10 +238,8 @@ deleteTag dbH req = do
 
 editTag :: DB.Handle -> EditTag.Request -> Result String
 editTag dbH req = do
-  admin <- DB.isAdmin dbH (EditTag.token req)
-  unless admin (throw ErrorNotFound)
-  exist <- DB.isTagExist dbH (EditTag.tag_id req)
-  unless exist (throw ErrorTagNotExist)
+  checkIfAdmin dbH (EditTag.token req)
+  checkIfTagExist dbH (EditTag.tag_id req)
   res <- DB.editTag dbH (EditTag.tag_id req) (EditTag.name req)
   case res of
     Just () -> return justOK
@@ -269,7 +247,7 @@ editTag dbH req = do
 
 getTags :: DB.Handle -> GetTags.Request -> Result [GetTags.Tag]
 getTags dbH req = do
-  unless (isValidPage (GetTags.page req)) (throw ErrorBadPage)
+  checkIfValidPage (GetTags.page req)
   res <- DB.getTags dbH (GetTags.page req) Constants.tagsPerPage
   case res of
     Just tags -> return tags
@@ -277,8 +255,7 @@ getTags dbH req = do
 
 addNewsComment :: DB.Handle -> AddNewsComment.Request -> Result String
 addNewsComment dbH req = do
-  published <- DB.isNewsPublished dbH (AddNewsComment.news_id req)
-  unless published (throw ErrorNewsNotExist)
+  checkIfNewsPublished dbH (AddNewsComment.news_id req)
   user <- DB.isUser dbH (AddNewsComment.token req)
   unless user (throw ErrorNotUser)
   res <- DB.addNewsComment dbH
@@ -291,37 +268,25 @@ addNewsComment dbH req = do
 
 addNewsPhoto :: DB.Handle -> AddNewsPhoto.Request -> Result String
 addNewsPhoto dbH req = do
-  author <- DB.isAuthor dbH (AddNewsPhoto.token req)
-  unless author (throw ErrorNotAuthor)
-  exist <- DB.isNewsExist dbH (AddNewsPhoto.news_id req)
-  unless exist (throw ErrorNewsNotExist)
-  newsAuthor <- DB.thisNewsAuthor dbH
-                                  (AddNewsPhoto.news_id req)
-                                  (AddNewsPhoto.token req)
-  unless newsAuthor (throw ErrorNotYourNews)
+  checkIfAuthor dbH (AddNewsPhoto.token req)
+  checkIfNewsExist dbH (AddNewsPhoto.news_id req)
+  checkIfThisNewsAuthor dbH (AddNewsPhoto.news_id req) (AddNewsPhoto.token req)
   let ext = makeExt (AddNewsPhoto.photo_type req)
   res <- DB.addNewsPhoto dbH
                          (AddNewsPhoto.news_id req)
                          (AddNewsPhoto.token req)
                          ext
   case res of
-    Just imgFile -> do
-      DB.saveImage dbH imgFile (AddNewsPhoto.photo req)
-      return justOK
+    Just imgFile ->
+      saveImage dbH imgFile (AddNewsPhoto.photo req) >> return justOK
     _ -> throw ErrorBadRequest
 
 addNewsTag :: DB.Handle -> AddNewsTag.Request -> Result String
 addNewsTag dbH req = do
-  author <- DB.isAuthor dbH (AddNewsTag.token req)
-  unless author (throw ErrorNotAuthor)
-  newsexist <- DB.isNewsExist dbH (AddNewsTag.news_id req)
-  unless newsexist (throw ErrorNewsNotExist)
-  newsAuthor <- DB.thisNewsAuthor dbH
-                                  (AddNewsTag.news_id req)
-                                  (AddNewsTag.token req)
-  unless newsAuthor (throw ErrorNotYourNews)
-  tagexist <- DB.isTagExist dbH (AddNewsTag.tag_id req)
-  unless tagexist (throw ErrorTagNotExist)
+  checkIfAuthor dbH (AddNewsTag.token req)
+  checkIfNewsExist dbH (AddNewsTag.news_id req)
+  checkIfThisNewsAuthor dbH (AddNewsTag.news_id req) (AddNewsTag.token req)
+  checkIfTagExist dbH (AddNewsTag.tag_id req)
   res <- DB.addNewsTag dbH
                        (AddNewsTag.news_id req)
                        (AddNewsTag.tag_id req)
@@ -332,10 +297,8 @@ addNewsTag dbH req = do
 
 createNews :: DB.Handle -> CreateNews.Request -> Result CreateNews.NewsId
 createNews dbH req = do
-  author <- DB.isAuthor dbH (CreateNews.token req)
-  unless author (throw ErrorNotAuthor)
-  exist <- DB.isCategoryExist dbH (CreateNews.cat_id req)
-  unless exist (throw ErrorCategoryNotExist)
+  checkIfAuthor dbH (CreateNews.token req)
+  checkIfCategoryExist dbH (CreateNews.cat_id req)
   res <- DB.createNews dbH
                        (CreateNews.name req)
                        (CreateNews.token req)
@@ -347,27 +310,21 @@ createNews dbH req = do
 
 deleteNews :: DB.Handle -> DeleteNews.Request -> Result String
 deleteNews dbH req = do
-  author <- DB.isAuthor dbH (DeleteNews.token req)
-  unless author (throw ErrorNotAuthor)
-  exist <- DB.isNewsExist dbH (DeleteNews.news_id req)
-  unless exist (throw ErrorNewsNotExist)
-  newsAuthor <- DB.thisNewsAuthor dbH
-                                  (DeleteNews.news_id req)
-                                  (DeleteNews.token req)
-  unless newsAuthor (throw ErrorNotYourNews)
+  checkIfAuthor dbH (DeleteNews.token req)
+  checkIfNewsExist dbH (DeleteNews.news_id req)
+  checkIfThisNewsAuthor dbH (DeleteNews.news_id req) (DeleteNews.token req)
   maybephotos <- DB.deleteNews dbH
                                (DeleteNews.news_id req)
                                (DeleteNews.token req)
   case maybephotos of
     Just photos -> do
-      mapM_ (DB.deleteFile dbH) photos
+      mapM_ (deleteFile dbH) photos
       return justOK
     _ -> throw ErrorBadRequest
 
 deleteNewsComment :: DB.Handle -> DeleteNewsComment.Request -> Result String
 deleteNewsComment dbH req = do
-  admin <- DB.isAdmin dbH (DeleteNewsComment.token req)
-  unless admin (throw ErrorNotFound)
+  checkIfAdmin dbH (DeleteNewsComment.token req)
   res <- DB.deleteNewsComment dbH (DeleteNewsComment.comment_id req)
   case res of
     Just () -> return justOK
@@ -375,34 +332,27 @@ deleteNewsComment dbH req = do
 
 deleteNewsPhoto :: DB.Handle -> DeleteNewsPhoto.Request -> Result String
 deleteNewsPhoto dbH req = do
-  author <- DB.isAuthor dbH (DeleteNewsPhoto.token req)
-  unless author (throw ErrorNotAuthor)
-  exist <- DB.isNewsExist dbH (DeleteNewsPhoto.news_id req)
-  unless exist (throw ErrorNewsNotExist)
-  newsAuthor <- DB.thisNewsAuthor dbH
-                                  (DeleteNewsPhoto.news_id req)
-                                  (DeleteNewsPhoto.token req)
-  unless newsAuthor (throw ErrorNotYourNews)
+  checkIfAuthor dbH (DeleteNewsPhoto.token req)
+  checkIfNewsExist dbH (DeleteNewsPhoto.news_id req)
+  checkIfThisNewsAuthor dbH
+                        (DeleteNewsPhoto.news_id req)
+                        (DeleteNewsPhoto.token req)
   res <- DB.deleteNewsPhoto dbH
                             (DeleteNewsPhoto.photo_id req)
                             (DeleteNewsPhoto.news_id req)
                             (DeleteNewsPhoto.token req)
   case res of
-    Just photo -> DB.deleteFile dbH photo >> return justOK
+    Just photo -> deleteFile dbH photo >> return justOK
     _          -> throw ErrorBadRequest
 
 deleteNewsTag :: DB.Handle -> DeleteNewsTag.Request -> Result String
 deleteNewsTag dbH req = do
-  author <- DB.isAuthor dbH (DeleteNewsTag.token req)
-  unless author (throw ErrorNotAuthor)
-  newsexist <- DB.isNewsExist dbH (DeleteNewsTag.news_id req)
-  unless newsexist (throw ErrorNewsNotExist)
-  newsAuthor <- DB.thisNewsAuthor dbH
-                                  (DeleteNewsTag.news_id req)
-                                  (DeleteNewsTag.token req)
-  unless newsAuthor (throw ErrorNotYourNews)
-  tagexist <- DB.isTagExist dbH (DeleteNewsTag.tag_id req)
-  unless tagexist (throw ErrorTagNotExist)
+  checkIfAuthor dbH (DeleteNewsTag.token req)
+  checkIfNewsExist dbH (DeleteNewsTag.news_id req)
+  checkIfThisNewsAuthor dbH
+                        (DeleteNewsTag.news_id req)
+                        (DeleteNewsTag.token req)
+  checkIfTagExist dbH (DeleteNewsTag.tag_id req)
   res <- DB.deleteNewsTag dbH
                           (DeleteNewsTag.tag_id req)
                           (DeleteNewsTag.news_id req)
@@ -413,9 +363,8 @@ deleteNewsTag dbH req = do
 
 getDrafts :: DB.Handle -> GetDrafts.Request -> Result [GetDrafts.Draft]
 getDrafts dbH req = do
-  unless (isValidPage (GetDrafts.page req)) (throw ErrorBadPage)
-  author <- DB.isAuthor dbH (GetDrafts.token req)
-  unless author (throw ErrorNotAuthor)
+  checkIfValidPage (GetDrafts.page req)
+  checkIfAuthor dbH (GetDrafts.token req)
   res <- DB.getDrafts dbH
                       (GetDrafts.page req)
                       (Constants.newsPerPage)
@@ -426,7 +375,7 @@ getDrafts dbH req = do
 
 getNews :: DB.Handle -> GetNews.Request -> Result [GetNews.News]
 getNews dbH req = do
-  unless (isValidPage (GetNews.page req)) (throw ErrorBadPage)
+  checkIfValidPage (GetNews.page req)
   maybenews <- DB.getNews dbH
                           (GetNews.created_at req)
                           (GetNews.created_before req)
@@ -463,27 +412,21 @@ getNews dbH req = do
 getNewsComments
   :: DB.Handle -> GetNewsComments.Request -> Result [GetNewsComments.Comment]
 getNewsComments dbH req = do
-  unless (isValidPage (GetNewsComments.page req)) (throw ErrorBadPage)
-  published <- DB.isNewsPublished dbH (GetNewsComments.news_id req)
-  unless published (throw ErrorNewsNotExist)
+  checkIfValidPage (GetNewsComments.page req)
+  checkIfNewsPublished dbH (GetNewsComments.news_id req)
   res <- DB.getNewsComments dbH
                             (GetNewsComments.news_id req)
                             (GetNewsComments.page req)
                             (Constants.commentsPerPage)
   case res of
-    Just res -> return res
-    _        -> throw ErrorBadRequest
+    Just comments -> return comments
+    _             -> throw ErrorBadRequest
 
 publishNews :: DB.Handle -> PublishNews.Request -> Result String
 publishNews dbH req = do
-  author <- DB.isAuthor dbH (PublishNews.token req)
-  unless author (throw ErrorNotAuthor)
-  newsexist <- DB.isNewsExist dbH (PublishNews.news_id req)
-  unless newsexist (throw ErrorNewsNotExist)
-  newsAuthor <- DB.thisNewsAuthor dbH
-                                  (PublishNews.news_id req)
-                                  (PublishNews.token req)
-  unless newsAuthor (throw ErrorNotYourNews)
+  checkIfAuthor dbH (PublishNews.token req)
+  checkIfNewsExist dbH (PublishNews.news_id req)
+  checkIfThisNewsAuthor dbH (PublishNews.news_id req) (PublishNews.token req)
   res <- DB.publishNews dbH
                         (PublishNews.publish req)
                         (PublishNews.news_id req)
@@ -494,19 +437,16 @@ publishNews dbH req = do
 
 setNewsMainPhoto :: DB.Handle -> SetNewsMainPhoto.Request -> Result String
 setNewsMainPhoto dbH req = do
-  author <- DB.isAuthor dbH (SetNewsMainPhoto.token req)
-  unless author (throw ErrorNotAuthor)
-  newsexist <- DB.isNewsExist dbH (SetNewsMainPhoto.news_id req)
-  unless newsexist (throw ErrorNewsNotExist)
-  newsAuthor <- DB.thisNewsAuthor dbH
-                                  (SetNewsMainPhoto.news_id req)
-                                  (SetNewsMainPhoto.token req)
-  unless newsAuthor (throw ErrorNotYourNews)
+  checkIfAuthor dbH (SetNewsMainPhoto.token req)
+  checkIfNewsExist dbH (SetNewsMainPhoto.news_id req)
+  checkIfThisNewsAuthor dbH
+                        (SetNewsMainPhoto.news_id req)
+                        (SetNewsMainPhoto.token req)
   oldphoto <- DB.getNewsMainPhoto dbH
                                   (SetNewsMainPhoto.news_id req)
                                   (SetNewsMainPhoto.token req)
   case oldphoto of
-    Right (Just photo) -> DB.deleteFile dbH photo >> return ()
+    Right (Just photo) -> deleteFile dbH photo >> return ()
     Left  ()           -> throw ErrorInternal
     Right Nothing      -> return ()
   let ext = makeExt (SetNewsMainPhoto.photo_type req)
@@ -516,21 +456,15 @@ setNewsMainPhoto dbH req = do
                              ext
   case res of
     Just photo ->
-      DB.saveImage dbH photo (SetNewsMainPhoto.photo req) >> return justOK
+      saveImage dbH photo (SetNewsMainPhoto.photo req) >> return justOK
     _ -> throw ErrorBadRequest
 
 updateNews :: DB.Handle -> UpdateNews.Request -> Result String
 updateNews dbH req = do
-  author <- DB.isAuthor dbH (UpdateNews.token req)
-  unless author (throw ErrorNotAuthor)
-  newsexist <- DB.isNewsExist dbH (UpdateNews.news_id req)
-  unless newsexist (throw ErrorNewsNotExist)
-  newsAuthor <- DB.thisNewsAuthor dbH
-                                  (UpdateNews.news_id req)
-                                  (UpdateNews.token req)
-  unless newsAuthor (throw ErrorNotYourNews)
-  catexist <- DB.isCategoryExist dbH (UpdateNews.cat_id req)
-  unless catexist (throw ErrorCategoryNotExist)
+  checkIfAuthor dbH (UpdateNews.token req)
+  checkIfNewsExist dbH (UpdateNews.news_id req)
+  checkIfThisNewsAuthor dbH (UpdateNews.news_id req) (UpdateNews.token req)
+  checkIfCategoryExist dbH (UpdateNews.cat_id req)
   res <- DB.updateNews dbH
                        (UpdateNews.name req)
                        (UpdateNews.token req)
@@ -550,7 +484,61 @@ justOK = "ok"
 makeExt :: Maybe String -> String
 makeExt = maybe ".jpg" $ (++) "." . (map toLower)
 
-ifAdmin :: DB.Handle -> DB.Login -> DB.Result ()
-ifAdmin dbH token = do
+checkIfAdmin :: DB.Handle -> DB.Token -> DB.Result ()
+checkIfAdmin dbH token = do
   admin <- DB.isAdmin dbH token
   unless admin (throw ErrorNotFound)
+
+checkIfAuthor :: DB.Handle -> DB.Token -> DB.Result ()
+checkIfAuthor dbH token = do
+  author <- DB.isAuthor dbH token
+  unless author (throw ErrorNotAuthor)
+
+checkIfValidPage :: DB.Page -> DB.Result ()
+checkIfValidPage page = do
+  unless (isValidPage page) (throw ErrorBadPage)
+
+checkIfNewsExist :: DB.Handle -> DB.NewsID -> DB.Result ()
+checkIfNewsExist dbH news_id = do
+  exist <- DB.isNewsExist dbH news_id
+  unless exist (throw ErrorNewsNotExist)
+
+checkIfThisNewsAuthor :: DB.Handle -> DB.NewsID -> DB.Token -> DB.Result ()
+checkIfThisNewsAuthor dbH news_id token = do
+  newsAuthor <- DB.thisNewsAuthor dbH news_id token
+  unless newsAuthor (throw ErrorNotYourNews)
+
+checkIfCategoryExist :: DB.Handle -> DB.CategoryID -> DB.Result ()
+checkIfCategoryExist dbH cat_id = do
+  exist <- DB.isCategoryExist dbH cat_id
+  unless exist (throw ErrorCategoryNotExist)
+
+checkIfNewsPublished :: DB.Handle -> DB.NewsID -> DB.Result ()
+checkIfNewsPublished dbH news_id = do
+  published <- DB.isNewsPublished dbH news_id
+  unless published (throw ErrorNewsNotExist)
+
+checkIfLoginExist :: DB.Handle -> DB.Login -> DB.Result ()
+checkIfLoginExist dbH login = do
+  exist <- DB.isLoginExist dbH login
+  unless exist (throw ErrorLoginNotExist)
+
+checkIfAuthorExist :: DB.Handle -> DB.Login -> DB.Result ()
+checkIfAuthorExist dbH login = do
+  exist <- DB.isAuthorExist dbH login
+  unless exist (throw ErrorAuthorNotExist)
+
+checkIfTagExist :: DB.Handle -> DB.TagID -> DB.Result ()
+checkIfTagExist dbH tag_id = do
+  exist <- DB.isTagExist dbH tag_id
+  unless exist (throw ErrorTagNotExist)
+
+deleteFile :: DB.Handle -> FilePath -> DB.Result ()
+deleteFile dbH file = do
+  ok <- DB.deleteFile dbH file
+  unless ok (throw ErrorInternal)
+
+saveImage :: DB.Handle -> FilePath -> DB.Base64String -> DB.Result ()
+saveImage dbH path photo = do
+  ok <- DB.saveImage dbH path photo
+  unless ok (throw ErrorInternal)

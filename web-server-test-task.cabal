@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: cf33a8f70d6dcadf2335bf4a03a563d48fed610251e2fe4785c42ab068bd699b
+-- hash: 905b77c9f94dbd02ef2792d6c763e43d105d199a9bf258c4b70736b8bfb5411b
 
 name:           web-server-test-task
 version:        0.1.0.0
@@ -31,6 +31,7 @@ library
       Lib.Constants
       Lib.DB
       Lib.DB.Impl.PostgreSQL
+      Lib.DB.Impl.PostgreSQL.Functions
       Lib.DB.Impl.Testing
       Lib.FSUtils
       Lib.Functions

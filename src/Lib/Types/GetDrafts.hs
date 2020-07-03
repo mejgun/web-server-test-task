@@ -4,7 +4,6 @@ module Lib.Types.GetDrafts where
 
 import           Control.Monad                  ( liftM2 )
 import qualified Data.Aeson                    as A
-import           Data.Maybe                     ( catMaybes )
 import           Database.PostgreSQL.Simple
 import           Database.PostgreSQL.Simple.FromRow
                                                 ( field
@@ -13,6 +12,9 @@ import           Database.PostgreSQL.Simple.FromRow
 import           Database.PostgreSQL.Simple.Types
                                                 ( PGArray(..) )
 import           GHC.Generics
+
+import           Lib.DB.Impl.PostgreSQL.Functions
+                                                ( zipPGarrays )
 
 data Request =
   Request
@@ -76,9 +78,3 @@ data Tag =
   deriving (Generic, Show, Eq)
 
 instance A.ToJSON Tag
-
-zipPGarrays :: PGArray (Maybe a) -> PGArray (Maybe b) -> [(a, b)]
-zipPGarrays a1 a2 = zip (pgArrayToList a1) (pgArrayToList a2)
-
-pgArrayToList :: PGArray (Maybe a) -> [a]
-pgArrayToList = catMaybes . fromPGArray
