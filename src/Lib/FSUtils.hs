@@ -11,13 +11,13 @@ import qualified Lib.Constants                 as Constants
 import qualified Lib.Logger                    as Logger
 
 createImagesDir :: Logger.Logger -> IO ()
-createImagesDir l = do
-  handle (\e -> l Logger.LogQuiet (show (e :: IOException)) >> throw e)
+createImagesDir logg = do
+  handle (\e -> logg Logger.LogQuiet (show (e :: IOException)) >> throw e)
     $ createDirectoryIfMissing False Constants.imagesDir
-  p <- getPermissions Constants.imagesDir
-  if readable p && writable p
+  perm <- getPermissions Constants.imagesDir
+  if readable perm && writable perm
     then return ()
     else do
       let e = Constants.imagesDir ++ " access denied"
-      l Logger.LogQuiet e
+      logg Logger.LogQuiet e
       error e

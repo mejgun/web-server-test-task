@@ -34,10 +34,11 @@ data Config =
 
 read :: FilePath -> IO Config
 read f = do
-  j <- fromMaybe (error "ERROR: Bad config") <$> A.decodeFileStrict f :: IO Conf
-  c <- connectPostgreSQL $ B8.pack $ pgconfig j
-  let lgLvl = strToLogLevel $ log_level j
-  return Config { connection = c, logFile = log_file j, logLevel = lgLvl }
+  conf <-
+    fromMaybe (error "ERROR: Bad config") <$> A.decodeFileStrict f :: IO Conf
+  conn <- connectPostgreSQL $ B8.pack $ pgconfig conf
+  let lgLvl = strToLogLevel $ log_level conf
+  return Config { connection = conn, logFile = log_file conf, logLevel = lgLvl }
  where
   strToLogLevel :: String -> Logger.LogLevel
   strToLogLevel s = case s of

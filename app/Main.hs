@@ -34,13 +34,13 @@ main = do
   putStrLn "Server started"
   l <- mkReqLogger fileH conf
   run 8080 $ l $ Routes.runApp postgresH logger
-
-mkReqLogger :: Handle -> Config.Config -> IO Middleware
-mkReqLogger hnd conf = RL.mkRequestLogger $ def
-  { RL.outputFormat = case Config.logLevel conf of
-    Logger.LogDebug  -> RL.Detailed False
-    Logger.LogNormal -> RL.Apache RL.FromSocket
-    Logger.LogQuiet  -> RL.CustomOutputFormat (\_ _ _ _ -> "")
-  , RL.autoFlush    = True
-  , RL.destination  = RL.Handle hnd
-  }
+ where
+  mkReqLogger :: Handle -> Config.Config -> IO Middleware
+  mkReqLogger hnd conf = RL.mkRequestLogger $ def
+    { RL.outputFormat = case Config.logLevel conf of
+      Logger.LogDebug  -> RL.Detailed False
+      Logger.LogNormal -> RL.Apache RL.FromSocket
+      Logger.LogQuiet  -> RL.CustomOutputFormat (\_ _ _ _ -> "")
+    , RL.autoFlush    = True
+    , RL.destination  = RL.Handle hnd
+    }

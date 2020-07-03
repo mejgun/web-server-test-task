@@ -277,8 +277,10 @@ loginUser conn logg login password = catchErrorsMaybe logg $ do
   t <-
     query conn
           "select token from users where login=? and password=md5(?);"
-          [login, password] :: IO [DB.Token]
-  if null t then return Nothing else return $ Just (head t)
+          [login, password] :: IO [Only String]
+  return $ case t of
+    [Only token] -> Just token
+    _            -> Nothing
 
 deleteAuthor :: Connection -> Logger.Logger -> DB.Login -> DB.MaybeResult ()
 deleteAuthor conn logg login =

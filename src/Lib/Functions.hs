@@ -38,10 +38,10 @@ rIfJsonBody
   -> Request
   -> (Response -> IO ResponseReceived)
   -> IO ResponseReceived
-rIfJsonBody rs x req respond = do
-  j <- bodyToJSON req
-  q <- try $ maybe (throw rs) x j
-  respond $ eitherToResponse q
+rIfJsonBody rError handler jsonReq respond = do
+  request <- bodyToJSON jsonReq
+  result  <- try $ maybe (throw rError) handler request
+  respond $ eitherToResponse result
  where
   bodyToJSON :: A.FromJSON a => Request -> IO (Maybe a)
   bodyToJSON j = A.decode <$> lazyRequestBody j
@@ -65,11 +65,12 @@ adminHandler = rIfJsonBody Handlers.ErrorNotFound
 eitherToResponse
   :: A.ToJSON b => Either Handlers.ResultResponseError b -> Response
 eitherToResponse r = case r of
-  Right j -> responseBuilder status200 jsonCT $ fromLazyByteString $ A.encode j
+  Right res ->
+    responseBuilder status200 jsonCT $ fromLazyByteString $ A.encode res
   Left Handlers.ErrorNotFound -> responseBuilder status404 [] "Not Found"
   Left Handlers.ErrorInternal ->
     responseBuilder status500 [] "Internal Server Error"
-  Left p -> e p
+  Left errRes -> e errRes
  where
   e :: Handlers.ResultResponseError -> Response
   e = responseBuilder status400 jsonCT . toErr . show
@@ -79,20 +80,20 @@ eitherToResponse r = case r of
   jsonCT = [("Content-Type", "application/json")]
 
 return404 :: (Response -> IO ResponseReceived) -> IO ResponseReceived
-return404 rd = rd $ responseBuilder status404 [] ""
+return404 respond = respond $ responseBuilder status404 [] ""
 
 returnFile :: T.Text -> (Response -> IO ResponseReceived) -> IO ResponseReceived
-returnFile f rd = do
-  let file = imagesDir ++ (T.unpack f)
+returnFile fileName respond = do
+  let file = imagesDir ++ (T.unpack fileName)
   exist <- doesFileExist file
-  rd $ case exist of
+  respond $ case exist of
     True -> do
       responseFile status200 contentType file Nothing
     _ -> responseBuilder status404 [] ""
  where
   contentType :: [(HeaderName, B.ByteString)]
-  contentType = case T.split (== '.') f of
+  contentType = case T.split (== '.') fileName of
     [] -> []
-    l ->
-      let ext = encodeUtf8 $ T.toLower $ last l
+    list ->
+      let ext = encodeUtf8 $ T.toLower $ last list
       in  [("Content-Type", "image/" <> ext)]
