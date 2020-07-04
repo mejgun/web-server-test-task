@@ -8,6 +8,7 @@ import           System.Directory               ( createDirectoryIfMissing
                                                 )
 
 import qualified Lib.Constants                 as Constants
+                                                ( imagesDir )
 import qualified Lib.Logger                    as Logger
 
 createImagesDir :: Logger.Logger -> IO ()

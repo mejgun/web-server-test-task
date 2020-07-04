@@ -221,7 +221,6 @@ main = hspec $ do
       `shouldThrow` anyException
 
   describe "Handlers.getAuthors" $ do
-
     it
       "returns authors"
       (              Handlers.getAuthors
@@ -877,7 +876,6 @@ main = hspec $ do
       `shouldThrow` anyException
 
   describe "Handlers.getNewsComments" $ do
-
     it
       "returns news comments"
       (              Handlers.getNewsComments
@@ -905,7 +903,6 @@ main = hspec $ do
       `shouldThrow` anyException
 
   describe "Handlers.getDrafts" $ do
-
     it
       "returns authors drafts"
       (              Handlers.getDrafts
@@ -929,7 +926,6 @@ main = hspec $ do
       `shouldThrow` anyException
 
   describe "Handlers.getNews" $ do
-
     it
       "returns news"
       (              Handlers.getNews

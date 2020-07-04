@@ -3,7 +3,8 @@
 module Lib.Types.CreateUser where
 
 import qualified Data.Aeson                    as A
-import           GHC.Generics
+                                                ( FromJSON )
+import           GHC.Generics                   ( Generic )
 
 data Request =
   Request

@@ -4,14 +4,17 @@ module Lib.Types.GetDrafts where
 
 import           Control.Monad                  ( liftM2 )
 import qualified Data.Aeson                    as A
-import           Database.PostgreSQL.Simple
+                                                ( FromJSON
+                                                , ToJSON
+                                                )
+import           Database.PostgreSQL.Simple     ( FromRow )
 import           Database.PostgreSQL.Simple.FromRow
                                                 ( field
                                                 , fromRow
                                                 )
 import           Database.PostgreSQL.Simple.Types
                                                 ( PGArray(..) )
-import           GHC.Generics
+import           GHC.Generics                   ( Generic )
 
 import           Lib.DB.Impl.PostgreSQL.Functions
                                                 ( zipPGarrays )

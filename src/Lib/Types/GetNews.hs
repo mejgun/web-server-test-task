@@ -3,12 +3,15 @@
 module Lib.Types.GetNews where
 
 import qualified Data.Aeson                    as A
-import           Database.PostgreSQL.Simple
+                                                ( FromJSON
+                                                , ToJSON
+                                                )
+import           Database.PostgreSQL.Simple     ( FromRow )
 import           Database.PostgreSQL.Simple.FromRow
                                                 ( field
                                                 , fromRow
                                                 )
-import           GHC.Generics
+import           GHC.Generics                   ( Generic )
 
 import           Lib.DB.Impl.PostgreSQL.Functions
                                                 ( pgArrayToList )

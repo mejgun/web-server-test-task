@@ -5,8 +5,8 @@ module Main
   )
 where
 
-import           Data.Default
-import           Network.Wai
+import           Data.Default                   ( def )
+import           Network.Wai                    ( Middleware )
 import           Network.Wai.Handler.Warp       ( run )
 import qualified Network.Wai.Middleware.RequestLogger
                                                as RL
@@ -33,7 +33,7 @@ main = do
   createImagesDir logger
   putStrLn "Server started"
   l <- mkReqLogger fileH conf
-  run 8080 $ l $ Routes.runApp postgresH logger
+  run 8080 $ l $ Routes.runApp postgresH
  where
   mkReqLogger :: Handle -> Config.Config -> IO Middleware
   mkReqLogger hnd conf = RL.mkRequestLogger $ def

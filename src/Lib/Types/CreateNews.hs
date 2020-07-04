@@ -3,8 +3,11 @@
 module Lib.Types.CreateNews where
 
 import qualified Data.Aeson                    as A
-import           Database.PostgreSQL.Simple
-import           GHC.Generics
+                                                ( FromJSON
+                                                , ToJSON
+                                                )
+import           Database.PostgreSQL.Simple     ( FromRow )
+import           GHC.Generics                   ( Generic )
 
 data Request =
   Request

@@ -10,7 +10,9 @@ where
 import           Data.Aeson                    as A
 import qualified Data.ByteString.Char8         as B8
 import           Data.Maybe                     ( fromMaybe )
-import           Database.PostgreSQL.Simple
+import           Database.PostgreSQL.Simple     ( Connection
+                                                , connectPostgreSQL
+                                                )
 import           GHC.Generics
 
 import qualified Lib.Logger                    as Logger

@@ -5,17 +5,16 @@ module Lib.Routes where
 import           Network.Wai
 
 import qualified Lib.DB                        as DB
-import           Lib.Functions
+                                                ( Handle )
+import qualified Lib.Functions                 as Functions
 import qualified Lib.Handlers                  as Handlers
-import qualified Lib.Logger                    as Logger
 
 runApp
   :: DB.Handle
-  -> Logger.Logger
   -> Request
   -> (Response -> IO ResponseReceived)
   -> IO ResponseReceived
-runApp dbH _ request respond = case pathInfo request of
+runApp dbH request respond = case pathInfo request of
   ["user"    , "get"          ] -> norm Handlers.getUsers
   ["user"    , "create"       ] -> norm Handlers.createUser
   ["user"    , "delete"       ] -> adm Handlers.deleteUser
@@ -46,8 +45,8 @@ runApp dbH _ request respond = case pathInfo request of
   ["news"    , "delete"       ] -> norm Handlers.deleteNews
   ["news"    , "get"          ] -> norm Handlers.getNews
   ["news"    , "getdrafts"    ] -> norm Handlers.getDrafts
-  ["images"  , img            ] -> returnFile img respond
-  _                             -> return404 respond
+  ["images"  , img            ] -> Functions.returnFile img respond
+  _                             -> Functions.return404 respond
  where
-  norm x = normalHandler (x dbH) request respond
-  adm x = adminHandler (x dbH) request respond
+  norm x = Functions.normalHandler (x dbH) request respond
+  adm x = Functions.adminHandler (x dbH) request respond
