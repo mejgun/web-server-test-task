@@ -68,10 +68,8 @@ newHandle = DB.Handle { DB.createUser          = createUser
 
 createUser
   :: DB.Name -> DB.LastName -> DB.Login -> DB.Password -> DB.MaybeResult ()
-createUser name lastname login password =
-  return $ case any null [name, lastname, login, password] of
-    True -> Nothing
-    _    -> Just ()
+createUser name lastname login password = return
+  $ if any null [name, lastname, login, password] then Nothing else Just ()
 
 createUserWithPhoto
   :: DB.Name
@@ -81,9 +79,9 @@ createUserWithPhoto
   -> DB.PhotoExt
   -> DB.MaybeResult String
 createUserWithPhoto name lastname login password ext =
-  return $ case any null [name, lastname, login, password, ext] of
-    True -> Nothing
-    _    -> Just "photo"
+  return $ if any null [name, lastname, login, password, ext]
+    then Nothing
+    else Just "photo"
 
 getUsers :: DB.Page -> DB.Count -> DB.MaybeResult [GetUsers.User]
 getUsers _ _ = return $ Just []
@@ -247,15 +245,10 @@ isNewsPublished :: DB.NewsID -> DB.Result Bool
 isNewsPublished news_id = return $ news_id > 0
 
 thisNewsAuthor :: DB.NewsID -> DB.Token -> DB.Result Bool
-thisNewsAuthor news_id token =
-  return $ if (news_id > 0) && (token == "author") then True else False
+thisNewsAuthor news_id token = return $ (news_id > 0) && (token == "author")
 
 saveImage :: FilePath -> DB.Base64String -> DB.Result Bool
-saveImage file str = return $ case any null [file, str] of
-  True -> False
-  _    -> True
+saveImage file str = return $ not $ any null [file, str]
 
 deleteFile :: FilePath -> DB.Result Bool
-deleteFile file = return $ case null file of
-  True -> False
-  _    -> True
+deleteFile file = return $ not $ null file

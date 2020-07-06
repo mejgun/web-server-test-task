@@ -43,6 +43,7 @@ import           Control.Monad                  ( unless )
 import           Data.Char                      ( toLower )
 import           Data.Maybe                     ( fromJust
                                                 , isJust
+                                                , fromMaybe
                                                 )
 
 import qualified Lib.Types.AddNewsComment      as AddNewsComment
@@ -367,7 +368,7 @@ getDrafts dbH req = do
   checkIfAuthor dbH (GetDrafts.token req)
   res <- DB.getDrafts dbH
                       (GetDrafts.page req)
-                      (Constants.newsPerPage)
+                      Constants.newsPerPage
                       (GetDrafts.token req)
   case res of
     Just drafts -> return drafts
@@ -389,8 +390,8 @@ getNews dbH req = do
                           (GetNews.tags_any req)
                           (GetNews.sort_by req)
                           (GetNews.page req)
-                          (Constants.newsPerPage)
-  let news = maybe (throw ErrorBadRequest) id maybenews
+                          Constants.newsPerPage
+  let news = fromMaybe (throw ErrorBadRequest) maybenews
   cats <- DB.getCategoriesAll dbH
   return $ map (buildAnswer cats) news
  where
@@ -417,7 +418,7 @@ getNewsComments dbH req = do
   res <- DB.getNewsComments dbH
                             (GetNewsComments.news_id req)
                             (GetNewsComments.page req)
-                            (Constants.commentsPerPage)
+                            Constants.commentsPerPage
   case res of
     Just comments -> return comments
     _             -> throw ErrorBadRequest
@@ -482,7 +483,7 @@ justOK :: String
 justOK = "ok"
 
 makeExt :: Maybe String -> String
-makeExt = maybe ".jpg" $ (++) "." . (map toLower)
+makeExt = maybe ".jpg" $ (++) "." . map toLower
 
 checkIfAdmin :: DB.Handle -> DB.Token -> DB.Result ()
 checkIfAdmin dbH token = do
@@ -495,8 +496,7 @@ checkIfAuthor dbH token = do
   unless author (throw ErrorNotAuthor)
 
 checkIfValidPage :: DB.Page -> DB.Result ()
-checkIfValidPage page = do
-  unless (isValidPage page) (throw ErrorBadPage)
+checkIfValidPage page = unless (isValidPage page) (throw ErrorBadPage)
 
 checkIfNewsExist :: DB.Handle -> DB.NewsID -> DB.Result ()
 checkIfNewsExist dbH news_id = do

@@ -84,12 +84,11 @@ return404 respond = respond $ responseBuilder status404 [] ""
 
 returnFile :: T.Text -> (Response -> IO ResponseReceived) -> IO ResponseReceived
 returnFile fileName respond = do
-  let file = imagesDir ++ (T.unpack fileName)
+  let file = imagesDir <> T.unpack fileName
   exist <- doesFileExist file
-  respond $ case exist of
-    True -> do
-      responseFile status200 contentType file Nothing
-    _ -> responseBuilder status404 [] ""
+  respond $ if exist
+    then responseFile status200 contentType file Nothing
+    else responseBuilder status404 [] ""
  where
   contentType :: [(HeaderName, B.ByteString)]
   contentType = case T.split (== '.') fileName of

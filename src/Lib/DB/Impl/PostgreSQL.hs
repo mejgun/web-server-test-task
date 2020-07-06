@@ -101,7 +101,7 @@ calcOffsetAndLimil page perPage =
   in  [offset, limit]
 
 catchErrorsMaybe :: Logger.Logger -> DB.MaybeResult a -> DB.MaybeResult a
-catchErrorsMaybe logg func = do
+catchErrorsMaybe logg func =
   func
     `catch` (\(SqlError q w t e r) -> do
               logg Logger.LogQuiet $ B8.unpack $ B8.intercalate
@@ -111,7 +111,7 @@ catchErrorsMaybe logg func = do
             )
 
 catchErrorsEither :: Logger.Logger -> DB.EitherResult a -> DB.EitherResult a
-catchErrorsEither logg func = do
+catchErrorsEither logg func =
   func
     `catch` (\(SqlError q w t e r) -> do
               logg Logger.LogQuiet $ B8.unpack $ B8.intercalate
@@ -131,10 +131,10 @@ rIfDB conn qry val = do
     _        -> return False
 
 isLoginExist :: Connection -> Logger.Logger -> DB.Login -> DB.Result Bool
-isLoginExist conn _ login = ifLogin 1 conn login
+isLoginExist conn _ = ifLogin 1 conn
 
 isLoginNotExist :: Connection -> Logger.Logger -> DB.Login -> DB.Result Bool
-isLoginNotExist conn _ login = ifLogin 0 conn login
+isLoginNotExist conn _ = ifLogin 0 conn
 
 ifLogin :: Int -> Connection -> DB.Login -> DB.Result Bool
 ifLogin cond conn login =
@@ -380,9 +380,7 @@ getCategories conn logg page count = catchErrorsMaybe logg $ do
   return $ Just res
 
 getCategoriesAll :: Connection -> Logger.Logger -> DB.Result [GetCategories.Cat]
-getCategoriesAll conn _ = do
-  res <- query_ conn "select id,name,parent from categories;"
-  return res
+getCategoriesAll conn _ = query_ conn "select id,name,parent from categories;"
 
 createTag :: Connection -> Logger.Logger -> DB.TagName -> DB.MaybeResult ()
 createTag conn logg name =
@@ -548,11 +546,12 @@ publishNews
   -> DB.NewsID
   -> DB.Token
   -> DB.MaybeResult ()
-publishNews conn logg publish news_id token = catchErrorsMaybe logg $ do
-  execute
-      conn
-      "update news set published=? where id=? and author_id=(select id from authors where user_id=(select id from users where token=?));"
-      (publish, news_id, token)
+publishNews conn logg publish news_id token =
+  catchErrorsMaybe logg
+    $   execute
+          conn
+          "update news set published=? where id=? and author_id=(select id from authors where user_id=(select id from users where token=?));"
+          (publish, news_id, token)
     >>= execResult
 
 getNewsMainPhoto
@@ -615,7 +614,7 @@ getNewsComments conn logg news_id page count = catchErrorsMaybe logg $ do
   r <- query
     conn
     "select c.id,u.name,u.lastname,c.text from news_comments as c, users as u, news as n where c.user_id=u.id and news_id=? and n.id=c.news_id and n.published=true offset ? limit ?;"
-    ([news_id] <> (calcOffsetAndLimil page count))
+    ([news_id] <> calcOffsetAndLimil page count)
   return $ Just r
 
 getDrafts

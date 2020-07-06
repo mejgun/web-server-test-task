@@ -62,7 +62,7 @@ instance FromRow Draft where
       -> PGArray (Maybe Int)
       -> PGArray (Maybe String)
       -> [a]
-    makeR c a b = (map (\(x, y) -> c x y)) $ zipPGarrays a b
+    makeR c a b = map (\(x, y) -> c x y) $ zipPGarrays a b
 
 data Photo =
   Photo
